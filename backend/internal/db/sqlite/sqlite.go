@@ -11,7 +11,7 @@ import (
 )
 
 func ConnectDB() *sql.DB {
-	dbPath := "./internal/db/sqlite/db.db"
+	dbPath := "../internal/db/sqlite/db.db"
 	
 	db, err := sql.Open("sqlite3", dbPath)
 	if err != nil {
@@ -33,7 +33,7 @@ func RunMigration(db *sql.DB) {
 	if err != nil {
 		log.Fatal("Failed to create migration driver:", err)
 	}
-	m, err := migrate.NewWithDatabaseInstance("file://internal/db/migrations/sqlite", "sqlite3", driver)
+	m, err := migrate.NewWithDatabaseInstance("file:..//internal/db/migrations/sqlite", "sqlite3", driver)
 	if err != nil {
 		log.Fatal("Failed to create migrate instance:", err)
 	}

@@ -4,27 +4,38 @@ import (
 	"log"
 	"net/http"
 	"social-network-backend/internal/db/sqlite"
-	"social-network-backend/internal/models"
+	CoreModels "social-network-backend/internal/models/app"
+	"social-network-backend/internal/router"
+	"social-network-backend/internal/services"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
 )
-var App *models.App
+var App *CoreModels.App
 func main() {
-	App = &models.App{
-		DB:      sqlite.ConnectDB(),
+	DB :=  sqlite.ConnectDB()
+	App = &CoreModels.App{
+		DB:     DB,
 		Session: make(map[string]string),
+		Posts: &services.PostModel{DB:DB},
+		
 	}
-
-	s:= models.Server{
+	s:= CoreModels.Server{
 		HTTP: &http.Server{
 			Addr:         ":8080",
-			//Handler:      app.Routes(),
+			Handler:      router.SetupRoutes(App),
 			WriteTimeout: 10 * time.Second,
 			ReadTimeout:  10 * time.Second,
 		},
 	}
+
+
+	
+	
 	App.Server = &s
+	
+	
+	
 	log.Println("Starting server on", App.Server.HTTP.Addr)
 
 	if err := App.Server.HTTP.ListenAndServe(); err != nil {

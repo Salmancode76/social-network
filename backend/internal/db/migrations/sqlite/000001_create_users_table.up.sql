@@ -14,3 +14,28 @@ CREATE TABLE IF NOT EXISTS users (
 );
 
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
+/*
+INSERT INTO users (
+                      email,
+                      password_hash,
+                      first_name,
+                      last_name,
+                      date_of_birth,
+                      avatar,
+                      nickname,
+                      about_me,
+                      is_public,
+                      created_at
+                  )
+                  VALUES (
+                      'tester@gmail.com',
+                      'password_hash',
+                      'tester',
+                      '123',
+                      '12/4/2003',
+                      'avatar',
+                      'tester123',
+                      'hello',
+                      '1',
+                      'created_at'
+                  );

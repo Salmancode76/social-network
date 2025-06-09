@@ -1,8 +1,9 @@
-package models
+package CoreModels
 
 import (
 	"database/sql"
 	"net/http"
+	"social-network-backend/internal/services"
 )
 
 type UserModel struct {
@@ -15,8 +16,8 @@ type Server struct {
 
 type App struct {
 	Server  *Server
-	//Users   *repository.UserModel
-	//Posts *repository.PostModel
+	//Users   *services.UserModel
+	Posts *services.PostModel
 	DB      *sql.DB
 	Session map[string]string
 	UserID  map[string]string
