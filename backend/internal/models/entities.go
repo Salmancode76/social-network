@@ -1,5 +1,6 @@
 package models
 
+
 type Post struct {
 	ID        string `json:"id`
 	UserID    string `json:"user_id"`
@@ -19,4 +20,16 @@ type Comment struct {
 	Username  string
 	Date      string `json:"date"`
 	CreatedAt string `json:created_at`
+}
+type User struct {
+	ID		  string `json:"id"`
+	Email	  string `json:"email"`
+	Password  string `json:"password"`
+	FirstN	  string `json:"first_name"`
+	LastN	  string `json:"last_name"`
+	Date	  string `json:"date_of_birth"`
+	Avatar    string `json:"avatar"`
+	Nickname  string `json:"nickname"`
+	Aboutme   string `json:"about_me"`
+	IsPublic  string `json:"is_public"` 
 }
