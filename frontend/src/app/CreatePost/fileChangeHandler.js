@@ -1,7 +1,10 @@
 import imageCompression from "browser-image-compression";
 
 export const fileChangeHandler =
-  (setError, setErrorMessage, setFormData) => async (e) => {
+  (setError, setErrorMessage, setFormData, ImageDiv, fileInputRef) =>
+  async (e) => {
+    ImageDiv.current.style.backgroundImage = "none";
+
     try {
       // Compression options
       const options = {
@@ -17,6 +20,9 @@ export const fileChangeHandler =
           setErrorMessage(
             "File size must be less than 5MB or wrong file type."
           );
+          setFormData((prev) => ({ ...prev, image_file: "" }));
+          if (fileInputRef.current) fileInputRef.current.value = "";
+
           return;
         }
 
@@ -35,9 +41,7 @@ export const fileChangeHandler =
             image_file: reader.result,
           }));
 
-          document.querySelector(
-            ".image"
-          ).style.backgroundImage = `url(${reader.result})`;
+          ImageDiv.current.style.backgroundImage = `url(${reader.result})`;
         };
 
         reader.readAsDataURL(processedFile);
@@ -46,5 +50,7 @@ export const fileChangeHandler =
     } catch (e) {
       setError(true);
       setErrorMessage(e.message);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+
     }
   };

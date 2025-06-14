@@ -15,6 +15,10 @@ func SetupRoutes(app *CoreModels.App) *http.ServeMux {
 
 	mux.HandleFunc(("/api/FetchAllPosts"),handlers.FetchAllPosts(app))
 
+	mux.HandleFunc(("/api/ViewPost"),handlers.FetchPostByID(app))
+
+	mux.HandleFunc("/api/CreateComment",handlers.CreateComment(app))
+
 	//Serve Images 
 	imageHandler := http.StripPrefix("/Image/", http.FileServer(http.Dir("../Image/")))
 	mux.Handle("/Image/", imageHandler)

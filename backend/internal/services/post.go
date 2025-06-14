@@ -2,8 +2,6 @@ package services
 
 import (
 	"database/sql"
-	"fmt"
-	"log"
 	"social-network-backend/internal/models"
 )
 
@@ -19,7 +17,7 @@ func (p *PostModel) FetchAllPosts()([]models.Post,error){
 	row,err := p.DB.Query(stmt)
 
 	if err != nil {
-	  return  Posts,fmt.Errorf("failed to fetch all post: %w", err)
+	  return  Posts,err
   }
 
   for row.Next(){
@@ -47,13 +45,87 @@ func (p* PostModel) InsertPost(Post models.Post) (error){
                    VALUES (?, ?, ?, ?, ?)  
 
 `
-	_,err := p.DB.Exec(stmt,Post.UserID,Post.Content,Post.ImageFile,Post.PrivacyTypeID,Post.GroupID)
+_, err := p.DB.Exec(stmt, &Post.UserID, &Post.Content, &Post.ImageFile, &Post.PrivacyTypeID, nil)
 
 	if err!=nil{
-		log.Fatal("Failed to insert post:" , err.Error())
+		return err
 	}
 
 
 
 	return nil
+}
+
+func (p *PostModel)FetchPostByID (id string)(models.Post,error){
+	var Post models.Post
+	stmt:=`SELECT id,
+       user_id,
+       content,
+       image_path,
+       privacy_type_id,
+       group_id,
+       created_at
+  FROM posts
+  where id =(?);
+`
+	row,err:= p.DB.Query(stmt,id)
+
+	if err!=nil{
+		return Post,err
+	}
+	for row.Next(){
+		row.Scan(&Post.ID,&Post.UserID,&Post.Content,&Post.ImageFile,&Post.PrivacyTypeID,&Post.GroupID,&Post.CreatedAt)
+	}
+	return Post,nil
+}
+
+func (p* PostModel)CreateComment(Comment models.Comment)(error){
+
+	stmt:=`
+	INSERT INTO comments (
+                         user_id,
+                         post_id,
+                         content
+                     )
+                     VALUES (
+                         ?,
+                          ?,
+                           ?
+						    );
+`
+
+	_,err := p.DB.Exec(stmt,Comment.UserID,Comment.PostID,Comment.Comment)
+
+	if err!=nil{
+		return  err
+	}
+	return nil
+}
+func(p*PostModel)FetchPostComments(id string)([]models.Comment,error){
+	var Comments [] models.Comment
+	stmt:=`
+	
+		select 
+		id,
+       user_id,
+       post_id,
+       content,
+       created_at
+		from comments
+		where post_id = (?);
+	
+	`
+
+	rows,err:= p.DB.Query(stmt,id)
+
+	if err!=nil{
+		return Comments,err
+	}
+
+	for rows.Next(){
+		var comment models.Comment
+		rows.Scan(&comment.ID, &comment.UserID, &comment.PostID, &comment.Comment, &comment.CreatedAt)
+		Comments = append(Comments, comment)
+	}
+	return Comments,nil
 }
