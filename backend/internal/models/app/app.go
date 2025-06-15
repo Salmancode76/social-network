@@ -6,9 +6,7 @@ import (
 	"social-network-backend/internal/services"
 )
 
-type UserModel struct {
-	DB *sql.DB
-}
+
 
 type Server struct {
 	HTTP *http.Server
@@ -16,8 +14,8 @@ type Server struct {
 
 type App struct {
 	Server  *Server
-	//Users   *services.UserModel
-	Posts *services.PostModel
+	Users   *services.UserModel
+	Posts   *services.PostModel
 	DB      *sql.DB
 	Session map[string]string
 	UserID  map[string]string

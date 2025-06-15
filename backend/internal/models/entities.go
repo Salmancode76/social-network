@@ -23,13 +23,13 @@ type Comment struct {
 }
 type User struct {
 	ID		  string `json:"id"`
-	Email	  string `json:"email"`
-	Password  string `json:"password"`
 	FirstN	  string `json:"first_name"`
 	LastN	  string `json:"last_name"`
-	Date	  string `json:"date_of_birth"`
-	Avatar    string `json:"avatar"`
 	Nickname  string `json:"nickname"`
+	Email	  string `json:"email"`
+	Date	  string `json:"date_of_birth"`
+	Password  string `json:"password"`
+	Avatar    string `json:"avatar"`
 	Aboutme   string `json:"about_me"`
 	IsPublic  string `json:"is_public"` 
 }
