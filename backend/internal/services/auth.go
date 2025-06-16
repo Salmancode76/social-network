@@ -22,21 +22,21 @@ func (U *UserModel) Register(User models.User) error {
 	return nil
 }
 
-func (U *UserModel) GetUserByEmail(email string) ( error) {
+func (U *UserModel) GetUserByEmail(email string) (*models.User, error) {
 	var user models.User
-	err := U.DB.QueryRow("SELECT id FROM users WHERE email = ?", email).
-		Scan(&user.ID)
+	err := U.DB.QueryRow("SELECT id,password_hash FROM users WHERE email = ?", email).
+		Scan(&user.ID ,&user.Password)
 	if err != nil {
-		return  errors.New("user not found")
+		return  nil , errors.New("user not found")
 	}
-	return  nil
+	return  &user,nil
 }
-func (U *UserModel) GetUserByUsername(nickname string) (error) {
-	var user models.User
-	err := U.DB.QueryRow("SELECT id  FROM users WHERE nickname = ?", nickname).
-		Scan(&user.ID)
-	if err != nil {
-		return  errors.New("user not found")
-	}
-	return  nil
-}
+// func (U *UserModel) GetUserByUsername(nickname string) (error) {
+// 	var user models.User
+// 	err := U.DB.QueryRow("SELECT id  FROM users WHERE nickname = ?", nickname).
+// 		Scan(&user.ID)
+// 	if err != nil {
+// 		return  errors.New("user not found")
+// 	}
+// 	return  nil
+// }

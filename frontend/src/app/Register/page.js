@@ -92,7 +92,6 @@ export default function RegisterPage() {
           value={formData.nickname}
           onChange={(e) => {
             setFormData({ ...formData, nickname: e.target.value });
-            if (formError) setFormError("");
           }}
           required
         />{" "}
