@@ -93,7 +93,7 @@ export default function RegisterPage() {
           onChange={(e) => {
             setFormData({ ...formData, nickname: e.target.value });
           }}
-          required
+          
         />{" "}
         <br />
         <label>Email:</label> <br />
