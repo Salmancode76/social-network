@@ -27,6 +27,28 @@ func RegisterHandler(app *CoreModels.App) http.HandlerFunc {
 			return
 		}
 
+		 err = app.Users.GetUserByEmail(user.Email)
+		if err == nil {
+			w.Header().Set("Content-Type", "application/json")
+			responseData := map[string]interface{}{
+				"status" : "401",
+				"message": "Email already exist",
+			}
+			json.NewEncoder(w).Encode(responseData)
+			return
+		}
+		
+		 err = app.Users.GetUserByUsername(user.Nickname)
+		if err == nil {
+			w.Header().Set("Content-Type", "application/json")
+			responseData := map[string]interface{}{
+				"status" : "401",
+				"message": "Username already exist",
+			}
+			json.NewEncoder(w).Encode(responseData)
+			return
+		}
+
 		hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 		if err != nil {
 			log.Println("Error hashing password:", err)
@@ -34,8 +56,16 @@ func RegisterHandler(app *CoreModels.App) http.HandlerFunc {
 			return
 		}
 
+		responseData := map[string]interface{}{
+			"status" : "ok",
+			"message": "Register successful",
+		}
 		user.Password = string(hashedPassword)
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(responseData)
 		app.Users.Register(*user)
+
 		
 	}
 }

@@ -7,7 +7,7 @@ export default function RegisterPage() {
   const [error,setError] = useState(false);
   const [ErrorType, setErrorType] = useState(null);
   const router = useRouter();
-  const [passwordError, setPasswordError] = useState("");
+  const [formError, setFormError] = useState("");
 
   const [formData, setFormData] = useState({
     fname: "",
@@ -33,7 +33,7 @@ export default function RegisterPage() {
       is_public: formData.Is_Public,
     };
 
-    if (!error && !passwordError) {
+    if (!error && !formError) {
       try {
         const result = await fetch("http://localhost:8080/api/Register", {
           method: "POST",
@@ -42,11 +42,16 @@ export default function RegisterPage() {
           },
           body: JSON.stringify(registerData),
         });
-        if (!result.ok) {
-          const errorText = await result.text();
-          throw new Error(errorText || "Server error");
+        const data = await result.json();
+
+        if (data.status === "ok"){
+          router.push("/");
+
+        }else if (data.status === "401"){
+          setFormError(data.message);
+          return
         }
-        router.push("/");
+      
       } catch (e) {
         console.error(e);
         setErrorType(e);
@@ -87,6 +92,7 @@ export default function RegisterPage() {
           value={formData.nickname}
           onChange={(e) => {
             setFormData({ ...formData, nickname: e.target.value });
+            if (formError) setFormError("");
           }}
           required
         />{" "}
@@ -98,6 +104,7 @@ export default function RegisterPage() {
           value={formData.email}
           onChange={(e) => {
             setFormData({ ...formData, email: e.target.value });
+            setFormError("");
           }}
           required
         />{" "}
@@ -123,9 +130,9 @@ export default function RegisterPage() {
             setFormData({ ...formData, password: newPass });
 
             if (formData.Repassword && formData.Repassword !== newPass) {
-              setPasswordError("Passwords do not match");
+              setFormError("Passwords do not match");
             } else {
-              setPasswordError("");
+              setFormError("");
             }
           }}
           required
@@ -141,17 +148,17 @@ export default function RegisterPage() {
             setFormData({ ...formData, Repassword: rePass });
 
             if (formData.password && formData.password !== rePass) {
-              setPasswordError("Passwords do not match");
+              setFormError("Passwords do not match");
             } else {
-              setPasswordError("");
+              setFormError("");
             }
           }}
           required
         />{" "}
         <br />
         <br />
-        {passwordError && (
-          <p style={{ color: "red", marginTop: "-10px" }}>{passwordError}</p>
+        {formError && (
+          <p style={{ color: "red", marginTop: "-10px" }}>{formError}</p>
         )}
         <label>Privacy:</label> <br />
         <label>

@@ -2,6 +2,7 @@ package services
 
 import (
 	"database/sql"
+	"errors"
 	"log"
 	"social-network-backend/internal/models"
 )
@@ -19,4 +20,23 @@ func (U *UserModel) Register(User models.User) error {
 	}
 
 	return nil
+}
+
+func (U *UserModel) GetUserByEmail(email string) ( error) {
+	var user models.User
+	err := U.DB.QueryRow("SELECT id FROM users WHERE email = ?", email).
+		Scan(&user.ID)
+	if err != nil {
+		return  errors.New("user not found")
+	}
+	return  nil
+}
+func (U *UserModel) GetUserByUsername(nickname string) (error) {
+	var user models.User
+	err := U.DB.QueryRow("SELECT id  FROM users WHERE nickname = ?", nickname).
+		Scan(&user.ID)
+	if err != nil {
+		return  errors.New("user not found")
+	}
+	return  nil
 }
