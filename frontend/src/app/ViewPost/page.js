@@ -1,8 +1,7 @@
-// src/app/ViewPost/page.js
 "use client";
 
 import { Suspense } from "react";
-import ViewPostContent from "./ViewPostContent";   // ← نضيف هذا الملف تحت نفس المجلد
+import ViewPostContent from "./ViewPostContent"; 
 
 export default function ViewPostPage() {
   return (
