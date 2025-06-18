@@ -66,7 +66,7 @@ export default function ViewPostContent() {
 
             {post.image_file && (
                 <img
-                    src={`http://backend:8080/Image/Posts/${post.image_file}`} // ⚠︎ backend بدلاً من localhost
+                    src={`http://backend:8080/Image/Posts/${post.image_file}`} 
                     alt="post image"
                 />
             )}
