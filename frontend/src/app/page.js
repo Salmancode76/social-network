@@ -32,7 +32,7 @@ export default function Home() {
         return (
           <Link href={`/ViewPost?id=${x.ID}`} key={x.ID}>
             <div className="post">
-             { x.image_file ? <img src={`http://localhost:8080/Image/Posts/${x.image_file}`}/> :"" }
+             { x.image_file ? <img src={`http://localhost:8080/Image/Posts/${x.image_file}`} alt="img"/> :"" }
               {x.content}
               {x.CreatedAt}
               <br></br>

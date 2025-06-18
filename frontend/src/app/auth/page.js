@@ -116,7 +116,7 @@ export default function AuthPage() {
             </fieldset>
             <button type="submit" className="btn-login">LOGIN</button>
             <div className="switch-link">
-              <a href="#" onClick={() => switchTo("register")}>Don't have an account? Sign up</a>
+              <a href="#" onClick={() => switchTo("register")}>Do not have an account? Sign up</a>
             </div>
           </form>
         </div>

@@ -1,3 +1,5 @@
+"use client";
+
 export function Internal505() {
   return (
     <div style={{ padding: "20px", textAlign: "center" }}>
@@ -11,7 +13,7 @@ export function Internal505() {
 export function Lost404() {
   return (
     <>
-      <div>The page you are looking for doesn't exist or got deleted.</div>
+      <div>The page you are looking for does not exist or got deleted.</div>
     </>
   );
 }
