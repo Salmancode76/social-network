@@ -16,6 +16,44 @@ import (
 	"time"
 )
 
+func DownloadImage(ImageFile string) (string,error){
+
+			var fileName string
+			if ImageFile == "" {
+				return fileName, nil // if there's no image, skip
+			}
+			filetype := "."+strings.Split((strings.Split((  strings.Split(ImageFile, ",")[0])  ,";")[0]),"/")[1] 
+	
+			data, err := base64.StdEncoding.DecodeString(strings.Split(ImageFile, ",")[1])
+		
+		
+		
+			if err !=nil{
+				//sendErrorResponse(w, fmt.Sprintf("Invalid image data: %v", err), http.StatusBadRequest)
+				return fileName,err 
+			}
+		
+		
+			imageDir := filepath.Join("..","Image", "Posts")
+			files,_ := ioutil.ReadDir(imageDir)
+			id := len(files)+1
+			//Image ID + User ID + Time + format
+			fileName = strconv.Itoa(id)+"_"+"1" + "_" + time.Now().Format("20060102_150405") + filetype	
+		
+			ImageFile = fileName
+		
+			imagePath := filepath.Join(imageDir, fileName)
+			os.WriteFile(imagePath, data, 0644)
+
+			return fileName,nil
+			
+		
+
+	}
+
+	
+
+
 func CreatePost(app *CoreModels.App) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
@@ -37,37 +75,19 @@ func CreatePost(app *CoreModels.App) http.HandlerFunc {
 		sendErrorResponse(w, "Invalid request payload", http.StatusBadRequest)
 		return 
 	}
+	
 
-	if(len(post.ImageFile) > 0){
-		filetype := "."+strings.Split((strings.Split((  strings.Split(post.ImageFile, ",")[0])  ,";")[0]),"/")[1] 
+	post.ImageFile,err = DownloadImage(post.ImageFile)
 
-		data, err := base64.StdEncoding.DecodeString(strings.Split(post.ImageFile, ",")[1])
-	
-	
-	
-		if err !=nil{
-			sendErrorResponse(w, fmt.Sprintf("Invalid image data: %v", err), http.StatusBadRequest)
-			return 
-		}
-	
-	
-		imageDir := filepath.Join("..","Image", "Posts")
-		files,_ := ioutil.ReadDir(imageDir)
-		id := len(files)+1
-		//Image ID + User ID + Time + format
-		fileName := strconv.Itoa(id)+"_"+ post.UserID + "_" + time.Now().Format("20060102_150405") + filetype	
-	
-		post.ImageFile = fileName
-	
-		imagePath := filepath.Join(imageDir, fileName)
-		os.WriteFile(imagePath, data, 0644)
-		
+	if err!=nil{
+		sendErrorResponse(w, fmt.Sprintf("Invalid image data: %v", err), http.StatusBadRequest)
+
 	}
 
-	//fmt.Println("Data:", post)
+	fmt.Println("Data:", post)
 
 	app.Posts.InsertPost(*post)	
-	fmt.Print(post.UserID)
+	//fmt.Print(post.UserID)
 }
 }
 
@@ -176,8 +196,16 @@ func CreateComment(app * CoreModels.App) http.HandlerFunc{
 
 		//fmt.Println(Comment)
 
+		Comment.ImageFile,err = DownloadImage(Comment.ImageFile)
+		if err!=nil{
+			sendErrorResponse(w, fmt.Sprintf("Invalid image data: %v", err), http.StatusBadRequest)
+	
+		}
+	
+
 		err=app.Posts.CreateComment(Comment)
 
+		
 		if err != nil {
 			sendErrorResponse(w, fmt.Sprintf("Failed to create a comment: %v", err), http.StatusBadRequest)
 			return

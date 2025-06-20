@@ -1,16 +1,29 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState,useRef } from "react";
 import { FetchPostByID } from "../utils/FetchPostByID";
 import { Lost404 } from "../Errors/page";
 import { Internal505 } from "../Errors/page";
+import { fileChangeHandler } from "../utils/fileChangeHandler";
+
 function ViewPost() {
   const [post, setPost] = useState(null);
+    const fileInputRef = useRef();
+    const [errorMessage,seterrorMessage] = useState('');
+    const ImageDiv = useRef(null);
+  
+    const [error,setError] = useState(false);
+  
   const [loading, setLoading] = useState(true)
   const searchParams = useSearchParams();
   const [comment,setComment] = useState("");
   const [ErrorType, setErrorType] = useState(null);
+
+
+  const [formData, setFormData] = useState({
+    image_file: "",
+  });
 
   const id = searchParams.get("id");
 
@@ -20,11 +33,13 @@ function ViewPost() {
 
     const data = {
       PostID: id,
+      image_file: formData.image_file,
+
       content: comment,
       user_id: "1",
       date: new Date().toISOString(),
     };
-    
+
     const result = await fetch(
       `http://localhost:8080/api/CreateComment?id=${id}`,
 
@@ -37,9 +52,10 @@ function ViewPost() {
       }
     );
     setComment("");
+    setFormData({ image_file: "" });
+    ImageDiv.current.style.backgroundImage = "none";
+
     await FetchPostByID(id, setPost);
-
-
   }
 
   useEffect(() => {
@@ -56,11 +72,35 @@ function ViewPost() {
         setLoading(false);
       }
     };
+ 
+
 
     if (id) {
       fetchData();
     }
   }, [id]);
+  
+
+  useEffect(() => {
+    ValidateComment();
+  }, [formData.image_file, comment]);
+
+
+  const ValidateComment = () => {
+    if (
+      comment.trim().length === 0 &&
+      formData.image_file.trim().length === 0
+    ) {
+      setError(true);
+      seterrorMessage(
+        "You need to enter either a Comment text or an image to create a comment."
+      );
+    } else {
+      setError(false);
+      seterrorMessage("");
+    }
+  };
+  
   if (ErrorType?.message?.includes("404")) {
     return <Lost404 />;
   }
@@ -94,13 +134,34 @@ function ViewPost() {
 
       <div>
         <form onSubmit={HandleCommentSubmit}>
+          {error && <div> {errorMessage} </div>}
+
           <textarea
             onChange={(e) => setComment(e.target.value)}
             maxLength={1500}
             value={comment}
-            required
           />
-          <button type="submit" disabled={comment.trim().length === 0}>
+          <label>Image Path:</label>
+          <div ref={ImageDiv} className="image"></div>
+
+          <input
+            type="file"
+            accept="image/*"
+            ref={fileInputRef}
+            onChange={fileChangeHandler(
+              setError,
+              seterrorMessage,
+              setFormData,
+              ImageDiv,
+              fileInputRef
+            )}
+          />
+          <button
+            type="submit"
+            disabled={
+             error
+            }
+          >
             Post
           </button>
         </form>
@@ -115,10 +176,18 @@ function ViewPost() {
                 margin: "5px 0",
               }}
             >
+              {console.table(commentObj)}
               <p>
                 <strong>User:</strong>{" "}
                 {commentObj.Username || `User ${commentObj.user_id}`}
               </p>
+              {commentObj.image_file ? (
+                <img
+                  src={`http://localhost:8080/Image/Posts/${commentObj.image_file}`}
+                />
+              ) : (
+                ""
+              )}
               <p>
                 <strong>Comment:</strong> {commentObj.content}
               </p>

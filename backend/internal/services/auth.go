@@ -40,3 +40,53 @@ func (U *UserModel) GetUserByEmail(email string) (*models.User, error) {
 // 	}
 // 	return  nil
 // }
+
+
+
+func(U *UserModel) FetchAllUsers() ([]models.User, error) {
+	stmt := `SELECT id, first_name, last_name, nickname, email, date_of_birth, 
+	         password_hash, is_public, created_at FROM users`
+	var Users []models.User
+	rows, err := U.DB.Query(stmt)
+	
+	if err != nil {
+		return Users, err
+	}
+	defer rows.Close() // Important: close rows when done
+	
+	for rows.Next() {
+		var user models.User
+		var avatar sql.NullString
+		
+		err := rows.Scan(
+			&user.ID,
+			&user.FirstN,
+			&user.LastN,
+			&user.Nickname,
+			&user.Email,
+			&user.Date,
+			&user.Password,
+			&user.IsPublic,
+			&user.CreatedAt,
+		)
+		if err != nil {
+			return Users, err
+		}
+		
+		// Handle the nullable avatar field
+		if avatar.Valid {
+			user.Avatar = avatar.String
+		} else {
+			user.Avatar = "" // or some default value
+		}
+		
+		Users = append(Users, user)
+	}
+	
+	// Check for errors during iteration
+	if err = rows.Err(); err != nil {
+		return Users, err
+	}
+
+	return Users, nil
+}
