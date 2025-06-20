@@ -29,7 +29,6 @@ export default function Home() {
   return (
     <div>
       Frontend
-<<<<<<< HEAD
       {posts  &&
         posts.map((x) => {
           return (
@@ -50,21 +49,6 @@ export default function Home() {
             </Link>
           );
         })}
-=======
-      {posts.map((x) => {
-        return (
-          <Link href={`/ViewPost?id=${x.ID}`} key={x.ID}>
-            <div className="post">
-             { x.image_file ? <img src={`http://localhost:8080/Image/Posts/${x.image_file}`} alt="img"/> :"" }
-              {x.content}
-              {x.CreatedAt}
-              <br></br>
-              {x.privacy_type_id}
-            </div>
-          </Link>
-        );
-      })}
->>>>>>> d2e79445a776cd4d42d7418918aca9e7ad4814c0
     </div>
   );
 }
