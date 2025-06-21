@@ -7,8 +7,11 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8080:8080"
+    volumes:
+      - ./backend/internal/db/sqlite:/app/internal/db/sqlite
     networks:
       - app-network
+
 
   frontend:
     build:

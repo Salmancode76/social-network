@@ -1,24 +1,21 @@
-# STEP 1: Use Go 1.23 with Alpine
-FROM golang:1.23-alpine
+# Use official Go image with CGO support (required for sqlite3)
+FROM golang:1.23
 
-# STEP 2: Set working directory
-WORKDIR /app
+# Set working directory to /app/cmd so ../internal/... matches
+WORKDIR /app/cmd
 
-# STEP 3: Copy Go module files first
-COPY go.mod ./
-COPY go.sum ./
+# Copy go.mod and go.sum first (for better caching)
+COPY go.mod go.sum /app/
+RUN cd /app && go mod download
 
-# STEP 4: Download dependencies
-RUN go mod download
+# Copy the whole backend project into /app
+COPY . /app/
 
-# STEP 5: Copy the rest of the source code
-COPY . .
+# Build from inside cmd folder
+RUN go build -o main .
 
-# STEP 6: Build the Go app from cmd/ folder
-RUN go build -o main ./cmd
-
-# STEP 7: Expose the port (change if your app uses different port)
+# Expose the backend port
 EXPOSE 8080
 
-# STEP 8: Run the app
+# Run the built backend binary
 CMD ["./main"]
