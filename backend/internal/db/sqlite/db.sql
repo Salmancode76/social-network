@@ -44,6 +44,8 @@ DROP TABLE IF EXISTS followers;
 DROP TABLE IF EXISTS request_status;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS notification_types;
+DROP TABLE IF EXISTS user_sessions;
+
 
 CREATE TABLE IF NOT EXISTS users (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -241,6 +243,14 @@ CREATE TABLE IF NOT EXISTS notifications (
     FOREIGN KEY (related_event_id) REFERENCES events(id) ON DELETE CASCADE,
     CHECK (is_read IN (0, 1))
 );
+CREATE TABLE IF NOT EXISTS user_sessions (
+  user_id INTEGER NOT NULL,
+  session_id VARCHAR(36) PRIMARY KEY,
+  expires_at DATETIME NOT NULL,
+  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+
 
 CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
 CREATE INDEX IF NOT EXISTS idx_followers_follower_id ON followers(follower_id);
@@ -282,3 +292,5 @@ CREATE INDEX IF NOT EXISTS idx_group_message_reads_message_id ON group_message_r
 CREATE INDEX IF NOT EXISTS idx_posts_user_privacy ON posts(user_id, privacy_type_id);
 CREATE INDEX IF NOT EXISTS idx_followers_status_following ON followers(request_status_id, following_id);
 CREATE INDEX IF NOT EXISTS idx_group_members_status_group ON group_members(request_status_id, group_id);
+
+
