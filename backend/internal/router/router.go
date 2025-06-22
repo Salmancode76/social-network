@@ -23,6 +23,8 @@ func SetupRoutes(app *CoreModels.App) *http.ServeMux {
 
 	mux.HandleFunc("/api/Login",handlers.LoginHandler(app))
 
+	
+
 	//Serve Images 
 	imageHandler := http.StripPrefix("/Image/", http.FileServer(http.Dir("../Image/")))
 	mux.Handle("/Image/", imageHandler)

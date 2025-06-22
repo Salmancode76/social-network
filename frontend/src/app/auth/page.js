@@ -31,6 +31,7 @@ export default function AuthPage() {
       const res = await fetch("http://localhost:8080/api/Login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(loginForm),
       });
       const data = await res.json();
@@ -62,6 +63,7 @@ export default function AuthPage() {
       const res = await fetch("http://localhost:8080/api/Register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
       const data = await res.json();
