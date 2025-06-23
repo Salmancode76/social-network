@@ -15,7 +15,7 @@ export default function AuthPage() {
       });
 
       if (res.ok) {
-        router.push("/"); // أو أي صفحة رئيسية
+        router.push("/"); 
       }
     }
 
