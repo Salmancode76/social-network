@@ -53,10 +53,10 @@ func(U *UserModel)  CreateSession(w http.ResponseWriter, userID string) {
 	})
 }
 
-func(U *UserModel)  GetUserIDFromSession(w http.ResponseWriter,r *http.Request)  (int, bool) {
+func(U *UserModel)  GetUserIDFromSession(w http.ResponseWriter,r *http.Request)  (int, error) {
     cookie, err := r.Cookie("session_id")
     if err != nil {
-        return 0, false
+        return 0, err
     }
     var userID int
     err = U.DB.QueryRow("SELECT user_id FROM sessions WHERE session_id = ?", cookie.Value).Scan(&userID)    
@@ -70,9 +70,9 @@ func(U *UserModel)  GetUserIDFromSession(w http.ResponseWriter,r *http.Request) 
             MaxAge:   -1,
             HttpOnly: true,
         })
-        return 0, false
+        return 0, err
     }
-    return userID, true
+    return userID, nil
 }
 
 // after the user log we delete 

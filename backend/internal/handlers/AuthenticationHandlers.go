@@ -113,35 +113,35 @@ func LoginHandler(app *CoreModels.App) http.HandlerFunc {
 	}
 }
 
-// func FetchAllUsersHandler(app *CoreModels.App) http.HandlerFunc {
-// 	return func(w http.ResponseWriter, r *http.Request) {
-// 		if CrosAllow(w, r) {
-// 			return
-// 		}
-// 		// Only allow GET requests
-// 		if r.Method != "GET" {
-// 			sendErrorResponse(w, "Method not allowed", http.StatusMethodNotAllowed)
-// 			return
-// 		}
+func FetchAllUsersHandler(app *CoreModels.App) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if CrosAllow(w, r) {
+			return
+		}
+		// Only allow GET requests
+		if r.Method != "GET" {
+			sendErrorResponse(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
 
-// 		var Users []models.User
+		var Users []models.User
 
-// 		Users, err := app.Users.FetchAllUsers()
+		Users, err := app.Users.FetchAllUsers()
 
-// 		if err != nil {
-// 			sendErrorResponse(w, fmt.Sprintf("Failed to fetch users: %v", err), http.StatusInternalServerError)
-// 			return
-// 		}
-// 		response := map[string]interface{}{
-// 			"Users": Users,
-// 		}
-// 		if err := json.NewEncoder(w).Encode(response); err != nil {
-// 			sendErrorResponse(w, fmt.Sprintf("Failed to encode Json: %v", err), http.StatusInternalServerError)
-// 			return
+		if err != nil {
+			sendErrorResponse(w, fmt.Sprintf("Failed to fetch users: %v", err), http.StatusInternalServerError)
+			return
+		}
+		response := map[string]interface{}{
+			"Users": Users,
+		}
+		if err := json.NewEncoder(w).Encode(response); err != nil {
+			sendErrorResponse(w, fmt.Sprintf("Failed to encode Json: %v", err), http.StatusInternalServerError)
+			return
 
-// 		}
-// 	}
-// }
+		}
+	}
+}
 
 func LogoutHandler(app *CoreModels.App) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
@@ -202,8 +202,8 @@ func CheckSessionHandler(app *CoreModels.App) http.HandlerFunc {
 		if CrosAllow(w, r) {
 			return
 		}
-        userID, ok := app.Users.GetUserIDFromSession(w, r)
-        if !ok {
+        userID, err := app.Users.GetUserIDFromSession(w, r)
+        if err!=nil {
             http.Error(w, "Unauthorized", http.StatusUnauthorized)
             return
         }

@@ -13,11 +13,15 @@ import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 
 import { MultiSelect } from "primereact/multiselect";
-        
+
+
+// app/api/session/route.js
 
 
 
 function CreatePostPage() {
+
+  
   const fileInputRef = useRef();
   const ImageDiv = useRef(null);
   const [ErrorType, setErrorType] = useState(null);
@@ -26,18 +30,44 @@ function CreatePostPage() {
 
   const [showUserPopup, setShowUserPopup] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
+  const[loading,setLoading] = useState(false);
 
   const [error,setError] = useState(false);
   const [errorMessage,seterrorMessage] = useState('');
   const [selectedUsers, setSelectedUsers] = useState([]); 
   const [formData, setFormData] = useState({
-      user_id: "1",
+      user_id: null,
       content: "",
         image_file:"",
       privacy_type_id: "1",
       group_id: "",
     });
 
+    
+    useEffect(() => {
+      const fetchSessionId = async () => {
+        try {
+          setLoading(false);
+          const res = await fetch("/api/session");
+          if (!res.ok) {
+            throw new Error("Failed to fetch session");
+          }
+          const data = await res.json();
+          console.log(data);
+          setFormData({ ...formData, user_id: data.sessionId });
+        } catch (err) {
+          console.error("Failed to fetch session ID", err);
+          setError("Failed to load session. Please refresh the page.");
+
+        }finally{
+          setLoading(false);
+        }
+      };
+
+      fetchSessionId();
+    }, []);
+    
+    
     const PrivateUsers = ()=>{
       setShowUserPopup(false);
       //alert(selectedUsers);
@@ -56,6 +86,11 @@ function CreatePostPage() {
       }
 
     }
+
+   
+
+
+
     useEffect(() => {
       const fetchUsersAndValidate = async () => {
         setError(false);
@@ -78,7 +113,7 @@ function CreatePostPage() {
 
     const handleSubmit = async (e) => {
       e.preventDefault();
-    
+   
       const postData = {
         user_id: formData.user_id,
         content: formData.content.trim(),
@@ -87,11 +122,13 @@ function CreatePostPage() {
         group_id: formData.group_id ? formData.group_id : null,
         visible_to: formData.privacy_type_id === "3" ? selectedUsers : [],
       };
+      //alert(postData.user_id)
       
       if(!error){
         try{
       const result = await fetch("http://localhost:8080/api/CreatePost", {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
@@ -111,7 +148,6 @@ function CreatePostPage() {
       //alert(`Post Data: ${postData.image_file}`);
     };
 
- 
  
 
   }
@@ -146,9 +182,6 @@ function CreatePostPage() {
       <h1>Create Post</h1>
 
       <form onSubmit={handleSubmit}>
-        <label>User ID:</label>
-        <input type="number" name="user_id" />
-        <br />
         <br />
         <label>Content:</label>
         <textarea

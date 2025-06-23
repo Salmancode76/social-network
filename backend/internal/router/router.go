@@ -29,7 +29,7 @@ func SetupRoutes(app *CoreModels.App) *http.ServeMux {
 	mux.HandleFunc("/api/check-session",handlers.CheckSessionHandler(app))
 
 	
-	// mux.HandleFunc(("/api/FetchAllUsers"),handlers.FetchAllUsersHandler(app))
+	mux.HandleFunc(("/api/FetchAllUsers"),handlers.FetchAllUsersHandler(app))
 
 	//Serve Images 
 	imageHandler := http.StripPrefix("/Image/", http.FileServer(http.Dir("../Image/")))

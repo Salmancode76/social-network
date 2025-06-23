@@ -77,7 +77,19 @@ func CreatePost(app *CoreModels.App) http.HandlerFunc {
 	}
 	
 
+	var id int
+	id ,err = app.Users.GetUserIDFromSession(w,r);
+	if err!=nil{
+		sendErrorResponse(w, fmt.Sprintf("Invalid image data: %v", err), http.StatusBadRequest)
+		return 
+	}
+
+
+	fmt.Println(post.UserID)
 	post.ImageFile,err = DownloadImage(post.ImageFile)
+
+
+	post.UserID = strconv.Itoa(id)
 
 	if err!=nil{
 		sendErrorResponse(w, fmt.Sprintf("Invalid image data: %v", err), http.StatusBadRequest)

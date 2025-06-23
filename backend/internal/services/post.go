@@ -64,7 +64,9 @@ func (p* PostModel) InsertPost(Post models.Post) (error){
 	
 
 	result, err := p.DB.Exec(stmt, &Post.UserID, &Post.Content, &Post.ImageFile, &Post.PrivacyTypeID, nil)
-
+	if err != nil {
+		return err
+	}
 	postID, err := result.LastInsertId()
 	if err != nil {
 		return err
