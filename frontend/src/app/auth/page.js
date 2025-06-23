@@ -1,10 +1,27 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
 import "../styles/auth.css";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 
 export default function AuthPage() {
+  const router = useRouter();
+
+   useEffect(() => {
+    async function checkSession() {
+      const res = await fetch("http://localhost:8080/api/check-session", {
+        credentials: "include",
+      });
+
+      if (res.ok) {
+        router.push("/"); // أو أي صفحة رئيسية
+      }
+    }
+
+    checkSession();
+  }, []);
+  
   const [isLogin, setIsLogin] = useState(true);
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [registerForm, setRegisterForm] = useState({
@@ -18,7 +35,6 @@ export default function AuthPage() {
     is_public: "",
   });
   const [errorMsg, setErrorMsg] = useState("");
-  const router = useRouter();
 
   const switchTo = (type) => {
     setErrorMsg("");
@@ -35,8 +51,12 @@ export default function AuthPage() {
         body: JSON.stringify(loginForm),
       });
       const data = await res.json();
-      if (data.status === "ok") router.push("/");
-      else setErrorMsg(data.message || "Login failed");
+      if (data.status === "ok"){
+window.dispatchEvent(new Event("session-changed"));
+
+        router.push("/");
+      }
+        else setErrorMsg(data.message || "Login failed");
     } catch (err) {
       setErrorMsg("Login error");
     }

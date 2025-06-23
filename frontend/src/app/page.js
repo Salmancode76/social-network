@@ -4,11 +4,27 @@ import Link from "next/link";
 import { FetchAllPosts } from "./utils/FetchAllPosts";
 import { Internal505 } from "./Errors/page";
 import "./styles/auth.css";
+import { useRouter } from "next/navigation";
+
 
 export default function Home() {
   const[posts,setPosts]= useState([]);
   const [hasError, setHasError] = useState(false);
+  const router = useRouter();
 
+  useEffect(() => {
+    async function checkSession() {
+      const res = await fetch("http://localhost:8080/api/check-session", {
+        credentials: "include",
+      });
+
+      if (!res.ok) {
+        router.push("/auth");
+      }
+    }
+
+    checkSession();
+  }, []);
 
   useEffect(() => {
     async function load() {

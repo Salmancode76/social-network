@@ -5,8 +5,10 @@ import (
 	"time"
 
 	"github.com/gofrs/uuid"
-	// "strconv"
 )
+
+
+
 var sessions = map[string]string{} // key is the session ID, value is the user ID
 
 var userSessions = map[string]string{}
@@ -15,51 +17,66 @@ func generateSessionID() string {
 	return uuid.Must(uuid.NewV4()).String()
 }
 
-func (p *UserModel) CreateSession(w http.ResponseWriter, userID string) {
-    // Generate a new UUID for the session ID
-    sessionID := generateSessionID()
+func(U *UserModel)  CreateSession(w http.ResponseWriter, userID string) {
+   sessionID := generateSessionID()
+	var existingSessionID string
+	err := U.DB.QueryRow("SELECT session_id FROM sessions WHERE user_id = ?", userID).Scan(&existingSessionID)
+	if err == nil {
 
-    if existingSessionID, exists := userSessions[userID]; exists {
-        delete(sessions, existingSessionID)
+		_, err := U.DB.Exec("DELETE FROM sessions WHERE session_id = ?", existingSessionID)
+		if err != nil {
+			http.Error(w,"Failed to delete old session", http.StatusInternalServerError )
+			return
+		}
+
 		http.SetCookie(w, &http.Cookie{
 			Name:     "session_id",
 			Value:    "",
-			Expires:  time.Now().Add(-1 * time.Hour), // Expire the old session cookie immediately
+			Expires:  time.Now().Add(-1 * time.Hour),
 			HttpOnly: true,
-            SameSite: http.SameSiteNoneMode,
-	        Secure:   true,
 		})
-    }
-    
-    // Store the session ID and associated userID in the session store
-    sessions[sessionID] = userID
-    userSessions[userID] = sessionID
+	}
 
-    // Set a cookie with the session ID
-    http.SetCookie(w, &http.Cookie{
-        Name:     "session_id",
-        Value:    sessionID,
-        Expires:  time.Now().Add(24 * time.Hour), 
-        HttpOnly: true,                          
-    })
+	expiresAt := time.Now().Add(24 * time.Hour)
+
+	_, err1 := U.DB.Exec("INSERT INTO sessions (session_id,user_id, expires_at) VALUES (?, ?, ?)", sessionID,userID , expiresAt)
+	if err1 != nil {
+        http.Error(w, "Failed to create session", http.StatusInternalServerError)
+        return
+    }
+
+	http.SetCookie(w , &http.Cookie{
+		Name: "session_id",
+		Value: sessionID,
+		Expires: expiresAt,
+		HttpOnly: true,
+	})
 }
 
-func (p *UserModel) GetUserIDFromSession(r *http.Request) (string, bool) {
+func(U *UserModel)  GetUserIDFromSession(w http.ResponseWriter,r *http.Request)  (int, bool) {
     cookie, err := r.Cookie("session_id")
     if err != nil {
-        return "", false
+        return 0, false
     }
-    
-    userID, exists := sessions[cookie.Value]
-    if !exists {
-        return "", false
+    var userID int
+    err = U.DB.QueryRow("SELECT user_id FROM sessions WHERE session_id = ?", cookie.Value).Scan(&userID)    
+     if err != nil {
+        
+        http.SetCookie(w, &http.Cookie{
+            Name:     "session_id",
+            Value:    "",
+            Path:     "/",
+            Expires:  time.Now().Add(-1 * time.Hour),
+            MaxAge:   -1,
+            HttpOnly: true,
+        })
+        return 0, false
     }
-
     return userID, true
 }
 
 // after the user log we delete 
-func (p *UserModel) DestroySession(w http.ResponseWriter, r *http.Request) {
+func(U *UserModel)  DestroySession(w http.ResponseWriter, r *http.Request) {
     cookie, err := r.Cookie("session_id")
     if err != nil {
         return
@@ -82,3 +99,6 @@ func (p *UserModel) DestroySession(w http.ResponseWriter, r *http.Request) {
         
     })
 }
+
+
+
