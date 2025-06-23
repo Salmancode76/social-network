@@ -52,11 +52,13 @@ func RegisterHandler(app *CoreModels.App) http.HandlerFunc {
 			"message": "Register successful",
 		}
 		user.Password = string(hashedPassword)
+		app.Users.Register(*user)
+		user1, err := app.Users.GetUserByEmail(user.Email)
+
+		app.Users.CreateSession(w, user1.ID)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(responseData)
-		app.Users.Register(*user)
-		app.Users.CreateSession(w, user.ID)
 
 	}
 }
