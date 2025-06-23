@@ -21,12 +21,31 @@ import { MultiSelect } from "primereact/multiselect";
 
 function CreatePostPage() {
 
+  const router = useRouter();
+
+   useEffect(() => {
+    async function checkSession() {
+      try {
+        const res = await fetch("http://localhost:8080/api/check-session", {
+          credentials: "include",
+        });
+
+        if (!res.ok) {
+          router.push("/auth");
+        }
+      } catch (error) {
+        console.error("Session check failed:", error);
+        router.push("/auth");
+      }
+    }
+
+    checkSession();
+  }, [router]);
   
   const fileInputRef = useRef();
   const ImageDiv = useRef(null);
   const [ErrorType, setErrorType] = useState(null);
 
-  const router = useRouter();
 
   const [showUserPopup, setShowUserPopup] = useState(false);
   const [allUsers, setAllUsers] = useState([]);
