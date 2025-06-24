@@ -412,6 +412,20 @@ DROP INDEX IF EXISTS idx_notifications_related_event;
 DROP TABLE IF EXISTS notifications;
 EOF
 
+# 18. Sessions table
+cat > "$MIGRATIONS_DIR/000018_create_user_sessions_table.up.sql" << 'EOF'
+CREATE TABLE IF NOT EXISTS user_sessions (
+  user_id INTEGER NOT NULL,
+  session_id VARCHAR(36) PRIMARY KEY,
+  expires_at DATETIME NOT NULL,
+  FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE CASCADE
+);
+
+EOF
+
+cat > "$MIGRATIONS_DIR/000018_create_user_sessions_table.down.sql" << 'EOF'
+DROP TABLE IF EXISTS user_sessions;
+EOF
 echo "✅ All migration files populated successfully!"
 echo ""
 echo "Created 17 migrations with proper UP and DOWN scripts:"

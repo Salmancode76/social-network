@@ -1,0 +1,7 @@
+
+*.exe
+*.log
+*.tmp
+.vscode
+.env
+*.sqlite

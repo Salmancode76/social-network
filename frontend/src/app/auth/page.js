@@ -1,9 +1,26 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+
 import "../styles/auth.css";
 import { useRouter } from "next/navigation";
 
 export default function AuthPage() {
+  const router = useRouter();
+
+   useEffect(() => {
+    async function checkSession() {
+      const res = await fetch("http://localhost:8080/api/check-session", {
+        credentials: "include",
+      });
+
+      if (res.ok) {
+        router.push("/"); 
+      }
+    }
+
+    checkSession();
+  }, []);
+  
   const [isLogin, setIsLogin] = useState(true);
   const [loginForm, setLoginForm] = useState({ email: "", password: "" });
   const [registerForm, setRegisterForm] = useState({
@@ -17,7 +34,6 @@ export default function AuthPage() {
     is_public: "",
   });
   const [errorMsg, setErrorMsg] = useState("");
-  const router = useRouter();
 
   const switchTo = (type) => {
     setErrorMsg("");
@@ -30,11 +46,16 @@ export default function AuthPage() {
       const res = await fetch("http://localhost:8080/api/Login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(loginForm),
       });
       const data = await res.json();
-      if (data.status === "ok") router.push("/");
-      else setErrorMsg(data.message || "Login failed");
+      if (data.status === "ok"){
+window.dispatchEvent(new Event("session-changed"));
+
+        router.push("/");
+      }
+        else setErrorMsg(data.message || "Login failed");
     } catch (err) {
       setErrorMsg("Login error");
     }
@@ -61,6 +82,7 @@ export default function AuthPage() {
       const res = await fetch("http://localhost:8080/api/Register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify(payload),
       });
       const data = await res.json();
@@ -115,7 +137,7 @@ export default function AuthPage() {
             </fieldset>
             <button type="submit" className="btn-login">LOGIN</button>
             <div className="switch-link">
-              <a href="#" onClick={() => switchTo("register")}>Don't have an account? Sign up</a>
+              <a href="#" onClick={() => switchTo("register")}>Do not have an account? Sign up</a>
             </div>
           </form>
         </div>

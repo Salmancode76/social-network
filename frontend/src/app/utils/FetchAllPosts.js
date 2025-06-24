@@ -1,7 +1,10 @@
-export async function FetchAllPosts(setPosts ) {
+"use server"
+export async function FetchAllPosts( ) {
   try{
   const response = await fetch("http://localhost:8080/api/FetchAllPosts", {
     method: "GET",
+    credentials: "include",
+
     headers: {
       "Content-Type": "application/json",
     },
@@ -11,7 +14,7 @@ export async function FetchAllPosts(setPosts ) {
   }
   const data = await response.json();
   //console.table(data.Posts)
-  setPosts(data.Posts);
+  return data.Posts;
 }catch(e){
     console.error("Error: ",e);  
     throw e;
