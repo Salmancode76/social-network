@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useRef } from "react";
 import Link from "next/link";
 import { FetchAllPosts } from "./utils/FetchAllPosts";
 import { Internal505 } from "./Errors/page";
@@ -7,6 +7,7 @@ import "./styles/auth.css";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
+  const postDiv = useRef(null);
   const [posts, setPosts] = useState([]);
   const [hasError, setHasError] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -63,7 +64,15 @@ export default function Home() {
             {posts && posts.length > 0 ? (
               posts.map((x) => (
                 <Link href={`/ViewPost?id=${x.ID}`} key={x.ID}>
-                  <div className="post">
+                  <div
+                    className="post"
+                    ref={postDiv}
+                    style={
+                      x.privacy_type_id === "3" ? { background: "red" } : {}
+                    }
+                  >
+                    <small> {x.userEmail}</small>
+
                     {x.image_file && (
                       <img
                         src={`http://localhost:8080/Image/Posts/${x.image_file}`}
@@ -73,7 +82,16 @@ export default function Home() {
                     <p>{x.content}</p>
                     <small>{x.CreatedAt}</small>
                     <br />
-                    <span>Privacy: {x.privacy_type_id}</span>
+                    <span>
+                      Privacy:{" "}
+                      {x.privacy_type_id === "1"
+                        ? "Public"
+                        : x.privacy_type_id === "2"
+                        ? "Followers"
+                        : "Private"}
+                    </span>
+                    <p>{x.UserFullname}</p>
+                    <p>{x.UserNickname != "" ? "AKA " + x.UserNickname : ""}</p>
                   </div>
                 </Link>
               ))

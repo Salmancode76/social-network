@@ -43,11 +43,11 @@ func (U *UserModel) GetUserByEmail(email string) (*models.User, error) {
 
 
 
-func(U *UserModel) FetchAllUsers() ([]models.User, error) {
+func(U *UserModel) FetchAllUsers( id int) ([]models.User, error) {
 	stmt := `SELECT id, first_name, last_name, nickname, email, date_of_birth, 
-	         password_hash, is_public, created_at FROM users`
+	         password_hash, is_public, created_at FROM users where id <> (?)`
 	var Users []models.User
-	rows, err := U.DB.Query(stmt)
+	rows, err := U.DB.Query(stmt,id)
 	
 	if err != nil {
 		return Users, err

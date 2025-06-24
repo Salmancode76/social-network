@@ -73,7 +73,24 @@ function CreatePostPage() {
           }
           const data = await res.json();
           console.log(data);
-          setFormData({ ...formData, user_id: data.sessionId });
+          const currentUserId = data.sessionId;
+
+          setFormData((prevFormData) => ({
+            ...prevFormData,
+            user_id: currentUserId,
+          }));
+          const users = await FetchAllUsers();
+          const formattedUsers = users.map((user) => ({
+            ...user,
+            label: `${user.first_name} ${user.last_name} | (${user.email})`,
+          }));
+
+  
+
+          setAllUsers(formattedUsers);
+
+
+
         } catch (err) {
           console.error("Failed to fetch session ID", err);
           setError("Failed to load session. Please refresh the page.");
@@ -114,13 +131,6 @@ function CreatePostPage() {
       const fetchUsersAndValidate = async () => {
         setError(false);
         seterrorMessage("");
-
-        const users = await FetchAllUsers();
-        const formattedUsers = users.map((user) => ({
-          ...user,
-          label: `${user.first_name} ${user.last_name} | (${user.email})`,
-        }));
-        setAllUsers(formattedUsers);
 
         ValidatePost();
       };

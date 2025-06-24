@@ -2,7 +2,7 @@ package services
 
 import (
 	"database/sql"
-	"fmt"
+	"log"
 	"social-network-backend/internal/models"
 )
 
@@ -10,24 +10,36 @@ type PostModel struct {
 	DB *sql.DB
 }
 
-func (p *PostModel) FetchAllPosts()([]models.Post,error){
+func (p *PostModel) FetchAllPosts(id int)([]models.Post,error){
 
 	//getting all public posts along with all private posts 
-	stmt:= `SELECT id,
-       user_id,
-       content,
-       image_path,
-       privacy_type_id,
-       group_id,
-       created_at
-  FROM posts
-  where privacy_type_id=1 or user_id =(?) or id IN (select post_id from post_privacy where user_id =(?))`
+	stmt:= 
+	`
+	SELECT 
+    p.id,
+    p.user_id,
+    p.content,
+    p.image_path,
+    p.privacy_type_id,
+    p.created_at,
+	u.nickname,
+	u.first_name || ' ' || u.last_name AS fullname
+FROM 
+    posts p
+JOIN 
+    users u ON u.id = p.user_id
+WHERE 
+    p.privacy_type_id = 1 
+    OR p.user_id = (?)
+    OR p.id IN (
+        SELECT post_id 
+        FROM post_privacy 
+        WHERE user_id = (?)
+    );
+`
 	var Posts []models.Post
-
-	//Hardcode user id 
-	var user_id int =1
-	//hardcoded user id
-	row,err := p.DB.Query(stmt,user_id,user_id)
+	//fmt.Print(id)
+	row,err := p.DB.Query(stmt,id,id)
 
 	if err != nil {
 	  return  Posts,err
@@ -35,9 +47,11 @@ func (p *PostModel) FetchAllPosts()([]models.Post,error){
 
   for row.Next(){
 	var Post models.Post
-	row.Scan(&Post.ID,&Post.UserID,&Post.Content,&Post.ImageFile,&Post.PrivacyTypeID,&Post.GroupID,&Post.CreatedAt)
-
-	Posts = append(Posts, Post)
+	 err:= row.Scan(&Post.ID,&Post.UserID,&Post.Content,&Post.ImageFile,&Post.PrivacyTypeID,&Post.CreatedAt,&Post.UserNickname,&Post.UserFullname)
+		if err!=nil{
+			log.Fatal(err)
+		}
+	 Posts = append(Posts, Post)
   }
 
  
@@ -77,7 +91,7 @@ func (p* PostModel) InsertPost(Post models.Post) (error){
 
 
 	if(Post.PrivacyTypeID == "3" && len(Post.VisibleTo)>0 ){
-		fmt.Print(Post.PrivacyTypeID)
+		//fmt.Print(Post.PrivacyTypeID)
 
 		stmt2:=`
 			INSERT INTO post_privacy (
@@ -87,7 +101,7 @@ func (p* PostModel) InsertPost(Post models.Post) (error){
 			VALUES (?, ?)
 
 		` 
-		fmt.Print(Post.VisibleTo)
+		//fmt.Print(Post.VisibleTo)
 		for i:=0;i<len(Post.VisibleTo);i++{
 			_, err := p.DB.Exec(stmt2, postID, Post.VisibleTo[i])
 			if err!=nil{
@@ -151,14 +165,17 @@ func(p*PostModel)FetchPostComments(id string)([]models.Comment,error){
 	stmt:=`
 	
 		select 
-		id,
-       user_id,
-       post_id,
-       content,
-	   image_path,
-       created_at
-		from comments
-		where post_id = (?);
+c.id,
+c.user_id,
+c.post_id,
+c.content,
+c.image_path,
+c.created_at,
+u.nickname,
+u.first_name || ' ' || u.last_name AS fullname
+from comments c
+JOIN users u ON c.user_id= u.id
+where c.post_id = (?);
 	
 	`
 
@@ -170,7 +187,11 @@ func(p*PostModel)FetchPostComments(id string)([]models.Comment,error){
 
 	for rows.Next(){
 		var comment models.Comment
-		rows.Scan(&comment.ID, &comment.UserID, &comment.PostID, &comment.Comment,&comment.ImageFile, &comment.CreatedAt)
+		rows.Scan(&comment.ID, &comment.UserID, &comment.PostID, &comment.Comment,&comment.ImageFile, &comment.CreatedAt,&comment.UserNickname,&comment.UserFullname)
+		
+	
+		
+		//fmt.Println(comment.UserNickname)
 		Comments = append(Comments, comment)
 	}
 	return Comments,nil

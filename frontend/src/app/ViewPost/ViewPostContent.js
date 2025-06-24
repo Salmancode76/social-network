@@ -21,6 +21,7 @@ export default function ViewPostContent() {
 
   const [formData, setFormData] = useState({
     image_file: "",
+    user_id: null,
   });
 
   const id = searchParams.get("id");
@@ -32,14 +33,16 @@ export default function ViewPostContent() {
       PostID: id,
       image_file: formData.image_file,
       content: comment,
-      user_id: "1",
+      user_id: formData.user_id,
       date: new Date().toISOString(),
     };
+    console.table(data)
 
     const result = await fetch(
       `http://localhost:8080/api/CreateComment?id=${id}`,
       {
         method: "POST",
+        credentials: "include",
         headers: {
           "Content-Type": "application/json",
         },
@@ -56,6 +59,30 @@ export default function ViewPostContent() {
     }
     await FetchPostByID(id, setPost);
   };
+
+  useEffect(() => {
+        const fetchSessionId = async () => {
+          try {
+            setLoading(false);
+            const res = await fetch("/api/session");
+            if (!res.ok) {
+              throw new Error("Failed to fetch session");
+            }
+            const data = await res.json();
+            setFormData({ ...formData, user_id: data.sessionId });
+
+          } catch (err) {
+            console.error("Failed to fetch session ID", err);
+            setError("Failed to load session. Please refresh the page.");
+  
+          }finally{
+            setLoading(false);
+          }
+        };
+  
+        fetchSessionId();
+      }, []);
+      
 
   useEffect(() => {
     const fetchData = async () => {
@@ -163,7 +190,7 @@ export default function ViewPostContent() {
               {console.table(commentObj)}
               <p>
                 <strong>User:</strong>{" "}
-                {commentObj.Username || `User ${commentObj.user_id}`}
+                {commentObj.Username || `${commentObj.user_id}`}
               </p>
               {commentObj.image_file ? (
                 <img
@@ -173,6 +200,16 @@ export default function ViewPostContent() {
               ) : null}
               <p>
                 <strong>Comment:</strong> {commentObj.content}
+              </p>
+
+              <p>
+                <strong>FullName:</strong>
+                {commentObj.UserFname}
+              </p>
+              <p>
+                {commentObj.UserNickname !== ""
+                  ? "Username: " + commentObj.UserNickname
+                  : ""}
               </p>
               <p>
                 <strong>Date:</strong>{" "}

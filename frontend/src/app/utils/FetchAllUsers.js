@@ -5,6 +5,7 @@ export async function FetchAllUsers() {
           "http://localhost:8080/api/FetchAllUsers",
           {
             method: "GET",
+            credentials: "include",
             headers: {
               "Content-Type": "application/json",
             },

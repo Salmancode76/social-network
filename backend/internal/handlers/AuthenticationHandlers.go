@@ -123,10 +123,21 @@ func FetchAllUsersHandler(app *CoreModels.App) http.HandlerFunc {
 			sendErrorResponse(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
+	
 
 		var Users []models.User
 
-		Users, err := app.Users.FetchAllUsers()
+
+		id,err:= app.Users.GetUserIDFromSession(w,r)
+		if err != nil {
+			sendErrorResponse(w, fmt.Sprintf("Failed to fetch users: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+
+		Users, err = app.Users.FetchAllUsers(id)
+
+		
 
 		if err != nil {
 			sendErrorResponse(w, fmt.Sprintf("Failed to fetch users: %v", err), http.StatusInternalServerError)

@@ -34,6 +34,8 @@ func(U *UserModel)  CreateSession(w http.ResponseWriter, userID string) {
 			Value:    "",
 			Expires:  time.Now().Add(-1 * time.Hour),
 			HttpOnly: true,
+
+            Path: "/",
 		})
 	}
 
@@ -96,6 +98,7 @@ func(U *UserModel)  DestroySession(w http.ResponseWriter, r *http.Request) {
         Value:    "",
         Expires:  time.Now().Add(-1 * time.Hour), // Expire the cookie immediately
         HttpOnly: true,
+        Path: "/",
         
     })
 }

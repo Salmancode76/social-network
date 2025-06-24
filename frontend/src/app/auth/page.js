@@ -179,7 +179,7 @@ window.dispatchEvent(new Event("session-changed"));
                   type="text"
                   value={registerForm.nickname}
                   onChange={(e) => setRegisterForm({ ...registerForm, nickname: e.target.value })}
-                  required
+                  
                 />
               </div>
               <div className="input-block">

@@ -80,12 +80,12 @@ func CreatePost(app *CoreModels.App) http.HandlerFunc {
 	var id int
 	id ,err = app.Users.GetUserIDFromSession(w,r);
 	if err!=nil{
-		sendErrorResponse(w, fmt.Sprintf("Invalid image data: %v", err), http.StatusBadRequest)
+		sendErrorResponse(w, fmt.Sprintf("Invalid id data: %v", err), http.StatusBadRequest)
 		return 
 	}
 
 
-	fmt.Println(post.UserID)
+	//fmt.Println(post.UserID)
 	post.ImageFile,err = DownloadImage(post.ImageFile)
 
 
@@ -96,7 +96,7 @@ func CreatePost(app *CoreModels.App) http.HandlerFunc {
 
 	}
 
-	fmt.Println("Data:", post)
+	//fmt.Println("Data:", post)
 
 	app.Posts.InsertPost(*post)	
 	//fmt.Print(post.UserID)
@@ -117,8 +117,17 @@ func FetchAllPosts(app * CoreModels.App) http.HandlerFunc{
 		}
 
 		var Posts []models.Post
-		Posts,err:= app.Posts.FetchAllPosts()
 
+
+		
+		id,err:=app.Users.GetUserIDFromSession(w,r)
+
+		if err!=nil{
+			sendErrorResponse(w, fmt.Sprintf("Failed to fetch posts: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		Posts,err= app.Posts.FetchAllPosts(id)
 		if err!=nil{
 			sendErrorResponse(w, fmt.Sprintf("Failed to fetch posts: %v", err), http.StatusInternalServerError)
 			return
@@ -206,7 +215,16 @@ func CreateComment(app * CoreModels.App) http.HandlerFunc{
 			return 
 		}
 
-		//fmt.Println(Comment)
+		//fmt.Println(Comment.UserID)
+
+		var id int
+		id ,err = app.Users.GetUserIDFromSession(w,r);
+		if err!=nil{
+			sendErrorResponse(w, fmt.Sprintf("Invalid id data: %v", err), http.StatusBadRequest)
+			return 
+		}
+
+		Comment.UserID = strconv.Itoa(id)
 
 		Comment.ImageFile,err = DownloadImage(Comment.ImageFile)
 		if err!=nil{
