@@ -56,7 +56,13 @@ export default function Navbar() {
       <div className="nav-buttons">
         {loggedIn && (
           <>
-            <button onClick={() => router.push("/CreatePost")}>Create Post</button>
+            <button onClick={() => router.push("/CreatePost")}>
+              Create Post
+            </button>
+            <button onClick={() => router.push("/CreateGroup")}>
+              Create Group
+            </button>
+
             <button onClick={logout}>Logout</button>
           </>
         )}

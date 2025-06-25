@@ -5,6 +5,7 @@ import { fileChangeHandler } from "../utils/fileChangeHandler";
 import { Internal505 } from "../Errors/page";
 import { useRouter } from "next/navigation";
 import {FetchAllUsers} from "../utils/FetchAllUsers"
+import CheckSession from "../utils/CheckSession";
 
 import "primereact/resources/themes/lara-light-blue/theme.css";
 
@@ -23,24 +24,7 @@ function CreatePostPage() {
 
   const router = useRouter();
 
-   useEffect(() => {
-    async function checkSession() {
-      try {
-        const res = await fetch("http://localhost:8080/api/check-session", {
-          credentials: "include",
-        });
 
-        if (!res.ok) {
-          router.push("/auth");
-        }
-      } catch (error) {
-        console.error("Session check failed:", error);
-        router.push("/auth");
-      }
-    }
-
-    checkSession();
-  }, [router]);
   
   const fileInputRef = useRef();
   const ImageDiv = useRef(null);
@@ -64,7 +48,10 @@ function CreatePostPage() {
 
     
     useEffect(() => {
+
       const fetchSessionId = async () => {
+      const ok = await CheckSession(router);
+      if (ok){
         try {
           setLoading(false);
           const res = await fetch("/api/session");
@@ -99,6 +86,7 @@ function CreatePostPage() {
           setLoading(false);
         }
       };
+    }
 
       fetchSessionId();
     }, []);

@@ -2,6 +2,7 @@
 import { useEffect, useState, Suspense, useRef } from "react";
 import Link from "next/link";
 import { FetchAllPosts } from "./utils/FetchAllPosts";
+import CheckSession from "./utils/CheckSession";
 import { Internal505 } from "./Errors/page";
 import "./styles/auth.css";
 import { useRouter } from "next/navigation";
@@ -14,40 +15,25 @@ export default function Home() {
   const router = useRouter();
 
   useEffect(() => {
-    async function checkSession() {
-      try {
-        const res = await fetch("http://localhost:8080/api/check-session", {
-          credentials: "include",
-        });
-
-        if (!res.ok) {
-          router.push("/auth");
+    async function init() {
+      const ok = await CheckSession(router);
+      if (ok) {
+        try {
+          setLoading(true);
+          const postsData = await FetchAllPosts();
+          setPosts(postsData || []);
+        } catch (e) {
+          console.error("Error fetching posts:", e);
+          setHasError(true);
+        } finally {
+          setLoading(false);
         }
-      } catch (error) {
-        console.error("Session check failed:", error);
-        router.push("/auth");
       }
     }
 
-    checkSession();
+    init();
   }, [router]);
-
-  useEffect(() => {
-    async function load() {
-      try {
-        setLoading(true);
-        const postsData = await FetchAllPosts(); 
-        setPosts(postsData || []);
-      } catch (e) {
-        console.error("Error fetching posts:", e);
-        setHasError(true);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    load();
-  }, []);
+  
 
   if (hasError) {
     return <Internal505 />;
@@ -73,9 +59,14 @@ export default function Home() {
                   >
                     <small> {x.userEmail}</small>
 
-                    {x.image_file && (
+                    { x.image_file && (
                       <img
                         src={`http://localhost:8080/Image/Posts/${x.image_file}`}
+                        onError={(e) => {
+                          e.target.onerror = null; 
+                          e.target.src =
+                            "http://localhost:8080/Image/Posts/images_notfound.png";
+                        }}
                         alt="Post image"
                       />
                     )}

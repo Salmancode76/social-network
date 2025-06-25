@@ -1,11 +1,12 @@
 "use client";
 
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
 import { FetchPostByID } from "../utils/FetchPostByID";
 import { Lost404 } from "../Errors/page";
 import { Internal505 } from "../Errors/page";
 import { fileChangeHandler } from "../utils/fileChangeHandler";
+import CheckSession from "../utils/CheckSession";
 
 export default function ViewPostContent() {
   const [post, setPost] = useState(null);
@@ -26,7 +27,11 @@ export default function ViewPostContent() {
 
   const id = searchParams.get("id");
 
+  const router = useRouter();
+
+
   const HandleCommentSubmit = async (e) => {
+    
     e.preventDefault();
 
     const data = {
@@ -37,6 +42,9 @@ export default function ViewPostContent() {
       date: new Date().toISOString(),
     };
     console.table(data)
+
+
+
 
     const result = await fetch(
       `http://localhost:8080/api/CreateComment?id=${id}`,
@@ -61,27 +69,27 @@ export default function ViewPostContent() {
   };
 
   useEffect(() => {
-        const fetchSessionId = async () => {
-          try {
-            setLoading(false);
-            const res = await fetch("/api/session");
-            if (!res.ok) {
-              throw new Error("Failed to fetch session");
-            }
-            const data = await res.json();
-            setFormData({ ...formData, user_id: data.sessionId });
-
-          } catch (err) {
-            console.error("Failed to fetch session ID", err);
-            setError("Failed to load session. Please refresh the page.");
-  
-          }finally{
-            setLoading(false);
+    const fetchSessionId = async () => {
+      const ok = await CheckSession(router);
+      if (ok) {
+        try {
+          setLoading(false);
+          const res = await fetch("/api/session");
+          if (!res.ok) {
+            throw new Error("Failed to fetch session");
           }
-        };
-  
-        fetchSessionId();
-      }, []);
+          const data = await res.json();
+          setFormData({ ...formData, user_id: data.sessionId });
+        } catch (err) {
+          console.error("Failed to fetch session ID", err);
+          setError("Failed to load session. Please refresh the page.");
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+    fetchSessionId();
+  }, []);
       
 
   useEffect(() => {
@@ -137,15 +145,22 @@ export default function ViewPostContent() {
     <>
       <div>
         <h2>Post Details</h2>
-        {post.image_file ? (
-          <img src={`http://localhost:8080/Image/Posts/${post.image_file}`} />
+        {post?.image_file ? (
+          <img
+            src={`http://localhost:8080/Image/Posts/${post.image_file}`}
+            onError={(e) => {
+              e.target.onerror = null;
+              e.target.src =
+                "http://localhost:8080/Image/Posts/images_notfound.png";
+            }}
+          />
         ) : null}
 
-        <p>ID: {post.ID}</p>
-        <p>User ID: {post.user_id}</p>
-        <p>Content: {post.content}</p>
-        <p>Created At: {post.CreatedAt}</p>
-        <p>Privacy Type ID: {post.privacy_type_id}</p>
+        <p>ID: {post?.ID}</p>
+        <p>User ID: {post?.user_id}</p>
+        <p>Content: {post?.content}</p>
+        <p>Created At: {post?.CreatedAt}</p>
+        <p>Privacy Type ID: {post?.privacy_type_id}</p>
       </div>
 
       <div>
@@ -177,7 +192,7 @@ export default function ViewPostContent() {
           </button>
         </form>
         <h3>Comments:</h3>
-        {post.Comments && post.Comments.length > 0 ? (
+        {post?.Comments && post?.Comments.length > 0 ? (
           post.Comments.map((commentObj, index) => (
             <div
               key={index}
