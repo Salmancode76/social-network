@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState, Suspense, useRef } from "react";
+import { useEffect, useState, Suspense } from "react";
+import ChatBox from "../components/ChatBox.js";
 import Link from "next/link";
 import { FetchAllPosts } from "./utils/FetchAllPosts";
 import CheckSession from "./utils/CheckSession";
@@ -91,6 +92,7 @@ export default function Home() {
             )}
           </>
         )}
+        <ChatBox />
       </div>
     </Suspense>
   );
