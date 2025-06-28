@@ -1,5 +1,10 @@
 "use client";
 
+import "primereact/resources/themes/lara-light-blue/theme.css";
+
+import "primereact/resources/primereact.min.css";
+
+import "primeicons/primeicons.css";
 import { useState ,useEffect} from "react";
 import { MultiSelect } from "primereact/multiselect";
 import { FetchAllUsers } from "../utils/FetchAllUsers";
@@ -11,13 +16,7 @@ function CreateGroupPage() {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
   const [showUserPopup, setShowUserPopup] = useState(false);
-  const [formData, setFormData] = useState({
-      user_id: null,
-      content: "",
-        image_file:"",
-      privacy_type_id: "1",
-      group_id: "",
-    });
+
   const PrivateUsers = () => {
     console.log("Selected users:", selectedUsers);
     setShowUserPopup(false);
@@ -32,13 +31,7 @@ function CreateGroupPage() {
               throw new Error("Failed to fetch session");
             }
             const data = await res.json();
-            console.log(data);
-            const currentUserId = data.sessionId;
-  
-            setFormData((prevFormData) => ({
-              ...prevFormData,
-              user_id: currentUserId,
-            }));
+            console.log(data);  
             const users = await FetchAllUsers();
             const formattedUsers = users.map((user) => ({
               ...user,
@@ -63,49 +56,102 @@ function CreateGroupPage() {
         fetchSessionId();
       }, []);
 
+
+      const handleSubmit = async ()=>{
+        const formData = {
+          title: title,
+          description: desc,
+          invited_users: selectedUsers,
+        };
+        let result ;
+        try {
+           result =await fetch("http://localhost:8080/api/CreateGroup", {
+            method: "POST",
+            credentials: "include",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+          });
+          if (!result.ok) {
+            throw new Error(`HTTP error: ${result.status}`);
+          }
+        } catch (e) {
+          console.error("Error: ", e);
+          throw e;
+        }    
+      }
+
   return (
     <div>
-      <label htmlFor="group-title">Title</label>
-      <input
-        id="group-title"
-        name="Group_title"
-        placeholder="Title"
-        onChange={(e) => setTitle(e.target.value)}
-      />
-      <br />
-      <label htmlFor="group-desc">Description</label>
-      <textarea
-        id="group-desc"
-        name="Group_Desc"
-        placeholder="Description"
-        onChange={(e) => setDesc(e.target.value)}
-      />
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          setTitle("");
+          setDesc("");
 
-      <button onClick={() => setShowUserPopup(true)}>Open User Selector</button>
+          handleSubmit();
+        }}
+      >
+        <label htmlFor="group-title">Title</label>
+        <input
+          id="group-title"
+          name="Group_title"
+          placeholder="Title"
+          value={title}
+          onChange={(e) => setTitle(e.target.value)}
+          required
+        />
+        <br />
+        <label htmlFor="group-desc">Description</label>
+        <textarea
+          id="group-desc"
+          name="Group_Desc"
+          placeholder="Description"
+          value={desc}
+          onChange={(e) => setDesc(e.target.value)}
+          required
+        />
 
-      {showUserPopup && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>Select users to share with</h3>
+        <button onClick={() => setShowUserPopup(true)}>
+          Open User Selector
+        </button>
+        <button onClick={() => setSelectedUsers([])}>Clear Invited User</button>
+        {showUserPopup && (
+          <div className="modal">
+            <div className="modal-content">
+              <h3>Select users to share with</h3>
 
-            <MultiSelect
-              value={selectedUsers}
-              onChange={(e) => setSelectedUsers(e.value)}
-              options={allUsers}
-              optionLabel="label"
-              optionValue="id"
-              display="chip"
-              placeholder="Select Users"
-              maxSelectedLabels={5}
-              style={{ width: "100%" }}
-            />
+              <MultiSelect
+                value={selectedUsers}
+                onChange={(e) => setSelectedUsers(e.value)}
+                options={allUsers}
+                optionLabel="label"
+                optionValue="id"
+                display="chip"
+                placeholder="Select Users"
+                maxSelectedLabels={5}
+                style={{ width: "100%" }}
+              />
 
-            <button className="btn" onClick={PrivateUsers}>
-              Done
-            </button>
+              <button className="btn" onClick={PrivateUsers}>
+                Done
+              </button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+        {selectedUsers.length > 0 && (
+          <>
+            <h1>Invited Users</h1>
+            {selectedUsers.map((id) => {
+              const user = allUsers.find((u) => u.id === id);
+              return <h3 key={id}>{user.label || "Unknown User"}</h3>;
+            })}
+          </>
+        )}
+        <br />
+        <button type="submit">Create Group</button>
+      </form>
     </div>
   );
 }

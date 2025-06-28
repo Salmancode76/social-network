@@ -19,6 +19,7 @@ func main() {
 		Session: make(map[string]string),
 		Posts: &services.PostModel{DB:DB},
 		Users:  &services.UserModel{DB: DB},
+		Groups: &services.GroupModel{DB: DB},
 		
 	}
 	s:= CoreModels.Server{

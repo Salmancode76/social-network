@@ -16,6 +16,7 @@ type App struct {
 	Server  *Server
 	Users   *services.UserModel
 	Posts   *services.PostModel
+	Groups 	*services.GroupModel
 	DB      *sql.DB
 	Session map[string]string
 	UserID  map[string]string

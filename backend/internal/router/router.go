@@ -31,6 +31,7 @@ func SetupRoutes(app *CoreModels.App) *http.ServeMux {
 	
 	mux.HandleFunc(("/api/FetchAllUsers"),handlers.FetchAllUsersHandler(app))
 
+	mux.HandleFunc("/api/CreateGroup",handlers.CreateGroup(app))
 	//Serve Images 
 	imageHandler := http.StripPrefix("/Image/", http.FileServer(http.Dir("../Image/")))
 	mux.Handle("/Image/", imageHandler)

@@ -39,3 +39,12 @@ type User struct {
 	IsPublic  string `json:"is_public"`
 	CreatedAt string `json:created_at`
 }
+type Group struct {
+	ID           string   `json:"id"`
+	Creator      string   `json:"creator"`
+	Title        string   `json:"title"`
+	Description  string   `json:"description"`
+	InvitedUsers []string `json:"invited_users"`
+	Members      string   `json:"members"`
+	CreatedAt    string   `json:"created_at"`
+}
