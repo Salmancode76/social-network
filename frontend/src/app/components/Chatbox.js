@@ -1,10 +1,17 @@
-// components/ChatBox.js
 "use client";
-import { useState } from "react";
+import { useEffect,useState } from "react";
+import { socket } from "../utils/ws";
 import "./ChatBox.css"; // Create this for styles
 
-export default function ChatBox() {
+export default function Chatbox() {
   const [isOpen, setIsOpen] = useState(false);
+
+ useEffect(() => {
+    if (isOpen) {
+      socket.send(JSON.stringify({ type: "get_users" }));
+    }
+  }, [isOpen]); // Runs when `isOpen` changes
+
 
   return (
     <>
@@ -14,13 +21,10 @@ export default function ChatBox() {
           <button className="close-btn" onClick={() => setIsOpen(false)}>✖</button>
         </div>
         <div className="chatbox-body">
-          <p>This is a chat placeholder.</p>
+          <p></p>
           {/* You can add real-time messages and input later */}
         </div>
-        <div className="chatbox-footer">
-          <input type="text" placeholder="Type a message..." />
-          <button>Send</button>
-        </div>
+       
       </div>
 
       <button
