@@ -1,11 +1,18 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState , useRef } from "react";
+import { fileChangeHandler } from "../utils/fileChangeHandler";
 
 import "../styles/auth.css";
 import { useRouter } from "next/navigation";
 
 export default function AuthPage() {
+    const fileInputRef = useRef();
+  
   const router = useRouter();
+ const [error,setError] = useState(false);
+  const [errorMessage,seterrorMessage] = useState('');
+  const [selectedUsers, setSelectedUsers] = useState([]);
+   const ImageDiv = useRef(null);
 
    useEffect(() => {
     async function checkSession() {
@@ -31,7 +38,9 @@ export default function AuthPage() {
     date: "",
     password: "",
     repassword: "",
+    aboutme: "",
     is_public: "",
+    image_file:"",
   });
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -75,6 +84,8 @@ window.dispatchEvent(new Event("session-changed"));
       email: registerForm.email,
       date_of_birth: registerForm.date,
       password: registerForm.password,
+      avatar: registerForm.image_file,
+      about_me: registerForm.aboutme,
       is_public: registerForm.is_public,
     };
 
@@ -217,6 +228,14 @@ window.dispatchEvent(new Event("session-changed"));
                   required
                 />
               </div>
+               <div className="input-block">
+                <label>About me</label>
+                <textarea
+                  value={registerForm.aboutme}
+                  onChange={(e) => setRegisterForm({ ...registerForm, aboutme: e.target.value })}
+                  required
+                />
+              </div>
               <div className="input-block">
                 <label>Privacy</label>
                 <div className="radio-group">
@@ -242,8 +261,27 @@ window.dispatchEvent(new Event("session-changed"));
                   </label>
                 </div>
               </div>
+               <div className="input-block">
+                <label>Avatar:</label>
+                <input
+                  type="file"
+                  accept="image/*"
+                  ref={fileInputRef}
+                  
+                  onChange={fileChangeHandler(
+                              setError,
+                              seterrorMessage,
+                              setRegisterForm,
+                              ImageDiv,
+                              fileInputRef
+                            )}
+                  required
+                />
+              </div>
+              
               {errorMsg && !isLogin && <p className="error-message">{errorMsg}</p>}
             </fieldset>
+            <div ref={ImageDiv} className="image"></div>
             <button type="submit" className="btn-signup">SIGN UP</button>
             <div className="switch-link">
               <a href="#" onClick={() => switchTo("login")}>Already have an account? Login</a>

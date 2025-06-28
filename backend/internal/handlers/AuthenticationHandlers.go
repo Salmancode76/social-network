@@ -1,12 +1,18 @@
 package handlers
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
+	"path/filepath"
 	"social-network-backend/internal/models"
 	CoreModels "social-network-backend/internal/models/app"
+	"strconv"
+	"strings"
 	"time"
 
 	"golang.org/x/crypto/bcrypt"
@@ -45,6 +51,13 @@ func RegisterHandler(app *CoreModels.App) http.HandlerFunc {
 			log.Println("Error hashing password:", err)
 			http.Error(w, "Internal server error", http.StatusInternalServerError)
 			return
+		}
+
+		user.Avatar, err = DownloadImageAvatar(user.Avatar)
+
+		if err != nil {
+			sendErrorResponse(w, fmt.Sprintf("Invalid image data: %v", err), http.StatusBadRequest)
+
 		}
 
 		responseData := map[string]interface{}{
@@ -123,21 +136,16 @@ func FetchAllUsersHandler(app *CoreModels.App) http.HandlerFunc {
 			sendErrorResponse(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
-	
 
 		var Users []models.User
 
-
-		id,err:= app.Users.GetUserIDFromSession(w,r)
+		id, err := app.Users.GetUserIDFromSession(w, r)
 		if err != nil {
 			sendErrorResponse(w, fmt.Sprintf("Failed to fetch users: %v", err), http.StatusInternalServerError)
 			return
 		}
 
-
 		Users, err = app.Users.FetchAllUsers(id)
-
-		
 
 		if err != nil {
 			sendErrorResponse(w, fmt.Sprintf("Failed to fetch users: %v", err), http.StatusInternalServerError)
@@ -169,7 +177,7 @@ func LogoutHandler(app *CoreModels.App) http.HandlerFunc {
 		var sessionID string
 		if cookie, err := r.Cookie("session_id"); err == nil {
 			sessionID = cookie.Value
-		} 
+		}
 
 		if sessionID == "" {
 			w.WriteHeader(http.StatusOK)
@@ -206,20 +214,48 @@ func LogoutHandler(app *CoreModels.App) http.HandlerFunc {
 	}
 }
 
-
 func CheckSessionHandler(app *CoreModels.App) http.HandlerFunc {
-    return func(w http.ResponseWriter, r *http.Request) {
+	return func(w http.ResponseWriter, r *http.Request) {
 
 		if CrosAllow(w, r) {
 			return
 		}
-        userID, err := app.Users.GetUserIDFromSession(w, r)
-        if err!=nil {
-            http.Error(w, "Unauthorized", http.StatusUnauthorized)
-            return
-        }
+		userID, err := app.Users.GetUserIDFromSession(w, r)
+		if err != nil {
+			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
 
-        w.WriteHeader(http.StatusOK)
-        w.Write([]byte(fmt.Sprintf("UserID: %d", userID)))
-    }
+		w.WriteHeader(http.StatusOK)
+		w.Write([]byte(fmt.Sprintf("UserID: %d", userID)))
+	}
+}
+
+func DownloadImageAvatar(ImageFile string) (string, error) {
+
+	var fileName string
+	if ImageFile == "" {
+		return fileName, nil // if there's no image, skip
+	}
+	filetype := "." + strings.Split((strings.Split((strings.Split(ImageFile, ",")[0]), ";")[0]), "/")[1]
+
+	data, err := base64.StdEncoding.DecodeString(strings.Split(ImageFile, ",")[1])
+
+	if err != nil {
+		return fileName, err
+	}
+
+	imageDir := filepath.Join("..", "Image", "Users")
+	files, _ := ioutil.ReadDir(imageDir)
+	id := len(files) + 1
+	//Image ID + User ID + Time + format
+	fileName = strconv.Itoa(id) + "_" + "1" + "_" + time.Now().Format("20060102_150405") + filetype
+
+	ImageFile = fileName
+
+	imagePath := filepath.Join(imageDir, fileName)
+	os.WriteFile(imagePath, data, 0644)
+
+	return fileName, nil
+
 }

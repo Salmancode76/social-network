@@ -12,8 +12,8 @@ type UserModel struct {
 }
 
 func (U *UserModel) Register(User models.User) error {
-	stmt := `INSERT INTO users (email , password_hash , first_name, last_name , date_of_birth, nickname,is_public) VALUES (?,?,?,?,?,?,?)	`
-	_, err := U.DB.Exec(stmt, &User.Email, &User.Password, &User.FirstN, &User.LastN, &User.Date, &User.Nickname, &User.IsPublic)
+	stmt := `INSERT INTO users (email , password_hash , first_name, last_name , date_of_birth,avatar, nickname,about_me,is_public) VALUES (?,?,?,?,?,?,?,?,?)	`
+	_, err := U.DB.Exec(stmt, &User.Email, &User.Password, &User.FirstN, &User.LastN, &User.Date,&User.Avatar, &User.Nickname,&User.Aboutme, &User.IsPublic)
 	if err != nil {
 		log.Printf("Register error: %v\n", err)
 		return err
@@ -90,3 +90,4 @@ func(U *UserModel) FetchAllUsers( id int) ([]models.User, error) {
 
 	return Users, nil
 }
+
