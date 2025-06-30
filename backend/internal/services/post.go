@@ -23,7 +23,8 @@ func (p *PostModel) FetchAllPosts(id int)([]models.Post,error){
     p.privacy_type_id,
     p.created_at,
 	u.nickname,
-	u.first_name || ' ' || u.last_name AS fullname
+	u.first_name || ' ' || u.last_name AS fullname,
+	u.avatar
 FROM 
     posts p
 JOIN 
@@ -47,7 +48,7 @@ WHERE
 
   for row.Next(){
 	var Post models.Post
-	 err:= row.Scan(&Post.ID,&Post.UserID,&Post.Content,&Post.ImageFile,&Post.PrivacyTypeID,&Post.CreatedAt,&Post.UserNickname,&Post.UserFullname)
+	 err:= row.Scan(&Post.ID,&Post.UserID,&Post.Content,&Post.ImageFile,&Post.PrivacyTypeID,&Post.CreatedAt,&Post.UserNickname,&Post.UserFullname,&Post.UserImage)
 		if err!=nil{
 			log.Fatal(err)
 		}
@@ -165,17 +166,18 @@ func(p*PostModel)FetchPostComments(id string)([]models.Comment,error){
 	stmt:=`
 	
 		select 
-c.id,
-c.user_id,
-c.post_id,
-c.content,
-c.image_path,
-c.created_at,
-u.nickname,
-u.first_name || ' ' || u.last_name AS fullname
-from comments c
-JOIN users u ON c.user_id= u.id
-where c.post_id = (?);
+		c.id,
+		c.user_id,
+		c.post_id,
+		c.content,
+		c.image_path,
+		c.created_at,
+		u.nickname,
+		u.first_name || ' ' || u.last_name AS fullname,
+		u.avatar
+		from comments c
+		JOIN users u ON c.user_id= u.id
+		where c.post_id = (?);
 	
 	`
 
@@ -187,7 +189,7 @@ where c.post_id = (?);
 
 	for rows.Next(){
 		var comment models.Comment
-		rows.Scan(&comment.ID, &comment.UserID, &comment.PostID, &comment.Comment,&comment.ImageFile, &comment.CreatedAt,&comment.UserNickname,&comment.UserFullname)
+		rows.Scan(&comment.ID, &comment.UserID, &comment.PostID, &comment.Comment,&comment.ImageFile, &comment.CreatedAt,&comment.UserNickname,&comment.UserFullname,&comment.UserImage)
 		
 	
 		

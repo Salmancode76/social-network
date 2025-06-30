@@ -1,5 +1,7 @@
 package models
 
+import "database/sql"
+
 type Post struct {
 	ID            string `json:"id`
 	UserID        string `json:"user_id"`
@@ -11,8 +13,9 @@ type Post struct {
 	GroupID       string `json:"group_id"`
 	CreatedAt     string `json:created_at`
 	Comments      []Comment
-	VisibleTo     []string `json:"visible_to"`
-	UserEmail     string   `json:"userEmail"`
+	VisibleTo     []string       `json:"visible_to"`
+	UserEmail     string         `json:"userEmail"`
+	UserImage     sql.NullString `json:"userImage"`
 }
 type Comment struct {
 	ID           string `json:"id`
@@ -21,6 +24,7 @@ type Comment struct {
 	UserID       string `json:"user_id"`
 	ImageFile    string `json:"image_file"`
 	UserFullname string `json:"UserFname"`
+	UserImage     sql.NullString `json:"userImage"`
 
 	UserNickname string `json:"UserNickname"`
 	Date         string `json:"date"`
