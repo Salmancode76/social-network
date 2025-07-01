@@ -1,18 +1,81 @@
 'use client';
-import { useState } from 'react';
-import './group.css';
 
-export default function CreateGroupButton() {
+import { useState, useEffect } from "react";
+import { MultiSelect } from "primereact/multiselect";
+import { FetchAllUsers } from "../utils/FetchAllUsers"; // Use the working utility
+import "primereact/resources/themes/lara-light-blue/theme.css";
+import "primereact/resources/primereact.min.css";
+import "primeicons/primeicons.css";
+import "./group.css";
+
+export default function CreateGroupButton({ onGroupCreated }) {
   const [showModal, setShowModal] = useState(false);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
+  const [title, setTitle] = useState("");
+  const [desc, setDesc] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
 
-  const handleSubmit = (e) => {
+  useEffect(() => {
+    if (showModal) {
+      const fetchUsers = async () => {
+        try {
+          setLoading(true);
+          
+          // Use the working approach from CreateGroup/page.js
+          const users = await FetchAllUsers();
+          const formatted = users.map((user) => ({
+            ...user,
+            label: `${user.first_name} ${user.last_name} (${user.email})`,
+            value: user.id,
+          }));
+          setAllUsers(formatted);
+          
+        } catch (err) {
+          console.error("Error loading users:", err);
+        } finally {
+          setLoading(false);
+        }
+      };
+      fetchUsers();
+    }
+  }, [showModal]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert(`Group "${title}" created!`);
-    setShowModal(false);
-    setTitle('');
-    setDescription('');
+
+    const formData = {
+      title,
+      description: desc,
+      invited_users: selectedUsers,
+    };
+
+    try {
+      const res = await fetch("http://localhost:8080/api/CreateGroup", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!res.ok) throw new Error("Failed to create group");
+
+      alert(`Group "${title}" created!`);
+      setShowModal(false);
+      setTitle("");
+      setDesc("");
+      setSelectedUsers([]);
+      
+      // Notify parent component that a group was created
+      if (onGroupCreated) {
+        onGroupCreated();
+      }
+    } catch (err) {
+      console.error("Error creating group:", err);
+      alert("Group creation failed.");
+    }
   };
 
   return (
@@ -39,12 +102,33 @@ export default function CreateGroupButton() {
               <label>
                 Description:
                 <textarea
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
+                  value={desc}
+                  onChange={(e) => setDesc(e.target.value)}
                   required
                 />
               </label>
-              <button type="submit">Create</button>
+
+              <label>
+                Invite Users:
+                {loading ? (
+                  <div>Loading users...</div>
+                ) : (
+                  <MultiSelect
+                    value={selectedUsers}
+                    onChange={(e) => setSelectedUsers(e.value)}
+                    options={allUsers}
+                    optionLabel="label"
+                    optionValue="value"
+                    placeholder="Select users"
+                    display="chip"
+                    style={{ width: "100%" }}
+                  />
+                )}
+              </label>
+
+              <button type="submit" className="submit-button">
+                Create
+              </button>
             </form>
           </div>
         </div>
