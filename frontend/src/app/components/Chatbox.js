@@ -1,30 +1,56 @@
 "use client";
-import { useEffect,useState } from "react";
+import { useEffect, useState } from "react";
 import { socket } from "../utils/ws";
-import "./ChatBox.css"; // Create this for styles
+import ChatUser from "./Chatuser.js";
+import "./ChatBox.css";
 
 export default function Chatbox() {
   const [isOpen, setIsOpen] = useState(false);
+  const [users, setUsers] = useState([]); 
 
- useEffect(() => {
+  
+  useEffect(() => {
+    const handleSocketMessage = (event) => {
+      try {
+        const data = JSON.parse(event.data);
+        console.log("Received message:", data);
+
+        if (data.type === "allusers" && Array.isArray(data.users)) {
+          setUsers(data.users);
+        }
+      } catch (err) {
+        console.error("Failed to parse message", err);
+      }
+    };
+
+    socket.addEventListener("message", handleSocketMessage);
+
+    return () => {
+      socket.removeEventListener("message", handleSocketMessage);
+    };
+  }, []); 
+
+  
+  useEffect(() => {
     if (isOpen) {
       socket.send(JSON.stringify({ type: "get_users" }));
     }
-  }, [isOpen]); // Runs when `isOpen` changes
-
+  }, [isOpen]); 
 
   return (
     <>
       <div className={`chatbox-container ${isOpen ? "open" : ""}`}>
         <div className="chatbox-header">
           <span>Chat</span>
-          <button className="close-btn" onClick={() => setIsOpen(false)}>✖</button>
+          <button className="close-btn" onClick={() => setIsOpen(false)}>
+            ✖
+          </button>
         </div>
         <div className="chatbox-body">
-          <p></p>
-          {/* You can add real-time messages and input later */}
+          {users.map((user) => (
+            <ChatUser key={user.id} user={user} />
+          ))}
         </div>
-       
       </div>
 
       <button
