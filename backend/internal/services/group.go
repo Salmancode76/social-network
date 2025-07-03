@@ -9,9 +9,9 @@ type GroupModel struct {
 	DB *sql.DB
 }
 
-func (g*GroupModel) CreateGroup(group * models.Group)(error){
+func (g *GroupModel) CreateGroup(group *models.Group) error {
 
-	stmt:=`
+	stmt := `
 	
 	INSERT INTO groups (
                        title,
@@ -25,7 +25,7 @@ func (g*GroupModel) CreateGroup(group * models.Group)(error){
                    );	
 	
 	`
-	result, err := g.DB.Exec(stmt,group.Title,group.Description,group.Creator)
+	result, err := g.DB.Exec(stmt, group.Title, group.Description, group.Creator)
 	if err != nil {
 		return err
 	}
@@ -33,8 +33,8 @@ func (g*GroupModel) CreateGroup(group * models.Group)(error){
 	if err != nil {
 		return err
 	}
-		for i:=0;i<len(group.InvitedUsers);i++{
-			_, err := g.DB.Exec(`
+	for i := 0; i < len(group.InvitedUsers); i++ {
+		_, err := g.DB.Exec(`
 			INSERT INTO group_members (
 				group_id,
 				user_id,
@@ -46,27 +46,29 @@ func (g*GroupModel) CreateGroup(group * models.Group)(error){
 			1,
 			group.Creator,
 		)
-		if err != nil{
+		if err != nil {
 			return err
 		}
-		}
-	
-		return nil
-	
+	}
+
+	return nil
+
 }
 
 func (g *GroupModel) GetAllGroups() ([]map[string]interface{}, error) {
 	stmt := `
-		SELECT 
-			g.id,
-			g.title,
-			g.description,
-			g.creator_id,
-			g.created_at
-		FROM groups g
-		ORDER BY g.created_at DESC
-	`
-	
+    SELECT 
+        g.id,
+        g.title,
+        g.description,
+        g.creator_id,
+        u.first_name || ' ' || u.last_name AS creator_name,
+        g.created_at
+    FROM groups g
+    JOIN users u ON g.creator_id = u.id
+    ORDER BY g.created_at DESC
+`
+
 	rows, err := g.DB.Query(stmt)
 	if err != nil {
 		return nil, err
@@ -75,18 +77,19 @@ func (g *GroupModel) GetAllGroups() ([]map[string]interface{}, error) {
 
 	var groups []map[string]interface{}
 	for rows.Next() {
-		var id, title, description, creatorID, createdAt string
-		err := rows.Scan(&id, &title, &description, &creatorID, &createdAt)
+		var id, title, description, creatorID, creatorName, createdAt string
+		err := rows.Scan(&id, &title, &description, &creatorID,  &creatorName, &createdAt)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		group := map[string]interface{}{
-			"id":          id,
-			"title":       title,
-			"description": description,
-			"creator_id":  creatorID,
-			"created_at":  createdAt,
+			"id":           id,
+			"title":        title,
+			"description":  description,
+			"creator_id":   creatorID,
+			"creator_name": creatorName, 
+			"created_at": createdAt,
 		}
 		groups = append(groups, group)
 	}
@@ -143,7 +146,7 @@ func (g *GroupModel) GetGroupMessages(groupID string) ([]map[string]interface{},
 		WHERE gm.group_id = ?
 		ORDER BY m.created_at ASC
 	`
-	
+
 	rows, err := g.DB.Query(stmt, groupID)
 	if err != nil {
 		return nil, err
@@ -157,7 +160,7 @@ func (g *GroupModel) GetGroupMessages(groupID string) ([]map[string]interface{},
 		if err != nil {
 			return nil, err
 		}
-		
+
 		message := map[string]interface{}{
 			"id":         id,
 			"content":    content,
