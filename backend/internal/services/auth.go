@@ -45,7 +45,7 @@ func (U *UserModel) GetUserByEmail(email string) (*models.User, error) {
 
 func(U *UserModel) FetchAllUsers( id int) ([]models.User, error) {
 	stmt := `SELECT id, first_name, last_name, nickname, email, date_of_birth, 
-	          is_public, created_at FROM users where id <> (?)`
+	          avatar,is_public,about_me, created_at FROM users where id <> (?)`
 	var Users []models.User
 	rows, err := U.DB.Query(stmt,id)
 	
@@ -65,7 +65,9 @@ func(U *UserModel) FetchAllUsers( id int) ([]models.User, error) {
 			&user.Nickname,
 			&user.Email,
 			&user.Date,
+			&avatar,
 			&user.IsPublic,
+			&user.Aboutme,
 			&user.CreatedAt,
 		)
 		if err != nil {
@@ -76,7 +78,7 @@ func(U *UserModel) FetchAllUsers( id int) ([]models.User, error) {
 		if avatar.Valid {
 			user.Avatar = avatar.String
 		} else {
-			user.Avatar = "" // or some default value
+			user.Avatar = "profile_notfound.png" // or some default value
 		}
 		
 		Users = append(Users, user)
@@ -90,10 +92,11 @@ func(U *UserModel) FetchAllUsers( id int) ([]models.User, error) {
 	return Users, nil
 }
 
-func(U *UserModel) FetchUserByID( id int) (models.User, error) {
+func(U *UserModel)FetchUserByID( id string) (*models.User, error) {
 	stmt := `SELECT id, first_name, last_name, nickname, email, date_of_birth,avatar, 
-	          is_public, created_at FROM users where id <> (?)`
+	          is_public,about_me, created_at FROM users where id = ?`
 	var user models.User
+	var avatar sql.NullString
 	 err := U.DB.QueryRow(stmt,id).Scan(
 			&user.ID,
 			&user.FirstN,
@@ -101,19 +104,22 @@ func(U *UserModel) FetchUserByID( id int) (models.User, error) {
 			&user.Nickname,
 			&user.Email,
 			&user.Date,
-			&user.Avatar,
+			&avatar,
 			&user.IsPublic,
+			&user.Aboutme,
 			&user.CreatedAt,
 		)
 	
 	if err != nil {
-		return user, err
+		return &user, err
 	}
 	
-	if user.Avatar == "" {
+	if avatar.Valid {
+		user.Avatar = avatar.String
+	} else {
 		user.Avatar = "profile_notfound.png"
 	}
 	
 
-	return user, nil
+	return &user, nil
 }

@@ -30,7 +30,7 @@ func SetupRoutes(app *CoreModels.App) *http.ServeMux {
 
 	mux.HandleFunc(("/api/FetchAllUsers"),handlers.FetchAllUsersHandler(app))
 
-	mux.HandleFunc(("/api/FetchAllUsers"),handlers.FetchAllUsersHandler(app))
+	mux.HandleFunc(("/api/FetchUserByID"),handlers.UserDataHandler(app))
 
 
 
