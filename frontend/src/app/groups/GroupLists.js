@@ -58,14 +58,18 @@ export default function GroupLists({ onGroupClick }) {
       <div className="group-list">
         {groups.length > 0 ? (
           groups.map((group) => (
-            <div 
-              key={group.id} 
+            <div
+              key={group.id}
               className="group-item clickable"
               onClick={() => handleGroupClick(group)}
             >
               <h3>{group.title}</h3>
               <p>{group.description}</p>
-              <small>Created: {new Date(group.created_at).toLocaleDateString()}</small>
+              <small>
+                Created: {new Date(group.created_at).toLocaleDateString()}<br />
+                Created by: {group.creator_name}
+              </small>
+
             </div>
           ))
         ) : (
