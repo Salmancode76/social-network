@@ -24,6 +24,10 @@ export default function ProfilePage(){
     
         checkSession();
       }, [router]);
+
+      const response = await fetch(
+        ``
+      )
     return (
         <div>
             profile

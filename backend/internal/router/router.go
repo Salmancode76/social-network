@@ -28,8 +28,11 @@ func SetupRoutes(app *CoreModels.App) *http.ServeMux {
 
 	mux.HandleFunc("/api/check-session",handlers.CheckSessionHandler(app))
 
-	
 	mux.HandleFunc(("/api/FetchAllUsers"),handlers.FetchAllUsersHandler(app))
+
+	mux.HandleFunc(("/api/FetchAllUsers"),handlers.FetchAllUsersHandler(app))
+
+
 
 	mux.HandleFunc("/api/CreateGroup",handlers.CreateGroup(app))
 	mux.HandleFunc("/api/FetchAllGroups",handlers.FetchAllGroups(app))

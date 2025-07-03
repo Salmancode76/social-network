@@ -45,7 +45,7 @@ func (U *UserModel) GetUserByEmail(email string) (*models.User, error) {
 
 func(U *UserModel) FetchAllUsers( id int) ([]models.User, error) {
 	stmt := `SELECT id, first_name, last_name, nickname, email, date_of_birth, 
-	         password_hash, is_public, created_at FROM users where id <> (?)`
+	          is_public, created_at FROM users where id <> (?)`
 	var Users []models.User
 	rows, err := U.DB.Query(stmt,id)
 	
@@ -65,7 +65,6 @@ func(U *UserModel) FetchAllUsers( id int) ([]models.User, error) {
 			&user.Nickname,
 			&user.Email,
 			&user.Date,
-			&user.Password,
 			&user.IsPublic,
 			&user.CreatedAt,
 		)
@@ -91,3 +90,30 @@ func(U *UserModel) FetchAllUsers( id int) ([]models.User, error) {
 	return Users, nil
 }
 
+func(U *UserModel) FetchUserByID( id int) (models.User, error) {
+	stmt := `SELECT id, first_name, last_name, nickname, email, date_of_birth,avatar, 
+	          is_public, created_at FROM users where id <> (?)`
+	var user models.User
+	 err := U.DB.QueryRow(stmt,id).Scan(
+			&user.ID,
+			&user.FirstN,
+			&user.LastN,
+			&user.Nickname,
+			&user.Email,
+			&user.Date,
+			&user.Avatar,
+			&user.IsPublic,
+			&user.CreatedAt,
+		)
+	
+	if err != nil {
+		return user, err
+	}
+	
+	if user.Avatar == "" {
+		user.Avatar = "profile_notfound.png"
+	}
+	
+
+	return user, nil
+}
