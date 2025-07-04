@@ -130,6 +130,9 @@ export default function GroupChat({ group, onBack }) {
           <p>{group.description}</p>
         </div>
       </div>
+      <div>Chats</div>
+      <div>Posts</div>
+      <div>Events</div>
 
       {/* Messages area */}
       <div className="messages-container">

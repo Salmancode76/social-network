@@ -2,7 +2,6 @@ package services
 
 import (
 	"database/sql"
-	"log"
 	"social-network-backend/internal/models"
 )
 
@@ -50,7 +49,7 @@ WHERE
 	var Post models.Post
 	 err:= row.Scan(&Post.ID,&Post.UserID,&Post.Content,&Post.ImageFile,&Post.PrivacyTypeID,&Post.CreatedAt,&Post.UserNickname,&Post.UserFullname,&Post.UserImage)
 		if err!=nil{
-			log.Fatal(err)
+			return Posts,err
 		}
 	 Posts = append(Posts, Post)
   }

@@ -202,6 +202,20 @@ export default function ViewPostContent() {
                 margin: "5px 0",
               }}
             >
+              <div className="avatar_div">
+                <img
+                  className="avatar-img"
+                  src={`http://localhost:8080/Image/Users/${
+                    commentObj.userImage?.String || "profile_notfound.png"
+                  }`}
+                  onError={(e) => {
+                    e.target.onerror = null;
+                    e.target.src =
+                      "http://localhost:8080/Image/Users/profile_notfound.png";
+                  }}
+                  alt="User avatar"
+                />
+              </div>
               {console.table(commentObj)}
               <p>
                 <strong>User:</strong>{" "}

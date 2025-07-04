@@ -105,7 +105,7 @@ ORDER BY g.created_at DESC
 		if request_status_id.Valid {
 			statusID = request_status_id.String
 		} else {
-			statusID = ""  
+			statusID = ""  // or "0" or whatever default
 		}
 		
 		group := map[string]interface{}{
