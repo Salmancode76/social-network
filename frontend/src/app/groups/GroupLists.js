@@ -145,9 +145,9 @@ export default function GroupLists({ onGroupClick }) {
                         </span>
                       ) : group.request_status_id === "5" ? (
                         <span className="member-label">Your group</span>
-                      ) :  group.request_status_id === "4" ? (
+                      ) : group.request_status_id === "4" ? (
                         <span className="member-label">Your request is sent</span>
-                      ): null}
+                      ) : null}
                     </div>
                   )}
                 </div>
