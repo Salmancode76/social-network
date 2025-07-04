@@ -20,7 +20,7 @@ func main() {
 		Posts: &services.PostModel{DB:DB},
 		Users:  &services.UserModel{DB: DB},
 		Groups: &services.GroupModel{DB: DB},
-		
+		Notifications : &services.NotificationModel{DB: DB},
 	}
 	s:= CoreModels.Server{
 		HTTP: &http.Server{

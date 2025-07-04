@@ -1,19 +1,20 @@
-'use client';
-import { useState, useEffect } from 'react';
-import { FetchAllGroups } from '../utils/FetchAllGroups';
-import './group.css';
+"use client";
+import { useState, useEffect } from "react";
+import { FetchAllGroups } from "../utils/FetchAllGroups";
+import "./group.css";
 
 export default function GroupLists({ onGroupClick }) {
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [requestStatuses, setRequestStatuses] = useState({}); // Track per group
 
   const fetchGroups = async () => {
     try {
       setLoading(true);
       setError(null);
       const fetchedGroups = await FetchAllGroups();
-      console.log("Groups received:", fetchedGroups);
+      console.table("Groups received:", fetchedGroups);
       setGroups(fetchedGroups);
     } catch (error) {
       console.error("Failed to fetch groups:", error);
@@ -31,6 +32,50 @@ export default function GroupLists({ onGroupClick }) {
   const handleGroupClick = (group) => {
     if (onGroupClick) {
       onGroupClick(group);
+    }
+  };
+
+  const handleRequestToJoin = async (id) => {
+    try {
+      setRequestStatuses((prev) => ({ ...prev, [id]: "pending" }));
+
+      const response = await fetch(
+        `http://localhost:8080/api/RequestJoin?id=${id}`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+
+      setRequestStatuses((prev) => ({ ...prev, [id]: "requested" }));
+
+    } catch (e) {
+      console.error("Error: ", e);
+      setRequestStatuses((prev) => ({ ...prev, [id]: "error" }));
+
+      setTimeout(() => {
+        setRequestStatuses((prev) => ({ ...prev, [id]: null }));
+      }, 3000);
+    }
+  };
+
+  const getButtonContent = (groupId, requestStatus) => {
+    switch (requestStatus) {
+      case "pending":
+        return { text: "Sending...", disabled: true };
+      case "requested":
+        return { text: "Request Sent", disabled: true };
+      case "error":
+        return { text: "Error - Try Again", disabled: false };
+      default:
+        return { text: "+ Request to join", disabled: false };
     }
   };
 
@@ -57,23 +102,62 @@ export default function GroupLists({ onGroupClick }) {
     <div className="group-list-container">
       <div className="group-list">
         {groups.length > 0 ? (
-          groups.map((group) => (
-            <div
-              key={group.id}
-              className="group-item clickable"
-              onClick={() => handleGroupClick(group)}
-            >
-              <h3>{group.title}</h3>
-              <p>{group.description}</p>
-              <small>
-                Created: {new Date(group.created_at).toLocaleDateString()}<br />
-                Created by: {group.creator_name}
-              </small>
+          groups.map((group) => {
+            const requestStatus = requestStatuses[group.id];
+            const buttonInfo = getButtonContent(group.id, requestStatus);
 
-            </div>
-          ))
+            return (
+              <div
+                key={group.id}
+                className="group-item clickable"
+                onClick={() => group.isMember && handleGroupClick(group)}
+              >
+                <h3>{group.title}</h3>
+                <p>{group.description}</p>
+                <small>
+                  Created: {new Date(group.created_at).toLocaleDateString()}
+                </small>
+                <div>
+                  {!group.isMember && !group.isInvited ? (
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault();
+                        if (!buttonInfo.disabled) {
+                          handleRequestToJoin(group.id);
+                        }
+                      }}
+                    >
+                      <button
+                        type="submit"
+                        disabled={buttonInfo.disabled}
+                        className={
+                          requestStatus === "error" ? "error-button" : ""
+                        }
+                      >
+                        {buttonInfo.text}
+                      </button>
+                    </form>
+                  ) : (
+                    <div>
+                      {group.request_status_id === "1" ? (
+                        <span className="member-label">
+                          Your are invited
+                        </span>
+                      ) : group.request_status_id === "5" ? (
+                        <span className="member-label">Your group</span>
+                      ) :  group.request_status_id === "4" ? (
+                        <span className="member-label">Your request is sent</span>
+                      ): null}
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })
         ) : (
-          <div className="group-item">No groups found. Create your first group!</div>
+          <div className="group-item">
+            No groups found. Create your first group!
+          </div>
         )}
       </div>
     </div>

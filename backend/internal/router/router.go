@@ -38,6 +38,13 @@ func SetupRoutes(app *CoreModels.App) *http.ServeMux {
 	mux.HandleFunc("/api/FetchAllGroups",handlers.FetchAllGroups(app))
 	mux.HandleFunc("/api/group/messages", handlers.GetGroupMessages(app))
 	mux.HandleFunc("/api/group/send-message", handlers.SendGroupMessage(app))
+
+
+
+	mux.HandleFunc("/api/RequestJoin",handlers.SendRequestToJoin(app))
+	mux.HandleFunc("/api/GetAllNotifications",handlers.GetAllNotifications(app))
+
+
 	//Serve Images 
 	imageHandler := http.StripPrefix("/Image/", http.FileServer(http.Dir("../Image/")))
 	mux.Handle("/Image/", imageHandler)

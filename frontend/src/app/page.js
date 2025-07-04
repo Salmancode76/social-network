@@ -57,13 +57,27 @@ export default function Home() {
                       x.privacy_type_id === "3" ? { background: "red" } : {}
                     }
                   >
+                    <div className="avatar_div">
+                      <img
+                        className="avatar-img"
+                        src={`http://localhost:8080/Image/Users/${
+                          x.userImage?.String || "profile_notfound.png"
+                        }`}
+                        onError={(e) => {
+                          e.target.onerror = null;
+                          e.target.src =
+                            "http://localhost:8080/Image/Users/profile_notfound.png";
+                        }}
+                        alt="User avatar"
+                      />
+                    </div>
                     <small> {x.userEmail}</small>
 
-                    { x.image_file && (
+                    {x.image_file && (
                       <img
                         src={`http://localhost:8080/Image/Posts/${x.image_file}`}
                         onError={(e) => {
-                          e.target.onerror = null; 
+                          e.target.onerror = null;
                           e.target.src =
                             "http://localhost:8080/Image/Posts/images_notfound.png";
                         }}

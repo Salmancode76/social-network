@@ -57,8 +57,14 @@ func FetchAllGroups(app *CoreModels.App) http.HandlerFunc {
 			sendErrorResponse(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
 		}
+		id,err:=app.Users.GetUserIDFromSession(w,r)
 
-		groups, err := app.Groups.GetAllGroups()
+		if err!=nil{
+			sendErrorResponse(w, fmt.Sprintf("Failed to fetch posts: %v", err), http.StatusInternalServerError)
+			return
+		}
+
+		groups, err := app.Groups.GetAllGroups(id)
 		if err != nil {
 			sendErrorResponse(w, fmt.Sprintf("Failed to fetch groups: %v", err), http.StatusInternalServerError)
 			return
@@ -138,5 +144,35 @@ func GetGroupMessages(app *CoreModels.App) http.HandlerFunc {
 
 		w.Header().Set("Content-Type", "application/json")
 		json.NewEncoder(w).Encode(response)
+	}
+}
+
+
+func SendRequestToJoin(app *CoreModels.App) http.HandlerFunc{
+	return func(w http.ResponseWriter, r *http.Request) {
+		if CrosAllow(w, r) {
+			return
+		}
+
+		if r.Method != "POST" {
+			sendErrorResponse(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		var id int
+		id ,err := app.Users.GetUserIDFromSession(w,r);
+		if err!=nil{
+			sendErrorResponse(w, fmt.Sprintf("Invalid id data: %v", err), http.StatusBadRequest)
+			return 
+		}
+		group_id,err:= strconv.Atoi(r.URL.Query().Get("id"))
+
+		if err!=nil{
+			sendErrorResponse(w, fmt.Sprintf("Invalid id data: %v", err), http.StatusBadRequest)
+			return 
+		}
+
+		app.Notifications.SendRequestToJoinGroup(group_id,id)
+
 	}
 }

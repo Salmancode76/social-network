@@ -57,6 +57,7 @@ func(U *UserModel) FetchAllUsers( id int) ([]models.User, error) {
 	for rows.Next() {
 		var user models.User
 		var avatar sql.NullString
+		var aboutMe sql.NullString
 		
 		err := rows.Scan(
 			&user.ID,
@@ -67,13 +68,17 @@ func(U *UserModel) FetchAllUsers( id int) ([]models.User, error) {
 			&user.Date,
 			&avatar,
 			&user.IsPublic,
-			&user.Aboutme,
+			&aboutMe,
 			&user.CreatedAt,
 		)
 		if err != nil {
 			return Users, err
 		}
 		
+		if aboutMe.Valid{
+			user.Aboutme = aboutMe.String
+		}
+
 		// Handle the nullable avatar field
 		if avatar.Valid {
 			user.Avatar = avatar.String

@@ -51,4 +51,20 @@ type Group struct {
 	InvitedUsers []string `json:"invited_users"`
 	Members      string   `json:"members"`
 	CreatedAt    string   `json:"created_at"`
+	request_status_id sql.NullString   `json:request_status_id`
+}
+
+type Notification struct {
+	ID                 int     `json:"id"`
+	UserID             int     `json:"user_id"`
+	UserFullName  		string `json:"user_fullName"`
+	GroupTitle			string `json:"group_title"`
+	NotificationTypeID int     `json:"notification_type_id"`
+	NotificationType   string  `json:"notification_type"`
+	Message            string  `json:"message"`
+	RelatedUserID      *int    `json:"related_user_id"`
+	RelatedGroupID     *int    `json:"related_group_id"`
+	RelatedEventID     *int    `json:"related_event_id"`
+	IsRead             bool    `json:"is_read"`
+	CreatedAt          string  `json:"created_at"`
 }

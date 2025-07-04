@@ -33,8 +33,17 @@ func (g *GroupModel) CreateGroup(group *models.Group) error {
 	if err != nil {
 		return err
 	}
-	for i := 0; i < len(group.InvitedUsers); i++ {
-		_, err := g.DB.Exec(`
+	//Add the group creator as a member
+	stmt3:=`INSERT INTO group_members (
+				group_id,
+				user_id,
+				request_status_id,
+				invited_by
+			) VALUES (?, ?, ?, ?)`
+	_,err= g.DB.Exec(stmt3,group_id,group.Creator,5,group.Creator)
+	
+		for i:=0;i<len(group.InvitedUsers);i++{
+			_, err := g.DB.Exec(`
 			INSERT INTO group_members (
 				group_id,
 				user_id,
@@ -55,21 +64,28 @@ func (g *GroupModel) CreateGroup(group *models.Group) error {
 
 }
 
-func (g *GroupModel) GetAllGroups() ([]map[string]interface{}, error) {
+func (g *GroupModel) GetAllGroups(id int) ([]map[string]interface{}, error) {
 	stmt := `
-    SELECT 
-        g.id,
-        g.title,
-        g.description,
-        g.creator_id,
-        u.first_name || ' ' || u.last_name AS creator_name,
-        g.created_at
-    FROM groups g
-    JOIN users u ON g.creator_id = u.id
-    ORDER BY g.created_at DESC
-`
+	SELECT 
+    g.id,
+    g.title,
+    g.description,
+    CASE
+        WHEN (gm.user_id IS NOT NULL AND gm.user_id = ?) OR g.creator_id = ? THEN true
+        ELSE false
+    END AS is_member,
+    g.creator_id,
+    g.created_at,
+    gm.request_status_id
+FROM groups g
+LEFT JOIN group_members gm 
+    ON gm.group_id = g.id AND gm.user_id = ?
+ORDER BY g.created_at DESC
 
-	rows, err := g.DB.Query(stmt)
+
+	`
+	
+	rows, err := g.DB.Query(stmt,id,id,id)
 	if err != nil {
 		return nil, err
 	}
@@ -77,19 +93,29 @@ func (g *GroupModel) GetAllGroups() ([]map[string]interface{}, error) {
 
 	var groups []map[string]interface{}
 	for rows.Next() {
-		var id, title, description, creatorID, creatorName, createdAt string
-		err := rows.Scan(&id, &title, &description, &creatorID,  &creatorName, &createdAt)
+		var id, title, description, creatorID, createdAt  string
+		var request_status_id sql.NullString 
+		var isMember bool
+		err := rows.Scan(&id, &title, &description,&isMember, &creatorID, &createdAt,&request_status_id)
 		if err != nil {
 			return nil, err
 		}
 
+		var statusID string
+		if request_status_id.Valid {
+			statusID = request_status_id.String
+		} else {
+			statusID = ""  // or "0" or whatever default
+		}
+		
 		group := map[string]interface{}{
-			"id":           id,
-			"title":        title,
-			"description":  description,
-			"creator_id":   creatorID,
-			"creator_name": creatorName, 
-			"created_at": createdAt,
+			"id":          id,
+			"title":       title,
+			"description": description,
+			"creator_id":  creatorID,
+			"created_at":  createdAt,
+			"isMember":isMember,
+			"request_status_id":statusID,
 		}
 		groups = append(groups, group)
 	}
