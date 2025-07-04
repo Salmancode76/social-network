@@ -56,7 +56,7 @@ export default function Navbar() {
       <div className="nav-buttons">
         {loggedIn && (
           <>
-           <button onClick={() => router.push("/Profile")}>
+           <button onClick={() => router.push("/Profile?id={}")}>
               My Profile
             </button>
             <button onClick={() => router.push("/CreatePost")}>
