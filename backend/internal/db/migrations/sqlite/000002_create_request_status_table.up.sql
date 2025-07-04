@@ -4,4 +4,4 @@ CREATE TABLE IF NOT EXISTS request_status (
 );
 
 INSERT OR IGNORE INTO request_status (status) VALUES 
-    ('pending'), ('accepted'), ('declined'), ('blocked');
+    ('invited'), ('accepted'), ('request'), ('declined'),('creator');

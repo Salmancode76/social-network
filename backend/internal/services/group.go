@@ -9,9 +9,9 @@ type GroupModel struct {
 	DB *sql.DB
 }
 
-func (g*GroupModel) CreateGroup(group * models.Group)(error){
+func (g *GroupModel) CreateGroup(group *models.Group) error {
 
-	stmt:=`
+	stmt := `
 	
 	INSERT INTO groups (
                        title,
@@ -25,7 +25,7 @@ func (g*GroupModel) CreateGroup(group * models.Group)(error){
                    );	
 	
 	`
-	result, err := g.DB.Exec(stmt,group.Title,group.Description,group.Creator)
+	result, err := g.DB.Exec(stmt, group.Title, group.Description, group.Creator)
 	if err != nil {
 		return err
 	}
@@ -55,13 +55,13 @@ func (g*GroupModel) CreateGroup(group * models.Group)(error){
 			1,
 			group.Creator,
 		)
-		if err != nil{
+		if err != nil {
 			return err
 		}
-		}
-	
-		return nil
-	
+	}
+
+	return nil
+
 }
 
 func (g *GroupModel) GetAllGroups(id int) ([]map[string]interface{}, error) {
@@ -172,7 +172,7 @@ func (g *GroupModel) GetGroupMessages(groupID string) ([]map[string]interface{},
 		WHERE gm.group_id = ?
 		ORDER BY m.created_at ASC
 	`
-	
+
 	rows, err := g.DB.Query(stmt, groupID)
 	if err != nil {
 		return nil, err
@@ -186,7 +186,7 @@ func (g *GroupModel) GetGroupMessages(groupID string) ([]map[string]interface{},
 		if err != nil {
 			return nil, err
 		}
-		
+
 		message := map[string]interface{}{
 			"id":         id,
 			"content":    content,

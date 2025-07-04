@@ -1,12 +1,14 @@
-'use client';
-import { useState, useEffect, useRef } from 'react';
-import './group.css';
+"use client";
+import { useState, useEffect, useRef } from "react";
+import "./group.css";
 
 export default function GroupChat({ group, onBack }) {
   const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
+  const [newMessage, setNewMessage] = useState("");
+  const [selectedImage, setSelectedImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const messagesEndRef = useRef(null);
+  const imageInputRef = useRef();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -16,62 +18,34 @@ export default function GroupChat({ group, onBack }) {
     scrollToBottom();
   }, [messages]);
 
-  // Get localStorage key for this group
   const getStorageKey = (groupId) => `group_messages_${groupId}`;
 
-  // Load messages from localStorage
   const loadMessagesFromStorage = () => {
     try {
-      const storageKey = getStorageKey(group.id);
-      const savedMessages = localStorage.getItem(storageKey);
-      if (savedMessages) {
-        return JSON.parse(savedMessages);
-      }
-    } catch (error) {
-      console.error("Error loading messages from storage:", error);
+      const saved = localStorage.getItem(getStorageKey(group.id));
+      if (saved) return JSON.parse(saved);
+    } catch (err) {
+      console.error("Error loading messages from storage:", err);
     }
     return [];
   };
 
-  // Save messages to localStorage
-  const saveMessagesToStorage = (messagesToSave) => {
+  const saveMessagesToStorage = (msgs) => {
     try {
-      const storageKey = getStorageKey(group.id);
-      localStorage.setItem(storageKey, JSON.stringify(messagesToSave));
-    } catch (error) {
-      console.error("Error saving messages to storage:", error);
+      localStorage.setItem(getStorageKey(group.id), JSON.stringify(msgs));
+    } catch (err) {
+      console.error("Error saving messages to storage:", err);
     }
   };
 
-  // Fetch messages for this group
   const fetchMessages = async () => {
+    setLoading(true);
     try {
-      setLoading(true);
-      
-      // Load messages from localStorage first
+      // For now loading only from localStorage
       const savedMessages = loadMessagesFromStorage();
       setMessages(savedMessages);
-
-      // TODO: Later, fetch from backend API and merge with local messages
-      // const response = await fetch(`http://localhost:8080/api/group/${group.id}/messages`, {
-      //   credentials: "include"
-      // });
-      // const data = await response.json();
-      // const serverMessages = data.messages || [];
-      // 
-      // // Merge server messages with local messages (avoid duplicates)
-      // const allMessages = [...serverMessages, ...savedMessages];
-      // const uniqueMessages = allMessages.filter((msg, index, self) => 
-      //   index === self.findIndex(m => m.id === msg.id)
-      // );
-      // setMessages(uniqueMessages);
-      // saveMessagesToStorage(uniqueMessages);
-      
     } catch (error) {
       console.error("Failed to fetch messages:", error);
-      // Still load from localStorage even if API fails
-      const savedMessages = loadMessagesFromStorage();
-      setMessages(savedMessages);
     } finally {
       setLoading(false);
     }
@@ -81,60 +55,69 @@ export default function GroupChat({ group, onBack }) {
     fetchMessages();
   }, [group.id]);
 
-  const handleSendMessage = async (e) => {
+  const handleSendMessage = (e) => {
     e.preventDefault();
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() && !selectedImage) return;
 
-    try {
+    if (selectedImage) {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        const base64Image = reader.result;
+        const tempMessage = {
+          id: Date.now(),
+          user_name: "You",
+          content: newMessage,
+          image: base64Image,
+          created_at: new Date().toISOString(),
+          group_id: group.id,
+        };
+        const updatedMessages = [...messages, tempMessage];
+        setMessages(updatedMessages);
+        saveMessagesToStorage(updatedMessages);
+        setNewMessage("");
+        setSelectedImage(null);
+        imageInputRef.current.value = "";
+
+        // TODO: Send to backend here if needed
+      };
+      reader.readAsDataURL(selectedImage);
+    } else {
       const tempMessage = {
         id: Date.now(),
         user_name: "You",
         content: newMessage,
+        image: null,
         created_at: new Date().toISOString(),
-        group_id: group.id
+        group_id: group.id,
       };
-      
-      // Update state
       const updatedMessages = [...messages, tempMessage];
       setMessages(updatedMessages);
-      
-      // Save to localStorage
       saveMessagesToStorage(updatedMessages);
-      
-      setNewMessage('');
-
-      // TODO: Send to backend API
-      // const response = await fetch(`http://localhost:8080/api/group/${group.id}/messages`, {
-      //   method: "POST",
-      //   credentials: "include",
-      //   headers: {
-      //     "Content-Type": "application/json",
-      //   },
-      //   body: JSON.stringify({ content: tempMessage.content }),
-      // });
-
-    } catch (error) {
-      console.error("Failed to send message:", error);
+      setNewMessage("");
     }
   };
 
   return (
     <div className="group-chat-container">
-      {/* Header with back button and group info */}
+      {/* Header */}
       <div className="chat-header">
-        <button className="back-button" onClick={onBack}>
-          ← Back to Groups
-        </button>
-        <div className="group-info">
-          <h2>{group.title}</h2>
-          <p>{group.description}</p>
+        <div className="chat-header-left">
+          <button className="back-button" onClick={onBack}>
+            ← Back
+          </button>
+          <div className="group-info">
+            <h2>{group.title}</h2>
+            <p>{group.description}</p>
+          </div>
+        </div>
+        <div className="chat-header-buttons">
+          <button className="create-btn">Chat</button>
+          <button className="create-btn">Post</button>
+          <button className="create-btn">Event</button>
         </div>
       </div>
-      <div>Chats</div>
-      <div>Posts</div>
-      <div>Events</div>
 
-      {/* Messages area */}
+      {/* Messages */}
       <div className="messages-container">
         {loading ? (
           <div className="loading-message">Loading messages...</div>
@@ -149,6 +132,13 @@ export default function GroupChat({ group, onBack }) {
                   </span>
                 </div>
                 <div className="message-content">{message.content}</div>
+                {message.image && (
+                  <img
+                    src={message.image}
+                    alt="attachment"
+                    style={{ maxWidth: "200px", borderRadius: "10px" }}
+                  />
+                )}
               </div>
             ))}
             <div ref={messagesEndRef} />
@@ -160,15 +150,43 @@ export default function GroupChat({ group, onBack }) {
         )}
       </div>
 
-      {/* Message input */}
+      {/* Send message form */}
       <form className="message-form" onSubmit={handleSendMessage}>
         <input
-          type="text"
-          value={newMessage}
-          onChange={(e) => setNewMessage(e.target.value)}
-          placeholder="Type your message..."
-          className="message-input"
+          type="file"
+          accept="image/*"
+          ref={imageInputRef}
+          style={{ display: "none" }}
+          onChange={(e) => setSelectedImage(e.target.files[0])}
         />
+
+        <button
+          type="button"
+          className="image-button"
+          onClick={() => imageInputRef.current.click()}
+          title="Attach Image"
+        >
+          +
+        </button>
+
+        <input
+          type="text"
+          className="message-input"
+          value={
+            selectedImage
+              ? `📎 ${selectedImage.name} | ${newMessage}`
+              : newMessage
+          }
+          onChange={(e) =>
+            setNewMessage(
+              selectedImage
+                ? e.target.value.replace(`📎 ${selectedImage.name} | `, "")
+                : e.target.value
+            )
+          }
+          placeholder="Type your message..."
+        />
+
         <button type="submit" className="send-button">
           Send
         </button>
