@@ -125,6 +125,7 @@ type ServerUser struct {
 }
 
 type ServerMessage struct {
+	AllUsers	[]string		   `json:"allusers"`
 	Type        string            `json:"type"`
 	Users       []ServerUser      `json:"users"`
 	Categories  []ServerCategory  `json:"categories"`

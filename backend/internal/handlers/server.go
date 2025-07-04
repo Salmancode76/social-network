@@ -1,10 +1,12 @@
 package handlers
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
 	"net/http"
+	"os"
 
 	CoreModels "social-network-backend/internal/models/app"
 
@@ -63,14 +65,11 @@ func handleWebSocketMessage(app *CoreModels.App, conn *websocket.Conn, message M
 
 	switch message.Type {
 	case "message":
-		
+
 		// handleMessageMessage(conn, message)
 		// notifyMassage(conn, message)
 	case "get_users":
-		message := ServerMessage{Type: "allusers"}
-		conn.WriteJSON(message)
-		fmt.Println("message sent to client", message)
-		// handleGetFriends(conn, message.To)
+		handleGetFriends(conn)
 		// handleGetUsersMessage(conn)
 		// onlineusers(app, conn)
 	case "get_chat_history":
@@ -86,4 +85,22 @@ func handleWebSocketMessage(app *CoreModels.App, conn *websocket.Conn, message M
 		log.Printf("Unsupported message type: %s", message.Type)
 
 	}
+}
+
+func handleGetFriends(conn *websocket.Conn) {
+	db := OpenDatabase()
+	defer db.Close()
+	users := getAllUsers(db)
+	message := ServerMessage{Type: "allusers", AllUsers: users}
+	conn.WriteJSON(message)
+	fmt.Println(users)
+}
+
+func OpenDatabase() *sql.DB {
+	db, err := sql.Open("sqlite3", "../internal/db/sqlite/db.db")
+	if err != nil {
+		fmt.Fprintln(os.Stderr, err)
+		return nil
+	}
+	return db
 }

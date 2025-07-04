@@ -2,7 +2,7 @@ export default function ChatUser({ user }) {
   return (
     <div className="chat-user">
       <div className="chat-user-info">
-        <strong>{user.name}</strong> (@{user.username})
+        <strong>{user}</strong>
       </div>
     </div>
   );

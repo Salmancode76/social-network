@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { socket } from "../utils/ws";
-import ChatUser from "./Chatuser.js";
+import ChatUser from "./ChatUser.js";
 import "./ChatBox.css";
 
 export default function Chatbox() {
@@ -15,8 +15,8 @@ export default function Chatbox() {
         const data = JSON.parse(event.data);
         console.log("Received message:", data);
 
-        if (data.type === "allusers" && Array.isArray(data.users)) {
-          setUsers(data.users);
+        if (data.type === "allusers" && Array.isArray(data.allusers)) {
+          setUsers(data.allusers);
         }
       } catch (err) {
         console.error("Failed to parse message", err);
