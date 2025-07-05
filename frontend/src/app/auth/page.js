@@ -89,6 +89,12 @@ window.dispatchEvent(new Event("session-changed"));
       return;
     }
 
+    const nicknameRegex = /^[a-zA-Z0-9_-]+$/;
+  if (registerForm.nickname && !nicknameRegex.test(registerForm.nickname)) {
+    setErrorMsg("Nickname can only contain letters, numbers, underscores (_) or dashes (-). No spaces or special characters.");
+    return;
+  }
+
     const payload = {
       first_name: registerForm.fname,
       last_name: registerForm.lname,
@@ -196,7 +202,7 @@ window.dispatchEvent(new Event("session-changed"));
                 />
               </div>
               <div className="input-block">
-                <label>Nickname</label>
+                <label>Nickname (optional)</label>
                 <input
                   type="text"
                   value={registerForm.nickname}
@@ -241,7 +247,7 @@ window.dispatchEvent(new Event("session-changed"));
                 />
               </div>
                <div className="input-block">
-                <label>About me</label>
+                <label>About me (optional)</label>
                 <textarea
                   value={registerForm.aboutme}
                   maxLength={200}
@@ -278,7 +284,7 @@ window.dispatchEvent(new Event("session-changed"));
                 </div>
               </div>
                <div className="input-block">
-                <label>Avatar:</label>
+                <label>Avatar (optional):</label>
                 <input
                   type="file"
                   accept="image/*"
