@@ -38,12 +38,19 @@ func CreateGroup(app * CoreModels.App)http.HandlerFunc{
 	}
 	group.Creator = strconv.Itoa(id)
 
-	err = app.Groups.CreateGroup(group)
+	group_id,err := app.Groups.CreateGroup(group)
 
 	if err!=nil{
 		sendErrorResponse(w, fmt.Sprintf("Failed to create Group: %v", err), http.StatusBadRequest)
 		return 
 	}
+
+	err = app.Notifications.SendInvites(id,group.InvitedUsers,group_id)
+	if err!=nil{
+		sendErrorResponse(w, fmt.Sprintf("Failed to create Group invite notifications: %v", err), http.StatusBadRequest)
+		return 
+	}
+
 	}
 }
 

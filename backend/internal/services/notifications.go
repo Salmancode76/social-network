@@ -46,7 +46,7 @@ VALUES (
     ?, ?, ?
 );	
 	`
-	result, err = n.DB.Exec(stmt2, group_id, sender_id, 4)
+	result, err = n.DB.Exec(stmt2, group_id, sender_id, 3)
     if err != nil {
         return fmt.Errorf("failed to insert notification: %w", err)
     }
@@ -112,4 +112,74 @@ func (n *NotificationModel) GetAllNotifications(id int) ([]models.Notification, 
 	}
 
 	return notifications, nil
+}
+
+func (n*NotificationModel)ManageRequest(id int,group_id int,user_id int,accept bool)(error){
+
+
+	
+		if accept{
+			stmt:=`
+			UPDATE group_members
+		SET request_status_id = ?
+		WHERE group_id = ? AND user_id = ?;
+       
+		`
+			_,err:=n.DB.Exec(stmt,2,group_id,user_id)
+			if err!=nil{
+				return err
+			}
+		}else{
+			stmt:=`
+		DELETE FROM group_members
+      WHERE group_id = (?) AND 
+            user_id =(?);
+		   
+			`
+				_,err:=n.DB.Exec(stmt,group_id,user_id)
+				if err!=nil{
+					return err
+				}
+		}
+
+		stmt:=`
+		DELETE FROM notifications
+      WHERE id = (?);
+		`
+		_,err := n.DB.Exec(stmt,id)
+		
+		if err!=nil{
+			return err
+		}
+		
+		return nil
+
+
+}
+
+func (n*NotificationModel)SendInvites( sender_id int,id  []string,group_id int)(error){
+	
+	stmt:=`
+
+	INSERT INTO notifications (
+    user_id,
+    notification_type_id,
+    message,
+    related_user_id,
+    related_group_id
+)
+VALUES (?, ?, ?, ?, ?);
+`
+
+	for i:=0;i<len(id);i++{
+		_,err := n.DB.Exec(stmt,sender_id,2,"Invite to group",id[i],group_id)
+			
+		if err!=nil{
+			return err
+		}
+	}
+	
+	return nil
+
+
 }

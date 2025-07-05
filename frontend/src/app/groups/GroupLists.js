@@ -140,14 +140,16 @@ export default function GroupLists({ onGroupClick }) {
                   ) : (
                     <div>
                       {group.request_status_id === "1" ? (
-                        <span className="member-label">
-                          Your are invited
-                        </span>
+                        <span className="member-label">Your are invited</span>
                       ) : group.request_status_id === "5" ? (
                         <span className="member-label">Your group</span>
-                      ) :  group.request_status_id === "4" ? (
-                        <span className="member-label">Your request is sent</span>
-                      ): null}
+                      ) : group.request_status_id === "2" ? (
+                        <span className="member-label">You are part of this group</span>
+                      ) : group.request_status_id === "3" ? (
+                        <span className="member-label">
+                          Your request is sent
+                        </span>
+                      ) : null}
                     </div>
                   )}
                 </div>

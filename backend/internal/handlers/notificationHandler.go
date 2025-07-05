@@ -43,3 +43,30 @@ func GetAllNotifications(app *CoreModels.App) http.HandlerFunc{
 		}
 	
 	}
+
+	func ManageRequestGroups(app *CoreModels.App)http.HandlerFunc{
+		return func(w http.ResponseWriter, r *http.Request) {
+			if CrosAllow(w,r){
+				return
+			}
+			
+			// Only process GET requests
+			if r.Method != "POST" {
+				sendErrorResponse(w, "Method not allowed", http.StatusMethodNotAllowed)
+				return 
+			}
+			var request models.Request
+			err := json.NewDecoder(r.Body).Decode(&request)
+			if err != nil {
+				sendErrorResponse(w, "Invalid request payload", http.StatusBadRequest)
+				return 
+			}
+
+			err=app.Notifications.ManageRequest(request.NotificationID,request.RelatedGroupID,request.RelatedUserID,request.Accepted)
+
+			if err != nil {
+				sendErrorResponse(w, "Failed to handle request: " + err.Error(), http.StatusBadRequest)
+				return 
+			}
+		}
+	}
