@@ -9,7 +9,7 @@ type GroupModel struct {
 	DB *sql.DB
 }
 
-func (g *GroupModel) CreateGroup(group *models.Group) error {
+func (g *GroupModel) CreateGroup(group *models.Group) (int,error) {
 
 	stmt := `
 	
@@ -27,11 +27,11 @@ func (g *GroupModel) CreateGroup(group *models.Group) error {
 	`
 	result, err := g.DB.Exec(stmt, group.Title, group.Description, group.Creator)
 	if err != nil {
-		return err
+		return 0,err
 	}
 	group_id, err := result.LastInsertId()
 	if err != nil {
-		return err
+		return 0,err
 	}
 	//Add the group creator as a member
 	stmt3:=`INSERT INTO group_members (
@@ -55,12 +55,13 @@ func (g *GroupModel) CreateGroup(group *models.Group) error {
 			1,
 			group.Creator,
 		)
+		
 		if err != nil {
-			return err
+			return 0,err
 		}
 	}
 
-	return nil
+	return int(group_id),nil
 
 }
 

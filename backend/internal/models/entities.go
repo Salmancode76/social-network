@@ -68,3 +68,10 @@ type Notification struct {
 	IsRead             bool    `json:"is_read"`
 	CreatedAt          string  `json:"created_at"`
 }
+
+type Request struct {
+	NotificationID  int `json:"notification_id"`
+	RelatedGroupID  int `json:"related_group_id"`
+	RelatedUserID   int `json:"related_user_id"`
+	Accepted        bool   `json:"accepted"`
+}

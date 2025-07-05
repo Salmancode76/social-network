@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 
 function NotificationPage() {
   const [notifications, setNotifications] = useState([]);
+
   const fetchNotifications = async () => {
     try {
       const response = await fetch(
@@ -22,7 +23,8 @@ function NotificationPage() {
 
       const data = await response.json();
       console.log("Fetched notifications:", data);
-      return data.Notifications || [];    } catch (e) {
+      return data.Notifications || [];
+    } catch (e) {
       console.error("Error fetching notifications:", e);
       return [];
     }
@@ -36,6 +38,38 @@ function NotificationPage() {
 
     getData();
   }, []);
+
+  const manageRequest = async (
+    notificationId,
+    related_group_id,
+    related_user_id,
+    accept
+  ) => {
+    try {
+      const response = await fetch("http://localhost:8080/api/ManageRequest", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          notification_id: notificationId,
+          related_group_id: related_group_id,
+          related_user_id: related_user_id,
+          accepted: accept,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+
+      const updated = await fetchNotifications();
+      setNotifications(updated);
+    } catch (error) {
+      console.error("Failed to manage request:", error);
+    }
+  };
 
   return (
     <div style={{ padding: "20px" }}>
@@ -52,10 +86,39 @@ function NotificationPage() {
             backgroundColor: n.is_read ? "#f9f9f9" : "#e6f7ff",
           }}
         >
-          {n.notification_type_id === 3 && (
+          {n.notification_type_id === 3 ? (
             <div>
-              User <b>{n.user_fullName}</b> Requested to join{" "}
-              <b> {n.group_title}</b> Group
+              <p>
+                User <b>{n.user_fullName}</b> requested to join{" "}
+                <b>{n.group_title}</b> group.
+              </p>
+              <button
+                onClick={() =>
+                  manageRequest(n.id, n.related_group_id, n.user_id, true)
+                }
+              >
+                Accept
+              </button>
+              <button
+                onClick={() =>
+                  manageRequest(n.id, n.related_group_id, n.user_id, false)
+                }
+              >
+                Decline
+              </button>
+            </div>
+          ) : n.notification_type_id === 2 ? (
+            <div>
+              <p>
+                User <b>{n.user_fullName}</b> Invited you to join{" "}
+                <b>{n.group_title}</b> group.
+                <button>Accept</button>
+                <button>Decline</button>
+              </p>
+            </div>
+          ) : (
+            <div>
+              <p>{n.message}</p>
             </div>
           )}
         </div>

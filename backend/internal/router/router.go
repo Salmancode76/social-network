@@ -43,6 +43,7 @@ func SetupRoutes(app *CoreModels.App) *http.ServeMux {
 
 	mux.HandleFunc("/api/RequestJoin",handlers.SendRequestToJoin(app))
 	mux.HandleFunc("/api/GetAllNotifications",handlers.GetAllNotifications(app))
+	mux.HandleFunc("/api/ManageRequest",handlers.ManageRequestGroups(app))
 
 
 	//Serve Images 
