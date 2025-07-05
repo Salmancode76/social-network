@@ -119,7 +119,7 @@ func(U *UserModel)FetchUserByID( id string) (*models.User, error) {
 		return &user, err
 	}
 	
-	if avatar.Valid {
+	if (avatar.Valid && avatar.String != ""){
 		user.Avatar = avatar.String
 	} else {
 		user.Avatar = "profile_notfound.png"

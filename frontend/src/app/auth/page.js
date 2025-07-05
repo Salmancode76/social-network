@@ -18,11 +18,17 @@ export default function AuthPage() {
     async function checkSession() {
       const res = await fetch("http://localhost:8080/api/check-session", {
         credentials: "include",
+        method: "GET",
       });
 
       if (res.ok) {
         router.push("/"); 
       }
+      if (!res.ok) {
+      if (res.status === 401) {
+        return null; 
+      }
+    }
     }
 
     checkSession();
@@ -74,6 +80,12 @@ window.dispatchEvent(new Event("session-changed"));
     e.preventDefault();
     if (registerForm.password !== registerForm.repassword) {
       setErrorMsg("Passwords do not match");
+      return;
+    }
+    const strongPasswordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
+
+    if (!strongPasswordRegex.test(registerForm.password)) {
+      ("Password must be at least 8 characters and include at least one uppercase letter and one special character.");
       return;
     }
 
@@ -232,9 +244,13 @@ window.dispatchEvent(new Event("session-changed"));
                 <label>About me</label>
                 <textarea
                   value={registerForm.aboutme}
+                  maxLength={200}
                   onChange={(e) => setRegisterForm({ ...registerForm, aboutme: e.target.value })}
-                  required
+                  rows={4}
+                  placeholder="Tell us about yourself..."
+                  style={{ resize: "vertical", width: "100%" }}
                 />
+                <small>{registerForm.aboutme.length}/200 characters</small>
               </div>
               <div className="input-block">
                 <label>Privacy</label>
@@ -275,7 +291,7 @@ window.dispatchEvent(new Event("session-changed"));
                               ImageDiv,
                               fileInputRef
                             )}
-                  required
+                  
                 />
               </div>
               

@@ -1,23 +1,52 @@
 "use client";
 
+import { FetchUserIDbySession } from "../utils/FetchUserIDbySession";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 export default function Navbar() {
   const [loggedIn, setLoggedIn] = useState(false);
   const router = useRouter();
+  const [userID, setUserID] = useState(null);
+  const [loading, setLoading] = useState(true);
+   useEffect(() => {
+          async function fetchData() {
+            try{
+              
+                const data = await FetchUserIDbySession();
+                setUserID(data.UserID);
+              
+  
+            }catch(e){
+              console.error("Failed to load user data:", e);
+               if (e.message.includes("401")) {
+                
+              } else {
+                console.error("Error loading session:", e);
+              }
+            } finally {
+              setLoading(false); 
+            }
+            
+          }
+          fetchData();
+        },[]);
+
+       
 
   useEffect(() => {
     async function checkSession() {
-      try {
+      
         const res = await fetch("http://localhost:8080/api/check-session", {
           credentials: "include",
+          method: "GET",
         });
-
-        setLoggedIn(res.ok);
-      } catch (err) {
+        if(res.ok){
+          setLoggedIn(res.ok);
+        }else {
         setLoggedIn(false);
-      }
+        }
+      
     }
 
     checkSession();
@@ -26,6 +55,10 @@ export default function Navbar() {
       window.removeEventListener("session-changed", checkSession);
     };
   }, []);
+
+       if (loading) return null;
+
+        if (!userID) return null;
 
   async function logout() {
     try {
@@ -41,7 +74,10 @@ export default function Navbar() {
       if (response.ok) {
         localStorage.clear();
         sessionStorage.clear();
-        window.location.href = "/auth";
+         setUserID(null);
+        setLoggedIn(false);
+        window.dispatchEvent(new Event("session-changed"));
+        router.push("/auth");
       }
     } catch (err) {
       alert("Logout error: " + err.message);
@@ -56,7 +92,7 @@ export default function Navbar() {
       <div className="nav-buttons">
         {loggedIn && (
           <>
-            <button onClick={() => router.push("/Profile")}>My Profile</button>
+            <button onClick={() => router.push(`/Profile?id=${userID}`)}>My Profile</button>
             <button onClick={() => router.push("/CreatePost")}>
               Create Post
             </button>

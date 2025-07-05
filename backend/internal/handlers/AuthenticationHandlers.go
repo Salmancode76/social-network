@@ -225,7 +225,7 @@ func CheckSessionHandler(app *CoreModels.App) http.HandlerFunc {
 			http.Error(w, "Unauthorized", http.StatusUnauthorized)
 			return
 		}
-
+		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
 		w.Write([]byte(fmt.Sprintf("UserID: %d", userID)))
 	}
@@ -258,4 +258,19 @@ func DownloadImageAvatar(ImageFile string) (string, error) {
 
 	return fileName, nil
 
+}
+func GetuserIDHandler(app *CoreModels.App) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		if CrosAllow(w, r) {
+			return
+		}
+		userID, _ := app.Users.GetUserIDFromSession(w, r)
+		
+
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{
+			"UserID": strconv.Itoa(userID),   
+		})
+	}
 }
