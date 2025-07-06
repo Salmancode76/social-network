@@ -161,14 +161,14 @@ func (n*NotificationModel)SendInvites( sender_id int,id  []string,group_id int)(
 	
 	stmt:=`
 
-	INSERT INTO notifications (
-    user_id,
-    notification_type_id,
-    message,
-    related_user_id,
-    related_group_id
-)
-VALUES (?, ?, ?, ?, ?);
+		INSERT INTO notifications (
+		user_id,
+		notification_type_id,
+		message,
+		related_user_id,
+		related_group_id
+	)
+	VALUES (?, ?, ?, ?, ?);
 `
 
 	for i:=0;i<len(id);i++{
@@ -182,4 +182,58 @@ VALUES (?, ?, ?, ?, ?);
 	return nil
 
 
+}
+
+
+func (n*NotificationModel)ManageInvites(id int,group_id int,user_id int,accept bool)(error){
+
+
+	
+	if accept{
+		stmt:=`
+		UPDATE group_members
+	SET request_status_id = ?
+	WHERE group_id = ? AND user_id = ?;
+   
+	`
+		_,err:=n.DB.Exec(stmt,2,group_id,user_id)
+		if err!=nil{
+			return err
+		}
+	}else{
+		stmt:=`
+	DELETE FROM group_members
+  WHERE group_id = (?) AND 
+		user_id =(?);
+	   
+		`
+			_,err:=n.DB.Exec(stmt,group_id,user_id)
+			if err!=nil{
+				return err
+			}
+	}
+
+	stmt:=`
+	DELETE FROM notifications
+  WHERE id = (?);
+	`
+	_,err := n.DB.Exec(stmt,id)
+	
+	if err!=nil{
+		return err
+	}
+	
+	return nil
+
+
+}
+
+func (n *NotificationModel) MarkNotificationAsRead(ids []int) error {
+	for i:=0;i<len(ids);i++ {
+		stmt := `UPDATE notifications SET is_read = 1 WHERE id = ?`
+		if _, err := n.DB.Exec(stmt, ids[i]); err != nil {
+			return err
+		}
+	}
+	return nil
 }

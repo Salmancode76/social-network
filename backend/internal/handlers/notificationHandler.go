@@ -70,3 +70,64 @@ func GetAllNotifications(app *CoreModels.App) http.HandlerFunc{
 			}
 		}
 	}
+
+	func ManageInvitestGroups(app *CoreModels.App)http.HandlerFunc{
+		return func(w http.ResponseWriter, r *http.Request) {
+			if CrosAllow(w,r){
+				return
+			}
+			
+			// Only process POST requests
+			if r.Method != "POST" {
+				sendErrorResponse(w, "Method not allowed", http.StatusMethodNotAllowed)
+				return 
+			}
+			var request models.Request
+			err := json.NewDecoder(r.Body).Decode(&request)
+			if err != nil {
+				sendErrorResponse(w, "Invalid request payload", http.StatusBadRequest)
+				return 
+			}
+
+			err=app.Notifications.ManageInvites(request.NotificationID,request.RelatedGroupID,request.RelatedUserID,request.Accepted)
+
+			if err != nil {
+				sendErrorResponse(w, "Failed to handle request: " + err.Error(), http.StatusBadRequest)
+				return 
+			}
+		}
+	}
+
+	func MarkNotificationAsRead(app *CoreModels.App)http.HandlerFunc{
+		return func(w http.ResponseWriter, r *http.Request) {
+			if CrosAllow(w,r){
+				return
+			}
+			
+			// Only process POST requests
+			if r.Method != "POST" {
+				sendErrorResponse(w, "Method not allowed", http.StatusMethodNotAllowed)
+				return 
+			}
+
+			type MarkReadRequest struct {
+				IDs []int `json:"ids"`
+			}
+			var req MarkReadRequest
+
+
+
+			 if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				sendErrorResponse(w, fmt.Sprintf("Failed to encode Json: %v", err), http.StatusInternalServerError)
+				return
+	
+			}
+
+			err:=app.Notifications.MarkNotificationAsRead(req.IDs)
+
+			if err != nil {
+				sendErrorResponse(w, "Failed to handle set Read: " + err.Error(), http.StatusBadRequest)
+				return 
+			}
+		}
+	}
