@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import GroupEvent from "./GroupEvent"; // 
 import "./group.css";
 
 export default function GroupChat({ group, onBack }) {
@@ -7,6 +8,8 @@ export default function GroupChat({ group, onBack }) {
   const [newMessage, setNewMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [showEventPage, setShowEventPage] = useState(false); 
+
   const messagesEndRef = useRef(null);
   const imageInputRef = useRef();
 
@@ -41,7 +44,6 @@ export default function GroupChat({ group, onBack }) {
   const fetchMessages = async () => {
     setLoading(true);
     try {
-      // For now loading only from localStorage
       const savedMessages = loadMessagesFromStorage();
       setMessages(savedMessages);
     } catch (error) {
@@ -77,8 +79,6 @@ export default function GroupChat({ group, onBack }) {
         setNewMessage("");
         setSelectedImage(null);
         imageInputRef.current.value = "";
-
-        // TODO: Send to backend here if needed
       };
       reader.readAsDataURL(selectedImage);
     } else {
@@ -97,6 +97,13 @@ export default function GroupChat({ group, onBack }) {
     }
   };
 
+  // Conditional rendering for the Event page
+  if (showEventPage) {
+    return (
+      <GroupEvent group={group} onBack={() => setShowEventPage(false)} />
+    );
+  }
+
   return (
     <div className="group-chat-container">
       {/* Header */}
@@ -113,7 +120,12 @@ export default function GroupChat({ group, onBack }) {
         <div className="chat-header-buttons">
           <button className="create-btn">Chat</button>
           <button className="create-btn">Post</button>
-          <button className="create-btn">Event</button>
+          <button
+            className="create-btn"
+            onClick={() => setShowEventPage(true)}
+          >
+            Event
+          </button>
         </div>
       </div>
 
