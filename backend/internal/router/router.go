@@ -11,6 +11,8 @@ import (
 func SetupRoutes(app *CoreModels.App) *http.ServeMux {
 	mux := http.NewServeMux()
 
+	mux.HandleFunc("/ws", func(w http.ResponseWriter, r *http.Request) {
+		handlers.HandleWebSocket(app, w, r)})
 
 	mux.HandleFunc(("/api/CreatePost"),handlers.CreatePost(app))
 

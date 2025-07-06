@@ -1,0 +1,86 @@
+/* ChattingScreen.css */
+.chatting-screen-overlay {
+  position: fixed; /* Stays in place even when scrolling */
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black background */
+  display: flex;
+  justify-content: center; /* Center horizontally */
+  align-items: center; /* Center vertically */
+  z-index: 1000; /* Ensure it's on top of other content */
+}
+
+.chatting-screen-content {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  width: 90%; /* Adjust as needed */
+  max-width: 700px; /* Increased max-width for a "screen" feel */
+  height: 90%; /* Take up more height for a "screen" feel */
+  max-height: 90%; /* Limit height for smaller screens */
+  box-sizing: border-box; /* Include padding and border in the element's total width and height */
+  display: flex;
+  flex-direction: column;
+  overflow: hidden; /* Hide overflow content */
+}
+
+.chatting-screen-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+}
+
+.chatting-screen-header h2 {
+  margin: 0;
+  font-size: 1.5em; /* Slightly larger for a "screen" */
+}
+
+.close-button {
+  background: none;
+  border: none;
+  font-size: 1.5em; /* Slightly larger */
+  cursor: pointer;
+  color: #888;
+}
+
+.close-button:hover {
+  color: #333;
+}
+
+.chatting-screen-body {
+  flex-grow: 1; /* Allows it to take up available space */
+  overflow-y: auto; /* Enable scrolling for chat messages */
+  padding-bottom: 10px;
+}
+
+.chatting-screen-footer {
+  display: flex;
+  margin-top: 10px;
+  gap: 10px;
+}
+
+.chatting-screen-footer input {
+  flex-grow: 1;
+  padding: 10px; /* Slightly more padding */
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.chatting-screen-footer button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 10px 20px; /* Slightly more padding */
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.chatting-screen-footer button:hover {
+  background-color: #0056b3;
+}
