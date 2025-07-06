@@ -28,7 +28,8 @@ var upgrader = websocket.Upgrader{
 }
 
 func HandleWebSocket(app *CoreModels.App, w http.ResponseWriter, r *http.Request) {
-
+	userID,_ := app.Users.GetUserIDFromSession(w, r)
+	fmt.Println("User ID:", userID)
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("WebSocket upgrade failed: %v", err)
@@ -73,6 +74,7 @@ func handleWebSocketMessage(app *CoreModels.App, conn *websocket.Conn, message M
 		// handleGetUsersMessage(conn)
 		// onlineusers(app, conn)
 	case "get_chat_history":
+
 		// handleGetChatHistoryMessage(conn, message)
 		// SetRead(message.From, message.To)
 	case "read_message":
