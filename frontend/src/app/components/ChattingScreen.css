@@ -84,3 +84,26 @@
 .chatting-screen-footer button:hover {
   background-color: #0056b3;
 }
+
+
+.chat-message {
+  margin: 5px 0;
+  padding: 8px 12px;
+  border-radius: 12px;
+  width: 100%; /* Make it take full width of the container */
+  word-wrap: break-word;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-message.sent {
+  background-color: #d1e7dd;
+  align-items: flex-end;
+  text-align: right;
+}
+
+.chat-message.received {
+  background-color: #f8d7da;
+  align-items: flex-start;
+  text-align: left;
+}

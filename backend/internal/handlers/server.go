@@ -28,7 +28,7 @@ var upgrader = websocket.Upgrader{
 }
 
 func HandleWebSocket(app *CoreModels.App, w http.ResponseWriter, r *http.Request) {
-	
+
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
 		log.Printf("WebSocket upgrade failed: %v", err)
@@ -106,12 +106,11 @@ func OpenDatabase() *sql.DB {
 	return db
 }
 
-
 func handleGetChatHistoryMessage(conn *websocket.Conn, m MyMessage) {
 	db := OpenDatabase()
 	defer db.Close()
-	To := m.To
-	From := GetUserID(db, m.From)
+	From := m.From
+	To := GetUserID(db, string(m.To))
 	fmt.Println(To)
 	fmt.Println(From)
 	fmt.Println("New message  ", m)
@@ -119,6 +118,7 @@ func handleGetChatHistoryMessage(conn *websocket.Conn, m MyMessage) {
 	messages := GetChatHistory(To, From, m.Set)
 
 	message := ServerMessage{Type: "oldmessages", ChatHistory: messages}
+
 	conn.WriteJSON(message)
 	// fmt.Println(message)
 

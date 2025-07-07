@@ -43,8 +43,9 @@ func AddMessageToHistory(fromUSer string, toUser string, messageText string) {
 func GetChatHistory(user string, from string, offset int) []Message {
 	db := OpenDatabase()
 	defer db.Close()
-
-	rows, err := db.Query("SELECT from_id, to_id, is_read, message, time FROM chatmessages WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?) ORDER BY time DESC LIMIT 10 OFFSET ?", user, from, from, user, offset)
+	fmt.Println("fromUser is=", from)
+	fmt.Println("toUser is=", user)
+	rows, err := db.Query("SELECT from_id, to_id, is_read, message, time FROM chatmessages WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?) ORDER BY time DESC", user, from, from, user)
 
 	if err != nil {
 		fmt.Printf("Server >> Error getting chat history: %s", err)
@@ -63,7 +64,8 @@ func GetChatHistory(user string, from string, offset int) []Message {
 
 		toUser = GetUsernameFromId(db, toUser)
 		fromUser = GetUsernameFromId(db, fromUser)
-
+		println("fromUser is=", fromUser)
+		println("toUser is=", toUser)
 		msg := Message{
 			From:      fromUser,
 			To:        toUser,
@@ -74,18 +76,18 @@ func GetChatHistory(user string, from string, offset int) []Message {
 		messages = append(messages, msg)
 	}
 
-	stmt, err := db.Prepare(`
-		UPDATE messages
-		SET is_read = 1
-		WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?)
-	`)
+	// stmt, err := db.Prepare(`
+	// 	UPDATE messages
+	// 	SET is_read = 1
+	// 	WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?)
+	// `)
 
 	// Execute the prepared statement with the user IDs
-	result, err := stmt.Exec(user, from, from, user)
-	if err != nil {
-		fmt.Printf("Server >> Error getting chat history: %s", err)
-	}
-	fmt.Println("is read executed result", result)
+	// // result, err := stmt.Exec(user, from, from, user)
+	// // if err != nil {
+	// // 	fmt.Printf("Server >> Error getting chat history: %s", err)
+	// // }
+	// fmt.Println("is read executed result", result)
 
 	return messages
 }
@@ -93,7 +95,8 @@ func GetChatHistory(user string, from string, offset int) []Message {
 // Get username depending on userID
 func GetUsernameFromId(db *sql.DB, id string) string {
 	// Prepare the SQL query to retrieve the user ID based on the username
-	query := "SELECT Username FROM User WHERE UserID = ?"
+
+	query := "SELECT nickname FROM Users WHERE id = ?"
 
 	// Execute the query and retrieve the user ID
 	var username string
@@ -119,8 +122,9 @@ func GetUserName(db *sql.DB, From string) string {
 }
 
 func GetUserID(db *sql.DB, username string) string {
+	fmt.Println("getting user id for", username)
 	// Prepare the SQL query to retrieve the user ID based on the username
-	query := "SELECT id FROM Users WHERE Username = ?"
+	query := "SELECT id FROM Users WHERE nickname = ?"
 	// Execute the query and retrieve the user ID
 	var userID string
 	err := db.QueryRow(query, username).Scan(&userID)
