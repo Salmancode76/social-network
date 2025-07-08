@@ -18,13 +18,13 @@ type Post struct {
 	UserImage     sql.NullString `json:"userImage"`
 }
 type Comment struct {
-	ID           string `json:"id`
-	PostID       string `json:"PostID"`
-	Comment      string `json:"content"`
-	UserID       string `json:"user_id"`
-	ImageFile    string `json:"image_file"`
-	UserFullname string `json:"UserFname"`
-	UserImage     sql.NullString `json:"userImage"`
+	ID           string         `json:"id`
+	PostID       string         `json:"PostID"`
+	Comment      string         `json:"content"`
+	UserID       string         `json:"user_id"`
+	ImageFile    string         `json:"image_file"`
+	UserFullname string         `json:"UserFname"`
+	UserImage    sql.NullString `json:"userImage"`
 
 	UserNickname string `json:"UserNickname"`
 	Date         string `json:"date"`
@@ -44,34 +44,44 @@ type User struct {
 	CreatedAt string `json:created_at`
 }
 type Group struct {
-	ID           string   `json:"id"`
-	Creator      string   `json:"creator"`
-	Title        string   `json:"title"`
-	Description  string   `json:"description"`
-	InvitedUsers []string `json:"invited_users"`
-	Members      string   `json:"members"`
-	CreatedAt    string   `json:"created_at"`
-	request_status_id sql.NullString   `json:request_status_id`
+	ID                string         `json:"id"`
+	Creator           string         `json:"creator"`
+	Title             string         `json:"title"`
+	Description       string         `json:"description"`
+	InvitedUsers      []string       `json:"invited_users"`
+	Members           string         `json:"members"`
+	CreatedAt         string         `json:"created_at"`
+	request_status_id sql.NullString `json:request_status_id`
+}
+
+type Event struct {
+	ID            int    `json:"id"`
+	GroupID       int    `json:"group_id"`
+	CreatorID     int    `json:"creator_id"`
+	Title         string `json:"title"`
+	Description   string `json:"description"`
+	EventDatetime string `json:"event_datetime"`
+	CreatedAt     string `json:"created_at"`
 }
 
 type Notification struct {
-	ID                 int     `json:"id"`
-	UserID             int     `json:"user_id"`
-	UserFullName  		string `json:"user_fullName"`
-	GroupTitle			string `json:"group_title"`
-	NotificationTypeID int     `json:"notification_type_id"`
-	NotificationType   string  `json:"notification_type"`
-	Message            string  `json:"message"`
-	RelatedUserID      *int    `json:"related_user_id"`
-	RelatedGroupID     *int    `json:"related_group_id"`
-	RelatedEventID     *int    `json:"related_event_id"`
-	IsRead             bool    `json:"is_read"`
-	CreatedAt          string  `json:"created_at"`
+	ID                 int    `json:"id"`
+	UserID             int    `json:"user_id"`
+	UserFullName       string `json:"user_fullName"`
+	GroupTitle         string `json:"group_title"`
+	NotificationTypeID int    `json:"notification_type_id"`
+	NotificationType   string `json:"notification_type"`
+	Message            string `json:"message"`
+	RelatedUserID      *int   `json:"related_user_id"`
+	RelatedGroupID     *int   `json:"related_group_id"`
+	RelatedEventID     *int   `json:"related_event_id"`
+	IsRead             bool   `json:"is_read"`
+	CreatedAt          string `json:"created_at"`
 }
 
 type Request struct {
-	NotificationID  int `json:"notification_id"`
-	RelatedGroupID  int `json:"related_group_id"`
-	RelatedUserID   int `json:"related_user_id"`
-	Accepted        bool   `json:"accepted"`
+	NotificationID int  `json:"notification_id"`
+	RelatedGroupID int  `json:"related_group_id"`
+	RelatedUserID  int  `json:"related_user_id"`
+	Accepted       bool `json:"accepted"`
 }

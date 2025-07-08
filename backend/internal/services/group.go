@@ -2,6 +2,7 @@ package services
 
 import (
 	"database/sql"
+	"fmt"
 	"social-network-backend/internal/models"
 )
 
@@ -9,7 +10,7 @@ type GroupModel struct {
 	DB *sql.DB
 }
 
-func (g *GroupModel) CreateGroup(group *models.Group) (int,error) {
+func (g *GroupModel) CreateGroup(group *models.Group) (int, error) {
 
 	stmt := `
 	
@@ -27,23 +28,23 @@ func (g *GroupModel) CreateGroup(group *models.Group) (int,error) {
 	`
 	result, err := g.DB.Exec(stmt, group.Title, group.Description, group.Creator)
 	if err != nil {
-		return 0,err
+		return 0, err
 	}
 	group_id, err := result.LastInsertId()
 	if err != nil {
-		return 0,err
+		return 0, err
 	}
 	//Add the group creator as a member
-	stmt3:=`INSERT INTO group_members (
+	stmt3 := `INSERT INTO group_members (
 				group_id,
 				user_id,
 				request_status_id,
 				invited_by
 			) VALUES (?, ?, ?, ?)`
-	_,err= g.DB.Exec(stmt3,group_id,group.Creator,5,group.Creator)
-	
-		for i:=0;i<len(group.InvitedUsers);i++{
-			_, err := g.DB.Exec(`
+	_, err = g.DB.Exec(stmt3, group_id, group.Creator, 5, group.Creator)
+
+	for i := 0; i < len(group.InvitedUsers); i++ {
+		_, err := g.DB.Exec(`
 			INSERT INTO group_members (
 				group_id,
 				user_id,
@@ -55,13 +56,13 @@ func (g *GroupModel) CreateGroup(group *models.Group) (int,error) {
 			1,
 			group.Creator,
 		)
-		
+
 		if err != nil {
-			return 0,err
+			return 0, err
 		}
 	}
 
-	return int(group_id),nil
+	return int(group_id), nil
 
 }
 
@@ -85,8 +86,8 @@ ORDER BY g.created_at DESC
 
 
 	`
-	
-	rows, err := g.DB.Query(stmt,id,id,id)
+
+	rows, err := g.DB.Query(stmt, id, id, id)
 	if err != nil {
 		return nil, err
 	}
@@ -94,10 +95,10 @@ ORDER BY g.created_at DESC
 
 	var groups []map[string]interface{}
 	for rows.Next() {
-		var id, title, description, creatorID, createdAt  string
-		var request_status_id sql.NullString 
+		var id, title, description, creatorID, createdAt string
+		var request_status_id sql.NullString
 		var isMember bool
-		err := rows.Scan(&id, &title, &description,&isMember, &creatorID, &createdAt,&request_status_id)
+		err := rows.Scan(&id, &title, &description, &isMember, &creatorID, &createdAt, &request_status_id)
 		if err != nil {
 			return nil, err
 		}
@@ -106,17 +107,17 @@ ORDER BY g.created_at DESC
 		if request_status_id.Valid {
 			statusID = request_status_id.String
 		} else {
-			statusID = ""  // or "0" or whatever default
+			statusID = "" // or "0" or whatever default
 		}
-		
+
 		group := map[string]interface{}{
-			"id":          id,
-			"title":       title,
-			"description": description,
-			"creator_id":  creatorID,
-			"created_at":  createdAt,
-			"isMember":isMember,
-			"request_status_id":statusID,
+			"id":                id,
+			"title":             title,
+			"description":       description,
+			"creator_id":        creatorID,
+			"created_at":        createdAt,
+			"isMember":          isMember,
+			"request_status_id": statusID,
 		}
 		groups = append(groups, group)
 	}
@@ -199,4 +200,118 @@ func (g *GroupModel) GetGroupMessages(groupID string) ([]map[string]interface{},
 	}
 
 	return messages, nil
+}
+
+func (g *GroupModel) CreateEvent(event models.Event) error {
+	stmt := `
+		INSERT INTO events (
+			group_id,
+			creator_id,
+			title,
+			description,
+			event_datetime
+		) VALUES (?, ?, ?, ?, ?)
+	`
+	_, err := g.DB.Exec(stmt,
+		event.GroupID,
+		event.CreatorID,
+		event.Title,
+		event.Description,
+		event.EventDatetime,
+	)
+
+	return err
+}
+
+func (g *GroupModel) GetEventsByGroupID(groupID int) ([]models.Event, error) {
+	stmt := `
+		SELECT 
+			id,
+			group_id,
+			creator_id,
+			title,
+			description,
+			event_datetime,
+			created_at
+		FROM events
+		WHERE group_id = ?
+		ORDER BY event_datetime ASC
+	`
+
+	rows, err := g.DB.Query(stmt, groupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var events []models.Event
+	for rows.Next() {
+		var e models.Event
+		err := rows.Scan(
+			&e.ID,
+			&e.GroupID,
+			&e.CreatorID,
+			&e.Title,
+			&e.Description,
+			&e.EventDatetime,
+			&e.CreatedAt,
+		)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, e)
+	}
+
+	return events, nil
+}
+
+func (gm *GroupModel) GetResponseForUser(eventID, userID int) (string, error) {
+	var isGoing sql.NullInt64
+	query := `SELECT is_going FROM event_responses WHERE event_id = ? AND user_id = ? LIMIT 1`
+	err := gm.DB.QueryRow(query, eventID, userID).Scan(&isGoing)
+	if err != nil {
+		return "", err
+	}
+
+	if !isGoing.Valid {
+		return "", nil
+	}
+	return fmt.Sprintf("%d", isGoing.Int64), nil // returns "1" or "0"
+}
+
+func (g *GroupModel) SaveEventResponse(eventID, userID, isGoing int) error {
+	stmt := `
+	INSERT INTO event_responses (event_id, user_id, is_going, created_at)
+	VALUES (?, ?, ?, datetime('now'))
+	ON CONFLICT(event_id, user_id)
+	DO UPDATE SET is_going = excluded.is_going, created_at = excluded.created_at;
+	`
+	_, err := g.DB.Exec(stmt, eventID, userID, isGoing)
+	return err
+}
+
+func (g *GroupModel) GetResponseCounts(eventID int) (map[string]int, error) {
+	rows, err := g.DB.Query(`
+		SELECT 
+			CASE WHEN is_going = 1 THEN 'Going' ELSE 'Not Going' END as choice,
+			COUNT(*) 
+		FROM event_responses
+		WHERE event_id = ?
+		GROUP BY choice
+	`, eventID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	result := map[string]int{}
+	for rows.Next() {
+		var choice string
+		var count int
+		if err := rows.Scan(&choice, &count); err != nil {
+			return nil, err
+		}
+		result[choice] = count
+	}
+	return result, nil
 }

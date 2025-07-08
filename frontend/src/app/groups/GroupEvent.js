@@ -1,64 +1,88 @@
 "use client";
 import { useState, useEffect } from "react";
+import { FetchEvents, CreateEvent, OptionsEvent } from "../utils/FetchEvents";
 import "./group.css";
 
 export default function GroupEvent({ group, onBack }) {
   const [events, setEvents] = useState([]);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ title: "", description: "", datetime: "" });
-  const [options, setOptions] = useState(["", ""]);
   const [selectedOption, setSelectedOption] = useState({});
-  const storageKey = `group_events_${group.id}`;
+
+  // Helper to enrich event data with options and selected state
+  const enrichEvents = (data) => {
+    const optionState = {};
+    const enriched = data.map(event => {
+      const responses = { ...(event.responses || {}) };
+      if (event.your_response) {
+        optionState[event.id] = event.your_response;
+      }
+      return {
+        ...event,
+        options: ["Going", "Not Going"],
+        responses,
+      };
+    });
+    return { enriched, optionState };
+  };
 
   useEffect(() => {
-    const saved = localStorage.getItem(storageKey);
-    if (saved) {
-      const parsed = JSON.parse(saved);
-      const updated = parsed.map(event => ({
-        ...event,
-        options: event.options || ["Option 1", "Option 2"],
-      }));
-      setEvents(updated);
-      localStorage.setItem(storageKey, JSON.stringify(updated));
+    async function loadEvents() {
+      const data = await FetchEvents(group.id);
+      const { enriched, optionState } = enrichEvents(data);
+      setEvents(enriched);
+      setSelectedOption(optionState);
     }
+    loadEvents();
   }, [group.id]);
 
-  const saveEvents = (newEvents) => {
-    localStorage.setItem(storageKey, JSON.stringify(newEvents));
-    setEvents(newEvents);
-  };
-
-  const handleCreate = (e) => {
+  const handleCreate = async (e) => {
     e.preventDefault();
-    const cleanedOptions = options.filter(opt => opt.trim() !== "");
-    if (cleanedOptions.length < 2) {
-      alert("Please enter at least two RSVP options.");
-      return;
-    }
-
     const newEvent = {
-      id: Date.now(),
-      ...form,
-      options: cleanedOptions,
-      responses: {},
-      createdAt: new Date().toISOString(),
+      group_id: parseInt(group.id),
+      title: form.title,
+      description: form.description,
+      event_datetime: form.datetime,
     };
 
-    saveEvents([...events, newEvent]);
-    setForm({ title: "", description: "", datetime: "" });
-    setOptions(["", ""]);
-    setShowModal(false);
+    const created = await CreateEvent(newEvent);
+    if (created) {
+      setForm({ title: "", description: "", datetime: "" });
+      setShowModal(false);
+
+      const refreshed = await FetchEvents(group.id);
+      const { enriched, optionState } = enrichEvents(refreshed);
+      setEvents(enriched);
+      setSelectedOption(optionState);
+    } else {
+      alert("Failed to create event. Please try again.");
+    }
   };
 
-  const handleRSVP = (eventId, choice) => {
-    const updated = events.map((e) => {
-      if (e.id === eventId) {
-        e.responses["You"] = choice;
-      }
-      return e;
-    });
-    saveEvents(updated);
-    setSelectedOption({ ...selectedOption, [eventId]: choice });
+  const handleRSVP = async (eventId, choice) => {
+    const success = await OptionsEvent(eventId, choice);
+    if (success) {
+      const updated = events.map(e => {
+        if (e.id === eventId) {
+          const updatedResponses = { ...e.responses };
+          // Update counts manually for smoother UX
+          if (selectedOption[eventId]) {
+            updatedResponses[selectedOption[eventId]] = (updatedResponses[selectedOption[eventId]] || 1) - 1;
+          }
+          updatedResponses[choice] = (updatedResponses[choice] || 0) + 1;
+
+          return {
+            ...e,
+            responses: updatedResponses,
+          };
+        }
+        return e;
+      });
+      setEvents(updated);
+      setSelectedOption({ ...selectedOption, [eventId]: choice });
+    } else {
+      alert("Failed to submit RSVP. Please try again.");
+    }
   };
 
   return (
@@ -81,10 +105,10 @@ export default function GroupEvent({ group, onBack }) {
         ) : (
           events.map((e) => {
             const eventOptions = e.options || [];
-            const totalVotes = Object.values(e.responses).length || 1;
+            const totalVotes = Object.values(e.responses).reduce((acc, val) => acc + val, 0) || 1;
             const optionCounts = eventOptions.map(opt => ({
               name: opt,
-              count: Object.values(e.responses).filter(v => v === opt).length
+              count: e.responses[opt] || 0,
             }));
 
             return (
@@ -92,7 +116,9 @@ export default function GroupEvent({ group, onBack }) {
                 <h3>{e.title}</h3>
                 <p>{e.description}</p>
                 <div className="event-time">
-                  📅 {new Date(e.datetime).toLocaleDateString()} - 🕒 {new Date(e.datetime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                  📅 {new Date(e.event_datetime).toLocaleDateString()}
+                  <br />
+                  🕒 {new Date(e.event_datetime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                 </div>
 
                 <div className="poll-option">
@@ -109,7 +135,7 @@ export default function GroupEvent({ group, onBack }) {
                         />
                         <div className={`poll-choice ${selectedOption[e.id] === opt ? "selected" : ""}`}>
                           <div
-                            className="poll-bar-fill"
+                            className={`poll-bar-fill ${opt === "Going" ? "going" : opt === "Not Going" ? "not-going" : ""}`}
                             style={{ width: `${(count / totalVotes) * 100}%` }}
                           ></div>
                           <span>{opt}</span>
@@ -125,7 +151,6 @@ export default function GroupEvent({ group, onBack }) {
         )}
       </div>
 
-      {/* Modal */}
       {showModal && (
         <div
           className="modal-overlay"
@@ -156,30 +181,7 @@ export default function GroupEvent({ group, onBack }) {
                 onChange={(e) => setForm({ ...form, datetime: e.target.value })}
                 required
               />
-
-              <h4>RSVP Options</h4>
-              {options.map((opt, i) => (
-                <div key={i} className="option-item">
-                  <input
-                    type="text"
-                    placeholder={`Option ${i + 1}`}
-                    value={opt}
-                    onChange={(e) => {
-                      const updated = [...options];
-                      updated[i] = e.target.value;
-                      setOptions(updated);
-                    }}
-                    required
-                  />
-                  {options.length > 2 && (
-                    <button type="button" onClick={() => setOptions(options.filter((_, idx) => idx !== i))}>
-                      X
-                    </button>
-                  )}
-                </div>
-              ))}
-              <button type="button" onClick={() => setOptions([...options, ""])}>+ Add Option</button>
-
+              <p><strong>Options:</strong> "Going" and "Not Going" will be automatically added.</p>
               <div className="modal-buttons">
                 <button type="submit" className="send-button">Create</button>
               </div>
