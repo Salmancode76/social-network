@@ -51,6 +51,10 @@ func SetupRoutes(app *CoreModels.App) *http.ServeMux {
 
 	mux.HandleFunc("/api/MarkNotificationAsRead", handlers.MarkNotificationAsRead(app))
 
+	mux.HandleFunc("/api/FetchUninvitedUsersToGroup",handlers.FetchAllUninvitedUsersToGroup(app))
+	
+	mux.HandleFunc("/api/InviteInGroupUsers",handlers.InGroupInvite(app))
+
 	//Serve Images
 	imageHandler := http.StripPrefix("/Image/", http.FileServer(http.Dir("../Image/")))
 	mux.Handle("/Image/", imageHandler)

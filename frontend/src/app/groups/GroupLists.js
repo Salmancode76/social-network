@@ -2,6 +2,7 @@
 import { useState, useEffect } from "react";
 import { FetchAllGroups } from "../utils/FetchAllGroups";
 import "./group.css";
+import {socket} from "../utils/ws"
 
 export default function GroupLists({ onGroupClick }) {
   const [groups, setGroups] = useState([]);
@@ -110,7 +111,11 @@ export default function GroupLists({ onGroupClick }) {
               <div
                 key={group.id}
                 className="group-item clickable"
-                onClick={() => group.isMember && handleGroupClick(group)}
+                onClick={() =>
+                  group.isMember &&
+                  group.request_status_id !="1" &&
+                  handleGroupClick(group)
+                }
               >
                 <h3>{group.title}</h3>
                 <p>{group.description}</p>
@@ -144,7 +149,9 @@ export default function GroupLists({ onGroupClick }) {
                       ) : group.request_status_id === "5" ? (
                         <span className="member-label">Your group</span>
                       ) : group.request_status_id === "2" ? (
-                        <span className="member-label">You are part of this group</span>
+                        <span className="member-label">
+                          You are part of this group
+                        </span>
                       ) : group.request_status_id === "3" ? (
                         <span className="member-label">
                           Your request is sent

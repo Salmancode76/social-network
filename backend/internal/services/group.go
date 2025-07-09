@@ -315,3 +315,4 @@ func (g *GroupModel) GetResponseCounts(eventID int) (map[string]int, error) {
 	}
 	return result, nil
 }
+

@@ -128,3 +128,74 @@ func(U *UserModel)FetchUserByID( id string) (*models.User, error) {
 
 	return &user, nil
 }
+
+
+func (U *UserModel) FetchUsersNotInGroup (group_id string , user_id string)([]models.User,error){
+	stmt :=`SELECT 
+    u.id,
+    u.email,
+    u.first_name,
+    u.last_name,
+    u.date_of_birth,
+    u.avatar,
+    u.nickname,
+    u.about_me,
+    u.is_public,
+    u.created_at
+FROM users u
+WHERE u.id <> ?
+  AND u.id NOT IN (
+      SELECT user_id FROM group_members WHERE group_id = ?
+  );
+`
+
+var Users []models.User
+	rows, err := U.DB.Query(stmt,user_id,group_id)
+	
+	if err != nil {
+		return Users, err
+	}
+	defer rows.Close() // Important: close rows when done
+	
+	for rows.Next() {
+		var user models.User
+		var avatar sql.NullString
+		var aboutMe sql.NullString
+		
+		err := rows.Scan(
+			&user.ID,
+			&user.Email,
+			&user.FirstN,
+			&user.LastN,
+			&user.Date,
+			&avatar,
+			&user.Nickname,
+			&aboutMe,
+			&user.IsPublic,
+			&user.CreatedAt,
+		)
+		if err != nil {
+			return Users, err
+		}
+		
+		if aboutMe.Valid{
+			user.Aboutme = aboutMe.String
+		}
+
+		// Handle the nullable avatar field
+		if avatar.Valid {
+			user.Avatar = avatar.String
+		} else {
+			user.Avatar = "profile_notfound.png" // or some default value
+		}
+		
+		Users = append(Users, user)
+	}
+	
+	// Check for errors during iteration
+	if err = rows.Err(); err != nil {
+		return Users, err
+	}
+
+	return Users, nil
+}

@@ -237,3 +237,50 @@ func (n *NotificationModel) MarkNotificationAsRead(ids []int) error {
 	}
 	return nil
 }
+
+
+func (n*NotificationModel)SendInvitesInGroup( sender_id int,id  []string,group_id int)(error){
+	
+	stmt:=`
+
+		INSERT INTO notifications (
+		user_id,
+		notification_type_id,
+		message,
+		related_user_id,
+		related_group_id
+	)
+	VALUES (?, ?, ?, ?, ?);
+`
+
+	for i:=0;i<len(id);i++{
+		_,err := n.DB.Exec(stmt,sender_id,2,"Invite to group",id[i],group_id)
+			
+		if err!=nil{
+			return err
+		}
+	}
+	
+
+	for i := 0; i < len(id); i++ {
+		_, err := n.DB.Exec(`
+			INSERT INTO group_members (
+				group_id,
+				user_id,
+				request_status_id,
+				invited_by
+			) VALUES (?, ?, ?, ?)`,
+			group_id,
+			id[i],
+			1,
+			sender_id,
+		)
+
+		if err != nil {
+			return  err
+		}
+	}
+	return nil
+
+
+}

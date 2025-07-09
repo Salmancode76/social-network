@@ -334,3 +334,79 @@ func OptionsEvent(app *CoreModels.App) http.HandlerFunc {
 		json.NewEncoder(w).Encode(map[string]string{"status": "response saved"})
 	}
 }
+
+
+func FetchAllUninvitedUsersToGroup(app * CoreModels.App)  http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		if CrosAllow(w, r) {
+			return
+		}
+		if r.Method != "GET" {
+			sendErrorResponse(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		groupID := r.URL.Query().Get("group_id")
+
+		userID, err := app.Users.GetUserIDFromSession(w, r)
+		if err != nil {
+			sendErrorResponse(w, "Invalid session", http.StatusUnauthorized)
+			return
+		}
+
+		userSTR := strconv.Itoa(userID)
+
+		var users []models.User
+
+		users,err = app.Users.FetchUsersNotInGroup(groupID,userSTR)
+
+		if err!=nil{
+			sendErrorResponse(w, "Failed to Fetch Unvited users "+ err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		json.NewEncoder(w).Encode(users)
+
+
+	}
+}
+
+
+func InGroupInvite(app * CoreModels.App) http.HandlerFunc{
+	return func(w http.ResponseWriter, r *http.Request) {
+
+		var invite models.Invite
+		if CrosAllow(w, r) {
+			return
+		}
+
+		// Only process POST requests
+		if r.Method != "POST" {
+			sendErrorResponse(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}	
+
+		err:=json.NewDecoder(r.Body).Decode(&invite)
+
+		if err != nil {
+			sendErrorResponse(w, "Invalid request payload", http.StatusBadRequest)
+			return
+		}
+		var id int
+		id, err = app.Users.GetUserIDFromSession(w, r)
+		if err != nil {
+			sendErrorResponse(w, fmt.Sprintf("Invalid id data: %v", err), http.StatusBadRequest)
+			return
+		}
+
+		err = app.Notifications.SendInvitesInGroup(id,invite.UserIDs,invite.GroupID)
+		if err != nil {
+			sendErrorResponse(w, fmt.Sprintf("Falied to send invites: %v", err), http.StatusBadRequest)
+			return
+		}
+	
+	}
+		
+		
+}

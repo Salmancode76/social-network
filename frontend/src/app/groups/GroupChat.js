@@ -1,14 +1,32 @@
 "use client";
+import React from "react";
+import { useRouter } from "next/navigation";
+
 import { useState, useEffect, useRef } from "react";
-import GroupEvent from "./GroupEvent"; // 
+import GroupEvent from "./GroupEvent"; 
 import "./group.css";
+import "primereact/resources/themes/lara-light-blue/theme.css";
+
+import "primereact/resources/primereact.min.css";
+
+import "primeicons/primeicons.css";
+
+import { MultiSelect } from "primereact/multiselect";
+
+import { FetchAllUsers } from "../utils/FetchAllUsers";
+import CheckSession from "../utils/CheckSession";
 
 export default function GroupChat({ group, onBack }) {
+  const router = useRouter();
+  const [showUserPopup, setShowUserPopup] = useState(false);
+
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [showEventPage, setShowEventPage] = useState(false); 
+  const [showEventPage, setShowEventPage] = useState(false);
+  const [selectedUsers, setSelectedUsers] = useState([]);
+  const [allUsers, setAllUsers] = useState([]);
 
   const messagesEndRef = useRef(null);
   const imageInputRef = useRef();
@@ -18,8 +36,113 @@ export default function GroupChat({ group, onBack }) {
   };
 
   useEffect(() => {
+    if (showUserPopup) {
+      setSelectedUsers([]);
+    }
+  }, [showUserPopup]);
+
+  const HandleInGroupInviteUsers = async (group_id, users) => {
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/InviteInGroupUsers`,
+        {
+          method: "POST",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_ids: users,
+            group_id: parseInt(group_id),
+          }),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+
+      setSelectedUsers([]);
+      setAllUsers([]);
+      setShowUserPopup(false);
+
+      setTimeout(async () => {
+        const data = await FetchUsersInvites(group_id);
+        if (data) {
+          const formattedUsers = data.map((user) => ({
+            ...user,
+            label: `${user.first_name} ${user.last_name} | (${user.email})`,
+          }));
+          setAllUsers(formattedUsers);
+        }
+      }, 100);
+    } catch (e) {
+      console.error("Error: ", e);
+      throw e;
+    }
+  };
+
+  async function FetchUsersInvites(group_id) {
+    try {
+      const response = await fetch(
+        `http://localhost:8080/api/FetchUninvitedUsersToGroup?group_id=${group_id}`,
+        {
+          method: "GET",
+          credentials: "include",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+      const data = await response.json();
+      console.log(data);
+      return data;
+    } catch (e) {
+      console.error("Error: ", e);
+      throw e;
+    }
+  }
+
+  useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  useEffect(() => {
+    console.log("Groups " + group);
+    const fetchSessionId = async () => {
+      const ok = await CheckSession(router);
+      if (ok) {
+        try {
+          setLoading(false);
+          const res = await fetch("/api/session");
+          if (!res.ok) {
+            throw new Error("Failed to fetch session");
+          }
+          const data = await res.json();
+          console.log(data);
+
+          const non_group_users = await FetchUsersInvites(group.id);
+          if (non_group_users) {
+            const formattedUsers = non_group_users.map((user) => ({
+              ...user,
+              label: `${user.first_name} ${user.last_name} | (${user.email})`,
+            }));
+            setAllUsers(formattedUsers);
+          }
+        } catch (err) {
+          console.error("Failed to fetch session ID", err);
+          setError("Failed to load session. Please refresh the page.");
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchSessionId();
+  }, []);
 
   const getStorageKey = (groupId) => `group_messages_${groupId}`;
 
@@ -97,15 +220,50 @@ export default function GroupChat({ group, onBack }) {
     }
   };
 
-  // Conditional rendering for the Event page
   if (showEventPage) {
-    return (
-      <GroupEvent group={group} onBack={() => setShowEventPage(false)} />
-    );
+    return <GroupEvent group={group} onBack={() => setShowEventPage(false)} />;
   }
 
   return (
     <div className="group-chat-container">
+      {showUserPopup && (
+        <div className="modal">
+          <div className="modal-content">
+            <button
+              onClick={() => {
+                setSelectedUsers([]);
+                setShowUserPopup(false);
+              }}
+            >
+              X
+            </button>
+            <h3>Select users to share with</h3>
+
+            <MultiSelect
+              value={selectedUsers}
+              onChange={(e) => setSelectedUsers(e.target.value || [])}
+              options={allUsers}
+              optionLabel="label"
+              optionValue="id"
+              display="chip"
+              placeholder="Select Users"
+              maxSelectedLabels={5}
+              style={{ width: "100%" }}
+              key={`multiselect-${Date.now()}-${allUsers.length}`}
+              showClear={true}
+              resetFilterOnHide={true}
+            />
+
+            <button
+              className="btn"
+              onClick={() => HandleInGroupInviteUsers(group.id, selectedUsers)}
+              disabled={selectedUsers.length === 0}
+            >
+              Done
+            </button>
+          </div>
+        </div>
+      )}
       {/* Header */}
       <div className="chat-header">
         <div className="chat-header-left">
@@ -120,11 +278,11 @@ export default function GroupChat({ group, onBack }) {
         <div className="chat-header-buttons">
           <button className="create-btn">Chat</button>
           <button className="create-btn">Post</button>
-          <button
-            className="create-btn"
-            onClick={() => setShowEventPage(true)}
-          >
+          <button className="create-btn" onClick={() => setShowEventPage(true)}>
             Event
+          </button>
+          <button className="create-btn" onClick={() => setShowUserPopup(true)}>
+            Invite
           </button>
         </div>
       </div>

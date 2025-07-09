@@ -85,3 +85,9 @@ type Request struct {
 	RelatedUserID  int  `json:"related_user_id"`
 	Accepted       bool `json:"accepted"`
 }
+
+type Invite struct{
+	UserIDs    []string `json:"user_ids"`
+	GroupID   int `json:"group_id"`
+
+}
