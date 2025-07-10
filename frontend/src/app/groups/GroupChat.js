@@ -3,7 +3,8 @@ import React from "react";
 import { useRouter } from "next/navigation";
 
 import { useState, useEffect, useRef } from "react";
-import GroupEvent from "./GroupEvent"; 
+import GroupEvent from "./GroupEvent";
+import GroupPost from "./GroupPost";
 import "./group.css";
 import "primereact/resources/themes/lara-light-blue/theme.css";
 
@@ -16,6 +17,7 @@ import { MultiSelect } from "primereact/multiselect";
 import { FetchAllUsers } from "../utils/FetchAllUsers";
 import CheckSession from "../utils/CheckSession";
 
+
 export default function GroupChat({ group, onBack }) {
   const router = useRouter();
   const [showUserPopup, setShowUserPopup] = useState(false);
@@ -25,6 +27,7 @@ export default function GroupChat({ group, onBack }) {
   const [selectedImage, setSelectedImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showEventPage, setShowEventPage] = useState(false);
+  const [showPostPage, setShowPostPage] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
 
@@ -224,6 +227,12 @@ export default function GroupChat({ group, onBack }) {
     return <GroupEvent group={group} onBack={() => setShowEventPage(false)} />;
   }
 
+
+  if (showPostPage) {
+    return <GroupPost group={group} onBack={() => setShowPostPage(false)} />;
+  }
+
+
   return (
     <div className="group-chat-container">
       {showUserPopup && (
@@ -277,10 +286,15 @@ export default function GroupChat({ group, onBack }) {
         </div>
         <div className="chat-header-buttons">
           <button className="create-btn">Chat</button>
-          <button className="create-btn">Post</button>
+          {/* post button */}
+          <button className="create-btn" onClick={() => setShowPostPage(true)}>
+            Post
+          </button>
+          {/* event button */}
           <button className="create-btn" onClick={() => setShowEventPage(true)}>
             Event
           </button>
+          {/* invite button */}
           <button className="create-btn" onClick={() => setShowUserPopup(true)}>
             Invite
           </button>

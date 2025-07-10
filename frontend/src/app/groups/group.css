@@ -501,4 +501,164 @@ form button[type="submit"]:hover {
   align-items: center;
 }
 
+/* posts  */
+
+
+
+
+/* ===================== COMMENT STYLING ===================== */
+
+.comment-list {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #ddd;
+}
+
+.comment {
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.comment p {
+  margin: 0 0 8px 0;
+  font-size: 0.95rem;
+  color: #333;
+}
+
+
+
+.comment small {
+  display: block;
+  margin-top: 8px;
+  color: #777;
+  font-size: 0.8rem;
+}
+
+/* Optional: style the comment input area separately if needed */
+.comment-input-area {
+  margin-top: 12px;
+  padding: 12px;
+  background: #f0f0f0;
+  border-radius: 10px;
+  border: 1px solid #ccc;
+}
+
+.comment-input-area textarea {
+  width: 100%;
+  padding: 10px;
+  font-size: 0.95rem;
+  resize: vertical;
+  margin-bottom: 8px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+.comment-input-area input[type="file"] {
+  margin-bottom: 8px;
+}
+
+.comment-input-area button {
+  background-color: #0084ff;
+  color: white;
+  padding: 8px 14px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.comment-input-area button:hover {
+  background-color: #006fd3;
+}
+
+
+.comment-timestamp {
+  display: block;
+  margin-top: 10px;
+  color: #777;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+
+.add-img-button {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-bottom: 8px;
+  transition: background-color 0.2s ease;
+}
+
+.add-img-button:hover {
+  background-color: #e2e2e2;
+}
+
+
+
+.comment-buttons-layout {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.comment-image-wrapper {
+  flex-grow: 1;
+  display: flex;
+  justify-content: center;
+}
+
+.comment-preview-image {
+  max-width: 250px;
+  max-height: 200px;
+  border-radius: 10px;
+  object-fit: cover;
+}
+
+.add-img-button {
+  background-color: #f0f0f0;
+  border: 1px solid #ccc;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.add-img-button:hover {
+  background-color: #e2e2e2;
+}
+
+.post-button {
+  background-color: #0084ff;
+  color: white;
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.post-button:hover {
+  background-color: #006fd3;
+}
+
+
+.event-time {
+  margin-top: 8px;
+  font-size: 0.85rem;
+  color: #777;
+  line-height: 1.5;
+}
+
+
 
