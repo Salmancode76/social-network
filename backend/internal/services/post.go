@@ -197,3 +197,44 @@ func(p*PostModel)FetchPostComments(id string)([]models.Comment,error){
 	}
 	return Comments,nil
 }
+
+
+func (p *PostModel)FetchPostsByUserID (userid string)([]models.Post,error){
+	var Posts []models.Post
+	stmt:=`SELECT
+		 id,
+       user_id,
+       content,
+       image_path,
+       privacy_type_id,
+       group_id,
+       created_at
+  FROM posts
+  where user_id =(?);
+`
+
+	row, err := p.DB.Query(stmt,userid)
+
+	if err != nil {
+	  return  Posts,err
+  }
+
+  for row.Next(){
+	var Post models.Post
+	var GroupID sql.NullString
+	 err:= row.Scan(&Post.ID,&Post.UserID,&Post.Content,&Post.ImageFile,&Post.PrivacyTypeID,&GroupID,&Post.CreatedAt)
+		if err!=nil{
+			return Posts,err
+		}
+		if GroupID.Valid{
+			Post.GroupID = GroupID.String
+		}
+	 Posts = append(Posts, Post)
+  }
+
+ 
+
+
+
+  return Posts,nil
+}

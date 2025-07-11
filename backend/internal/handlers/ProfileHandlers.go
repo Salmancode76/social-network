@@ -36,3 +36,36 @@ func UserDataHandler(app *CoreModels.App) http.HandlerFunc {
 
 	}
 }
+
+func FetchPostsByUserID(app * CoreModels.App) http.HandlerFunc{
+	return func(w http.ResponseWriter, r *http.Request){
+	var Posts []models.Post
+
+	if CrosAllow(w,r){
+			return
+		}
+			// Only allow GET requests
+			if r.Method != "GET" {
+				sendErrorResponse(w, "Method not allowed", http.StatusMethodNotAllowed)
+				return
+			}
+			
+	
+
+		Userid:= r.URL.Query().Get("Userid")
+
+
+		Posts,err:=app.Posts.FetchPostsByUserID(Userid)
+		if err != nil {
+			sendErrorResponse(w, fmt.Sprintf("Post not found: %v", err), http.StatusNotFound)
+
+			return
+		}
+
+		response:= map[string]interface{}{
+			"Posts": Posts,
+		}
+		
+		json.NewEncoder(w).Encode(response)
+	}
+}
