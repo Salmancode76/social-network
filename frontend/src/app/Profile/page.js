@@ -75,6 +75,7 @@ export default function ProfilePage(){
 
        useEffect(() => {
         async function fetchPosts() {
+          
           try{
             if (id){
               const data = await FetchPostsByUserID(id);
@@ -130,6 +131,11 @@ export default function ProfilePage(){
               <strong>{followingCount}</strong>
               <span>Following</span>
             </div>
+            {user.User.id === currentUserID && (
+              <Link href={`/Profile/EditProfile?id=${user.User.id}`}>
+                <button style={styles.editButton}>Edit Profile</button>
+              </Link>
+            )}
           </div>
         {user.User.is_public == 0 && user.User.id !== currentUserID ? (
         <p>This account is private.</p>
@@ -241,4 +247,13 @@ postImage: {
   marginTop: "10px",
   backgroundColor: "#f9f9f9",
 },
+editButton: {
+  padding: "8px 15px",
+  backgroundColor: "#0070f3",
+  color: "#fff",
+  border: "none",
+  borderRadius: "5px",
+  cursor: "pointer",
+  marginTop: "10px",
+}
 };

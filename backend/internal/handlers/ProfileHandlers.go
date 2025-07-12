@@ -69,3 +69,34 @@ func FetchPostsByUserID(app * CoreModels.App) http.HandlerFunc{
 		json.NewEncoder(w).Encode(response)
 	}
 }
+func UpdateProfile(app *CoreModels.App) http.HandlerFunc{
+	return func(w http.ResponseWriter, r *http.Request){
+		var User models.User
+		if CrosAllow(w,r){
+			return
+		}
+
+		if r.Method != "POST" {
+				sendErrorResponse(w, "Method not allowed", http.StatusMethodNotAllowed)
+				return
+			}
+		err := json.NewDecoder(r.Body).Decode(&User)
+		if err != nil {
+			sendErrorResponse(w, "Invalid request payload", http.StatusBadRequest)
+			return
+		}
+
+		err = app.Users.UpdateUserByData(User)
+			if err != nil {
+				sendErrorResponse(w, "Invalid request payload", http.StatusBadRequest)
+				return
+			}
+
+		w.Header().Set("Content-Type", "application/json")
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(map[string]string{
+			"message": "Profile updated successfully",
+		})
+
+	}
+}
