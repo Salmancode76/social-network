@@ -275,3 +275,35 @@ func GetuserIDHandler(app *CoreModels.App) http.HandlerFunc {
 	}
 }
 
+func SearchUsers(app *CoreModels.App) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if CrosAllow(w, r) {
+			return
+		}
+
+		if r.Method != "GET" {
+			sendErrorResponse(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		query := r.URL.Query().Get("query")
+		if query == "" {
+			sendErrorResponse(w, "Query parameter is required", http.StatusBadRequest)
+			return
+		}
+
+		users, err := app.Users.SearchUsers(query)
+		if err != nil {
+			sendErrorResponse(w, "Failed to search users", http.StatusInternalServerError)
+			return
+		}
+
+		response := map[string]interface{}{
+			"status": "ok",
+			"users":  users,
+		}
+		w.WriteHeader(http.StatusOK)
+		json.NewEncoder(w).Encode(response)
+		
+	}
+}

@@ -16,6 +16,11 @@ export default function Navbar() {
   const [notifications, setNotifications] = useState([]);
   const [notificationCount, setNotificationCount] = useState(0);
 
+
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+
   const hoverTimeoutRef = useRef(null);
 
   useEffect(() => {
@@ -156,6 +161,37 @@ export default function Navbar() {
     };
   }, []);
 
+  useEffect(()=> {
+
+    const timeout = setTimeout(async () =>{
+       if (searchQuery.trim().length === 0) {
+      setSearchResults([]);
+      setShowSearchResults(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://localhost:8080/api/search-users?query=${searchQuery}`,{
+        credentials: "include",
+      });
+      if (res.ok){
+        const data = await res.json();
+        setSearchResults(data.users || [] );
+        setShowSearchResults(true);
+      }else {
+       setSearchResults([]);
+       setShowSearchResults(false); 
+      }
+
+    }catch (e){
+       console.error("Search error:", e);
+    }
+
+    }, 300);
+
+    return () => clearTimeout(timeout);
+  }, [searchQuery]);
+
 
 
   if (loading) return null;
@@ -192,6 +228,47 @@ export default function Navbar() {
           King Hashem
         </div>
         <div className="nav-buttons">
+
+         <div className="search-container">
+            <input
+              type="text"
+              className="search-input"
+              placeholder="Search users..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onFocus={() => {
+                if (searchResults.length > 0) setShowSearchResults(true);
+              }}
+            />
+
+            {showSearchResults && (
+              <div className="search-results">
+                {searchResults.length === 0 ? (
+                  <p>No users found.</p>
+                ) : (
+                  searchResults.map((user) => (
+                    <div
+                      key={user.id}
+                      className="search-result-item"
+                      onClick={() => {
+                        router.push(`/Profile?id=${user.id}`);
+                        setSearchQuery("");
+                        setShowSearchResults(false);
+                      }}
+                    >
+                      <img
+                        src={`http://localhost:8080/Image/Users/${user.avatar}`}
+                        alt="avatar"
+                        className="search-avatar"
+                      />
+                      <span>{user.nickname || `${user.first_name} ${user.last_name}`}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+            )}
+          </div>
+
           {loggedIn && (
             <>
               <button onClick={() => router.push(`/Profile?id=${userID}`)}>

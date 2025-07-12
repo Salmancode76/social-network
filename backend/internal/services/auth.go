@@ -182,12 +182,11 @@ var Users []models.User
 			user.Aboutme = aboutMe.String
 		}
 
-		// Handle the nullable avatar field
-		if avatar.Valid {
-			user.Avatar = avatar.String
-		} else {
-			user.Avatar = "profile_notfound.png" // or some default value
-		}
+		if (avatar.Valid && avatar.String != ""){
+		user.Avatar = avatar.String
+	} else {
+		user.Avatar = "profile_notfound.png"
+	}
 		
 		Users = append(Users, user)
 	}
@@ -218,4 +217,41 @@ func (U *UserModel) UpdateUserByData (user models.User)(error){
 
 	return nil
 
+}
+
+func (U *UserModel) SearchUsers(query string) ([]models.User, error) {
+
+	stmt := `
+	SELECT id, first_name, last_name, nickname, avatar 
+	FROM users 
+	WHERE first_name LIKE ? OR last_name LIKE ? OR nickname LIKE ?
+	LIMIT 10
+	`
+	likeQuery := "%" + query + "%"
+	rows, err := U.DB.Query(stmt, likeQuery, likeQuery, likeQuery)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var users []models.User
+	for rows.Next() {
+		var user models.User
+		var avatar sql.NullString
+
+		err := rows.Scan(&user.ID, &user.FirstN, &user.LastN, &user.Nickname, &avatar)
+		if err != nil {
+			return nil, err
+		}
+
+		if (avatar.Valid && avatar.String != ""){
+		user.Avatar = avatar.String
+	} else {
+		user.Avatar = "profile_notfound.png"
+	}
+
+		users = append(users, user)
+	}
+
+	return users, nil
 }
