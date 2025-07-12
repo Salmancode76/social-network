@@ -12,31 +12,32 @@ type PostModel struct {
 func (p *PostModel) FetchAllPosts(id int)([]models.Post,error){
 
 	//getting all public posts along with all private posts 
-	stmt:= 
-	`
-	SELECT 
+stmt := `
+SELECT 
     p.id,
     p.user_id,
     p.content,
     p.image_path,
     p.privacy_type_id,
     p.created_at,
-	u.nickname,
-	u.first_name || ' ' || u.last_name AS fullname,
-	u.avatar
+    u.nickname,
+    u.first_name || ' ' || u.last_name AS fullname,
+    u.avatar
 FROM 
     posts p
 JOIN 
     users u ON u.id = p.user_id
 WHERE 
-    p.privacy_type_id = 1 
-    OR p.user_id = (?)
+    (p.privacy_type_id = 1 
+    OR p.user_id = (?) 
     OR p.id IN (
         SELECT post_id 
         FROM post_privacy 
         WHERE user_id = (?)
-    );
+    ))
+    AND p.group_id IS NULL;
 `
+
 	var Posts []models.Post
 	//fmt.Print(id)
 	row,err := p.DB.Query(stmt,id,id)
@@ -196,4 +197,45 @@ func(p*PostModel)FetchPostComments(id string)([]models.Comment,error){
 		Comments = append(Comments, comment)
 	}
 	return Comments,nil
+}
+
+
+func (p *PostModel)FetchPostsByUserID (userid string)([]models.Post,error){
+	var Posts []models.Post
+	stmt:=`SELECT
+		 id,
+       user_id,
+       content,
+       image_path,
+       privacy_type_id,
+       group_id,
+       created_at
+  FROM posts
+  where user_id =(?);
+`
+
+	row, err := p.DB.Query(stmt,userid)
+
+	if err != nil {
+	  return  Posts,err
+  }
+
+  for row.Next(){
+	var Post models.Post
+	var GroupID sql.NullString
+	 err:= row.Scan(&Post.ID,&Post.UserID,&Post.Content,&Post.ImageFile,&Post.PrivacyTypeID,&GroupID,&Post.CreatedAt)
+		if err!=nil{
+			return Posts,err
+		}
+		if GroupID.Valid{
+			Post.GroupID = GroupID.String
+		}
+	 Posts = append(Posts, Post)
+  }
+
+ 
+
+
+
+  return Posts,nil
 }

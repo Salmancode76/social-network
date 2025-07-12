@@ -32,6 +32,8 @@ func SetupRoutes(app *CoreModels.App) *http.ServeMux {
 	mux.HandleFunc(("/api/FetchAllUsers"), handlers.FetchAllUsersHandler(app))
 
 	mux.HandleFunc(("/api/FetchUserByID"), handlers.UserDataHandler(app))
+	
+	mux.HandleFunc(("/api/FetchPostsByUserID"), handlers.FetchPostsByUserID(app))
 
 	mux.HandleFunc(("/api/GetUserIDFromSession"), handlers.GetuserIDHandler(app))
 
@@ -43,6 +45,10 @@ func SetupRoutes(app *CoreModels.App) *http.ServeMux {
 	mux.HandleFunc("/api/CreateEvent", handlers.CreateEvent(app))
 	mux.HandleFunc("/api/FetchEvents", handlers.FetchEvents(app))
 	mux.HandleFunc("/api/OptionsEvent", handlers.OptionsEvent(app))
+	
+	mux.HandleFunc("/api/update-profile",handlers.UpdateProfile(app))
+
+	mux.HandleFunc("/api/search-users", handlers.SearchUsers(app))
 
 	mux.HandleFunc("/api/RequestJoin", handlers.SendRequestToJoin(app))
 	mux.HandleFunc("/api/GetAllNotifications", handlers.GetAllNotifications(app))

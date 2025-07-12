@@ -1,12 +1,17 @@
 package handlers
 
 import (
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"path/filepath"
 	"social-network-backend/internal/models"
 	CoreModels "social-network-backend/internal/models/app"
 	"strconv"
+	"strings"
+	"time"
 )
 
 func CreateGroup(app *CoreModels.App) http.HandlerFunc {
@@ -291,7 +296,6 @@ func mapIsGoingToLabel(value string) string {
 	}
 }
 
-
 func OptionsEvent(app *CoreModels.App) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if CrosAllow(w, r) {
@@ -335,8 +339,7 @@ func OptionsEvent(app *CoreModels.App) http.HandlerFunc {
 	}
 }
 
-
-func FetchAllUninvitedUsersToGroup(app * CoreModels.App)  http.HandlerFunc {
+func FetchAllUninvitedUsersToGroup(app *CoreModels.App) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		if CrosAllow(w, r) {
@@ -359,21 +362,19 @@ func FetchAllUninvitedUsersToGroup(app * CoreModels.App)  http.HandlerFunc {
 
 		var users []models.User
 
-		users,err = app.Users.FetchUsersNotInGroup(groupID,userSTR)
+		users, err = app.Users.FetchUsersNotInGroup(groupID, userSTR)
 
-		if err!=nil{
-			sendErrorResponse(w, "Failed to Fetch Unvited users "+ err.Error(), http.StatusInternalServerError)
+		if err != nil {
+			sendErrorResponse(w, "Failed to Fetch Unvited users "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
 		json.NewEncoder(w).Encode(users)
 
-
 	}
 }
 
-
-func InGroupInvite(app * CoreModels.App) http.HandlerFunc{
+func InGroupInvite(app *CoreModels.App) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 
 		var invite models.Invite
@@ -385,9 +386,9 @@ func InGroupInvite(app * CoreModels.App) http.HandlerFunc{
 		if r.Method != "POST" {
 			sendErrorResponse(w, "Method not allowed", http.StatusMethodNotAllowed)
 			return
-		}	
+		}
 
-		err:=json.NewDecoder(r.Body).Decode(&invite)
+		err := json.NewDecoder(r.Body).Decode(&invite)
 
 		if err != nil {
 			sendErrorResponse(w, "Invalid request payload", http.StatusBadRequest)
@@ -400,13 +401,139 @@ func InGroupInvite(app * CoreModels.App) http.HandlerFunc{
 			return
 		}
 
-		err = app.Notifications.SendInvitesInGroup(id,invite.UserIDs,invite.GroupID)
+		err = app.Notifications.SendInvitesInGroup(id, invite.UserIDs, invite.GroupID)
 		if err != nil {
 			sendErrorResponse(w, fmt.Sprintf("Falied to send invites: %v", err), http.StatusBadRequest)
 			return
 		}
-	
+
 	}
-		
-		
+
+}
+
+func DownloadGroupPostImage(imageData string) (string, error) {
+	if imageData == "" {
+		return "", nil // no image, skip
+	}
+
+	// Split into metadata and base64 string
+	parts := strings.Split(imageData, ",")
+	if len(parts) != 2 {
+		return "", fmt.Errorf("invalid image data format")
+	}
+
+	meta := parts[0]
+	base64Str := parts[1]
+
+	// Extract file extension from metadata
+	fileExt := "." + strings.Split(strings.Split(meta, ";")[0], "/")[1]
+
+	// Decode base64 to binary
+	data, err := base64.StdEncoding.DecodeString(base64Str)
+	if err != nil {
+		return "", fmt.Errorf("error decoding base64 image: %w", err)
+	}
+
+	// Create / ensure folder exists
+	imageDir := filepath.Join("..", "Image", "Posts")
+	err = os.MkdirAll(imageDir, 0755)
+	if err != nil {
+		return "", fmt.Errorf("error creating folder: %w", err)
+	}
+
+	// Create unique filename
+	fileName := fmt.Sprintf("group_%d_%s%s", time.Now().UnixNano(), time.Now().Format("20060102_150405"), fileExt)
+	imagePath := filepath.Join(imageDir, fileName)
+
+	// Write to disk
+	err = os.WriteFile(imagePath, data, 0644)
+	if err != nil {
+		return "", fmt.Errorf("error writing image to disk: %w", err)
+	}
+
+	return fileName, nil // return final filename to be saved in DB
+}
+
+func CreateGroupPost(app *CoreModels.App) http.HandlerFunc {
+
+	return func(w http.ResponseWriter, r *http.Request) {
+		var post models.Post
+
+		if CrosAllow(w, r) {
+			return
+		}
+		if r.Method != "POST" {
+			sendErrorResponse(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		err := json.NewDecoder(r.Body).Decode(&post)
+		if err != nil {
+			sendErrorResponse(w, "Invalid post data", http.StatusBadRequest)
+			return
+		}
+
+		userID, err := app.Users.GetUserIDFromSession(w, r)
+		if err != nil {
+			sendErrorResponse(w, "Invalid session", http.StatusUnauthorized)
+			return
+		}
+
+		// Convert to GroupPost directly (no need to convert groupID)
+		convertedPost := models.GroupPost{
+			UserID:    userID,
+			GroupID:   post.GroupID,
+			Content:   post.Content,
+			ImageFile: post.ImageFile,
+		}
+
+		convertedPost.ImagePath, err = DownloadGroupPostImage(post.ImageFile)
+		if err != nil {
+			sendErrorResponse(w, "Invalid image data: "+err.Error(), http.StatusBadRequest)
+			return
+		}
+		convertedPost.ImageFile = "" // optional cleanup
+
+		err = app.Groups.CreateGroupPost(&convertedPost)
+		if err != nil {
+			sendErrorResponse(w, "Failed to create group post: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusCreated)
+		json.NewEncoder(w).Encode(convertedPost)
+	}
+}
+
+func FetchGroupPosts(app *CoreModels.App) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if CrosAllow(w, r) {
+			return
+		}
+		if r.Method != "GET" {
+			sendErrorResponse(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		groupIDStr := r.URL.Query().Get("group_id")
+		groupID, err := strconv.Atoi(groupIDStr)
+		if err != nil {
+			sendErrorResponse(w, "Invalid group ID", http.StatusBadRequest)
+			return
+		}
+
+		posts, err := app.Groups.GetPostsByGroupID(groupID)
+		if err != nil {
+			sendErrorResponse(w, "Failed to fetch posts: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		var groupPosts []models.GroupPost
+		for _, post := range posts {
+			groupPosts = append(groupPosts, post)
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(groupPosts)
+	}
 }

@@ -85,7 +85,7 @@ window.dispatchEvent(new Event("session-changed"));
     const strongPasswordRegex = /^(?=.*[A-Z])(?=.*[!@#$%^&*(),.?":{}|<>]).{8,}$/;
 
     if (!strongPasswordRegex.test(registerForm.password)) {
-      ("Password must be at least 8 characters and include at least one uppercase letter and one special character.");
+       setErrorMsg("Password must be at least 8 characters and include at least one uppercase letter and one special character.");
       return;
     }
 

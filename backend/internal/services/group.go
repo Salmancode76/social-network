@@ -316,3 +316,54 @@ func (g *GroupModel) GetResponseCounts(eventID int) (map[string]int, error) {
 	return result, nil
 }
 
+func (g *GroupModel) CreateGroupPost(post *models.GroupPost) error {
+	stmt := `
+		INSERT INTO posts (user_id, content, image_path, group_id, created_at)
+		VALUES (?, ?, ?, ?, datetime('now'))
+	`
+	result, err := g.DB.Exec(stmt, post.UserID, post.Content, post.ImagePath, post.GroupID)
+	if err != nil {
+		return err
+	}
+
+	lastID, err := result.LastInsertId()
+	if err != nil {
+		return err
+	}
+
+	post.ID = int(lastID)
+	// Fetch the timestamp from DB after insert
+	row := g.DB.QueryRow(`SELECT created_at FROM posts WHERE id = ?`, post.ID)
+	err = row.Scan(&post.CreatedAt)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (g *GroupModel) GetPostsByGroupID(groupID int) ([]models.GroupPost, error) {
+	stmt := `
+		SELECT id, user_id, content, image_path, group_id, created_at
+		FROM posts
+		WHERE group_id = ?
+		ORDER BY created_at DESC
+	`
+
+	rows, err := g.DB.Query(stmt, groupID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []models.GroupPost
+	for rows.Next() {
+		var post models.GroupPost
+		err := rows.Scan(&post.ID, &post.UserID, &post.Content, &post.ImagePath, &post.GroupID, &post.CreatedAt)
+		if err != nil {
+			return nil, err
+		}
+		posts = append(posts, post)
+	}
+
+	return posts, nil
+}
