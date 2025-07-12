@@ -64,6 +64,13 @@ export default function ProfilePage(){
       try {
         const session = await FetchUserIDbySession();
         setUserID(session.UserID);
+
+        const pageUserId = searchParams.get("id");
+      if (session.UserID !== pageUserId) {
+        router.push("/"); 
+        return;
+      }
+
         const user = await FetchUserByID(session.UserID);
         const u = user.User;
         setUserData({
