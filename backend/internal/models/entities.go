@@ -64,6 +64,16 @@ type Event struct {
 	CreatedAt     string `json:"created_at"`
 }
 
+type GroupPost struct {
+	ID        int    `json:"id"`
+	UserID    int    `json:"user_id"`
+	Content   string `json:"content"`
+	ImageFile string `json:"image_file"` // base64 from frontend
+	ImagePath string `json:"image"`      // ✅ match what frontend expects
+	GroupID   string `json:"group_id"`
+	CreatedAt string `json:"created_at"`
+}
+
 type Notification struct {
 	ID                 int    `json:"id"`
 	UserID             int    `json:"user_id"`
@@ -86,8 +96,7 @@ type Request struct {
 	Accepted       bool `json:"accepted"`
 }
 
-type Invite struct{
-	UserIDs    []string `json:"user_ids"`
-	GroupID   int `json:"group_id"`
-
+type Invite struct {
+	UserIDs []string `json:"user_ids"`
+	GroupID int      `json:"group_id"`
 }

@@ -1,17 +1,26 @@
 "use client";
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
+import { FetchPostsGroup, CreateGroupPost } from "../utils/FetchGroupPosts";
 import "./group.css";
 
 export default function GroupPost({ group, onBack }) {
     const [posts, setPosts] = useState([]);
     const [showModal, setShowModal] = useState(false);
-    const [form, setForm] = useState({ title: "", content: "" });
+    const [form, setForm] = useState({ content: "" });
     const [imageBase64, setImageBase64] = useState(null);
     const imageInputRef = useRef();
 
     const [commentVisibility, setCommentVisibility] = useState({});
     const [commentForm, setCommentForm] = useState({});
     const commentImageRefs = useRef({});
+
+    useEffect(() => {
+        async function loadPosts() {
+            const groupPosts = await FetchPostsGroup(group.id);
+            setPosts(groupPosts);
+        }
+        loadPosts();
+    }, [group.id]);
 
     const handleImageUpload = (file, postId = null) => {
         const reader = new FileReader();
@@ -28,28 +37,26 @@ export default function GroupPost({ group, onBack }) {
                 }));
             }
         };
-        if (file) {
-            reader.readAsDataURL(file);
-        }
+        if (file) reader.readAsDataURL(file);
     };
 
-    const handleCreate = (e) => {
+    const handleCreate = async (e) => {
         e.preventDefault();
 
-        const newPost = {
-            id: Date.now(),
-            title: form.title,
+        const payload = {
             content: form.content,
-            image: imageBase64,
-            created_at: new Date().toISOString(),
-            comments: [],
+            image_file: imageBase64,   // ✅ now matches backend model!
+            group_id: group.id,
         };
 
-        setPosts([...posts, newPost]);
-        setForm({ title: "", content: "" });
-        setImageBase64(null);
-        imageInputRef.current.value = "";
-        setShowModal(false);
+        const createdPost = await CreateGroupPost(payload);
+        if (createdPost) {
+            setPosts(prev => [...prev, createdPost]);
+            setForm({ content: "" });
+            setImageBase64(null);
+            imageInputRef.current.value = "";
+            setShowModal(false);
+        }
     };
 
     const toggleComment = (postId) => {
@@ -112,12 +119,11 @@ export default function GroupPost({ group, onBack }) {
                 ) : (
                     posts.map((post) => (
                         <div className="message" key={post.id}>
-                            <p><strong style={{ fontSize: "2rem" }}>{post.title}</strong></p>
                             <p>{post.content}</p>
                             {post.image && (
                                 <div className="post-image">
                                     <img
-                                        src={post.image}
+                                        src={`http://localhost:8080/Image/Posts/${post.image}`}
                                         alt="Post visual"
                                         style={{
                                             maxWidth: "250px",
@@ -126,6 +132,7 @@ export default function GroupPost({ group, onBack }) {
                                             objectFit: "cover"
                                         }}
                                     />
+
                                 </div>
                             )}
                             <div className="event-time">
@@ -133,7 +140,6 @@ export default function GroupPost({ group, onBack }) {
                                 <br />
                                 🕒 {new Date(post.created_at).toLocaleTimeString()}
                             </div>
-
 
                             <button className="comment-button" onClick={() => toggleComment(post.id)}>
                                 💬 comments
@@ -154,7 +160,6 @@ export default function GroupPost({ group, onBack }) {
                                         required
                                     />
 
-                                    {/* Hidden file input */}
                                     <input
                                         type="file"
                                         accept="image/*"
@@ -182,14 +187,11 @@ export default function GroupPost({ group, onBack }) {
                                             )}
                                         </div>
 
-                                        <button type="submit" className="post-button">
-                                            Post
-                                        </button>
+                                        <button type="submit" className="post-button">Post</button>
                                     </div>
                                 </form>
                             )}
 
-                            {/* Show all comments */}
                             {post.comments && post.comments.length > 0 && (
                                 <div className="comment-list">
                                     {post.comments.map((c, i) => (
@@ -208,7 +210,6 @@ export default function GroupPost({ group, onBack }) {
                                                     }}
                                                 />
                                             )}
-
                                             <small className="comment-timestamp">
                                                 📅 {new Date(c.created_at).toLocaleDateString()}
                                                 <br />
@@ -231,13 +232,6 @@ export default function GroupPost({ group, onBack }) {
                         <button className="modal-close" onClick={() => setShowModal(false)}>✖</button>
                         <h2>Create New Post</h2>
                         <form onSubmit={handleCreate}>
-                            <input
-                                type="text"
-                                placeholder="Title"
-                                value={form.title}
-                                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                                required
-                            />
                             <textarea
                                 placeholder="What's on your mind?"
                                 value={form.content}
