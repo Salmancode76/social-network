@@ -33,7 +33,7 @@ func AddMessageToHistory(fromUSer string, toUser string, messageText string) {
 	db := OpenDatabase()
 	defer CloseDB(db)
 	//inserting data into table
-	_, err := db.Exec("INSERT INTO messages (from_id,to_id,message,time,is_read) VALUES (?,?,?,?,?)", fromUSer, toUser, messageText, time.Now().Format("2006-01-02 15:04:05"), isread)
+	_, err := db.Exec("INSERT INTO chatmessages (from_id,to_id,message,time,is_read) VALUES (?,?,?,?,?)", fromUSer, toUser, messageText, time.Now().Format("2006-01-02 15:04:05"), isread)
 	if err != nil {
 		// Handle error
 		fmt.Printf("Server >> Error adding message to database: %s ", err)
@@ -45,7 +45,7 @@ func GetChatHistory(user string, from string, offset int) []Message {
 	defer db.Close()
 	fmt.Println("fromUser is=", from)
 	fmt.Println("toUser is=", user)
-	rows, err := db.Query("SELECT from_id, to_id, is_read, message, time FROM chatmessages WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?) ORDER BY time DESC", user, from, from, user)
+	rows, err := db.Query("SELECT from_id, to_id, is_read, message, time FROM chatmessages WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?) ORDER BY time ASC", user, from, from, user)
 
 	if err != nil {
 		fmt.Printf("Server >> Error getting chat history: %s", err)
@@ -95,7 +95,22 @@ func GetChatHistory(user string, from string, offset int) []Message {
 // Get username depending on userID
 func GetUsernameFromId(db *sql.DB, id string) string {
 	// Prepare the SQL query to retrieve the user ID based on the username
+	
+	query := "SELECT nickname FROM Users WHERE id = ?"
 
+	// Execute the query and retrieve the user ID
+	var username string
+	err := db.QueryRow(query, id).Scan(&username)
+	if err != nil {
+		fmt.Printf("Server >> Error getting user ID: %s", err)
+	}
+
+	return username
+}
+func GetNickname(id string) string {
+	// Prepare the SQL query to retrieve the user ID based on the username
+	db := OpenDatabase()
+	defer db.Close()
 	query := "SELECT nickname FROM Users WHERE id = ?"
 
 	// Execute the query and retrieve the user ID
@@ -122,6 +137,23 @@ func GetUserName(db *sql.DB, From string) string {
 }
 
 func GetUserID(db *sql.DB, username string) string {
+	fmt.Println("getting user id for", username)
+	// Prepare the SQL query to retrieve the user ID based on the username
+	query := "SELECT id FROM Users WHERE nickname = ?"
+	// Execute the query and retrieve the user ID
+	var userID string
+	err := db.QueryRow(query, username).Scan(&userID)
+	if err != nil {
+		fmt.Printf("Server >> Error getting user ID: %s", err)
+	}
+
+	return userID
+}
+
+
+func GetID( username string) string {
+	db := OpenDatabase()
+	defer db.Close()
 	fmt.Println("getting user id for", username)
 	// Prepare the SQL query to retrieve the user ID based on the username
 	query := "SELECT id FROM Users WHERE nickname = ?"

@@ -40,10 +40,14 @@ func HandleWebSocket(app *CoreModels.App, w http.ResponseWriter, r *http.Request
 		if err != nil {
 			if websocket.IsUnexpectedCloseError(err, websocket.CloseGoingAway) {
 				log.Printf("Connection closed unexpectedly: %v", err)
-				//delete(app.UserID, cookie.Value)
-				//fmt.Println(app.UserID)
+
+				for i, s := range *userSockets {
+					if &s == conn {
+						delete(*userSockets, i)
+					}
+					return
+				}
 			}
-			return
 		}
 		// //log.Printf("Received: %s", message)
 		// if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {
@@ -56,6 +60,7 @@ func HandleWebSocket(app *CoreModels.App, w http.ResponseWriter, r *http.Request
 		fmt.Println(myMessage)
 		// cookieValue := r.Header.Get("Cookie")
 		// handleWebSocketConnection(conn, cookieValue)
+		(*userSockets)[myMessage.From] = *conn
 		handleWebSocketMessage(app, conn, myMessage)
 
 	}
@@ -76,8 +81,11 @@ func handleWebSocketMessage(app *CoreModels.App, conn *websocket.Conn, message M
 
 		handleGetChatHistoryMessage(conn, message)
 		// SetRead(message.From, message.To)
-	case "read_message":
-		// SetRead(message.From, message.To)
+	case "new_message":
+		fmt.Println("New message received: ", message)
+		handleNewMessage(conn, message)
+		//send message to receiver
+		notifyNewMessage(message)
 	case "logout":
 		// logoutUser(message.From, app)
 		// UpdateOfflineUsers(app, message.From)
@@ -122,4 +130,23 @@ func handleGetChatHistoryMessage(conn *websocket.Conn, m MyMessage) {
 	conn.WriteJSON(message)
 	// fmt.Println(message)
 
+}
+
+func handleNewMessage(conn *websocket.Conn, m MyMessage) {
+	db := OpenDatabase()
+	defer db.Close()
+	From := m.From
+	To := GetUserID(db, string(m.To))
+	fmt.Println(To)
+	fmt.Println(From)
+	fmt.Println("New message  ", m.Text)
+	AddMessageToHistory(From, To, m.Text)
+}
+
+func notifyNewMessage(m MyMessage) {
+	from := GetNickname(m.From)
+	message := MyMessage{Type: "new", From: from, To: m.To, Text: m.Text}
+	to := GetID(m.To)
+	conn := (*userSockets)[to]
+	conn.WriteJSON(message)
 }
