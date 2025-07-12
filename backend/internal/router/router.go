@@ -37,15 +37,19 @@ func SetupRoutes(app *CoreModels.App) *http.ServeMux {
 
 	mux.HandleFunc(("/api/GetUserIDFromSession"), handlers.GetuserIDHandler(app))
 
+
+	//groups
 	mux.HandleFunc("/api/CreateGroup", handlers.CreateGroup(app))
 	mux.HandleFunc("/api/FetchAllGroups", handlers.FetchAllGroups(app))
 	mux.HandleFunc("/api/group/messages", handlers.GetGroupMessages(app))
 	mux.HandleFunc("/api/group/send-message", handlers.SendGroupMessage(app))
-
 	mux.HandleFunc("/api/CreateEvent", handlers.CreateEvent(app))
 	mux.HandleFunc("/api/FetchEvents", handlers.FetchEvents(app))
 	mux.HandleFunc("/api/OptionsEvent", handlers.OptionsEvent(app))
-	
+	mux.HandleFunc("/api/FetchGroupPosts", handlers.FetchGroupPosts(app))
+	mux.HandleFunc("/api/CreateGroupPost", handlers.CreateGroupPost(app)) 
+    
+
 	mux.HandleFunc("/api/update-profile",handlers.UpdateProfile(app))
 
 	mux.HandleFunc("/api/search-users", handlers.SearchUsers(app))
