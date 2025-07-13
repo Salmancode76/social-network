@@ -72,6 +72,13 @@ type GroupPost struct {
 	ImagePath string `json:"image"`      
 	GroupID   string `json:"group_id"`
 	CreatedAt string `json:"created_at"`
+	Comments  []GroupPostComment  `json:"comments"`
+}
+
+type GroupPostComment struct {
+	UserID    int    `json:"user_id"`
+	Content   string `json:"text"`
+	CreatedAt string `json:"created_at"`
 }
 
 type Notification struct {
