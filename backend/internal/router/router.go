@@ -49,6 +49,12 @@ func SetupRoutes(app *CoreModels.App) *http.ServeMux {
 	mux.HandleFunc("/api/FetchGroupPosts", handlers.FetchGroupPosts(app))
 	mux.HandleFunc("/api/CreateGroupPost", handlers.CreateGroupPost(app)) 
     
+	mux.HandleFunc("/api/follow", handlers.FollowHandler(app) ) 
+	mux.HandleFunc("/api/unfollow", handlers.UnfollowHandler(app) ) 
+	mux.HandleFunc("/api/follow-status", handlers.FollowStatusHandler(app) )
+	mux.HandleFunc("/api/followers", handlers.GetFollowersHandler(app) )
+	mux.HandleFunc("/api/following", handlers.GetFollowingHandler(app) )
+
 
 	mux.HandleFunc("/api/update-profile",handlers.UpdateProfile(app))
 

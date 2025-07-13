@@ -16,6 +16,7 @@ type App struct {
 	Server  *Server
 	Users   *services.UserModel
 	Posts   *services.PostModel
+	Follow  *services.FollowModel
 	Groups 	*services.GroupModel
 	Notifications *services.NotificationModel
 	DB      *sql.DB

@@ -68,8 +68,8 @@ type GroupPost struct {
 	ID        int    `json:"id"`
 	UserID    int    `json:"user_id"`
 	Content   string `json:"content"`
-	ImageFile string `json:"image_file"` // base64 from frontend
-	ImagePath string `json:"image"`      // ✅ match what frontend expects
+	ImageFile string `json:"image_file"` 
+	ImagePath string `json:"image"`      
 	GroupID   string `json:"group_id"`
 	CreatedAt string `json:"created_at"`
 }
@@ -99,4 +99,10 @@ type Request struct {
 type Invite struct {
 	UserIDs []string `json:"user_ids"`
 	GroupID int      `json:"group_id"`
+}
+
+type FollowRequest struct {
+	FollowerID  string   `json:"follower_id"`
+	FollowingID string   `json:"following_id"`
+	IsPublic    string   `json:"is_public"`
 }
