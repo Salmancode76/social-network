@@ -78,8 +78,10 @@ type GroupPost struct {
 type GroupPostComment struct {
 	UserID    int    `json:"user_id"`
 	Content   string `json:"text"`
+	Image     string `json:"image"`      // ✅ added field for image
 	CreatedAt string `json:"created_at"`
 }
+
 
 type Notification struct {
 	ID                 int    `json:"id"`

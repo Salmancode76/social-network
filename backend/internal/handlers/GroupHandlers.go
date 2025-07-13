@@ -535,7 +535,6 @@ func FetchGroupPosts(app *CoreModels.App) http.HandlerFunc {
 
 
 
-
 func CreateGroupComment(app *CoreModels.App) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		if CrosAllow(w, r) {
@@ -548,8 +547,9 @@ func CreateGroupComment(app *CoreModels.App) http.HandlerFunc {
 		}
 
 		var input struct {
-			PostID  int    `json:"post_id"`
-			Content string `json:"content"`
+			PostID     int    `json:"post_id"`
+			Content    string `json:"content"`
+			ImageFile  string `json:"image_file"` // Accept image from frontend
 		}
 
 		err := json.NewDecoder(r.Body).Decode(&input)
@@ -564,17 +564,36 @@ func CreateGroupComment(app *CoreModels.App) http.HandlerFunc {
 			return
 		}
 
+		// Save the image (if exists)
+		var imageFileName string
+		if strings.TrimSpace(input.ImageFile) != "" {
+			imageFileName, err = DownloadGroupPostImage(input.ImageFile)
+			if err != nil {
+				sendErrorResponse(w, "Image upload failed: "+err.Error(), http.StatusBadRequest)
+				return
+			}
+		}
+
+		// Save to DB
 		stmt := `
-			INSERT INTO comments (user_id, post_id, content, created_at)
-			VALUES (?, ?, ?, datetime('now'))
+			INSERT INTO comments (user_id, post_id, content, image_path, created_at)
+			VALUES (?, ?, ?, ?, datetime('now'))
 		`
 
-		_, err = app.DB.Exec(stmt, userID, input.PostID, input.Content)
+		_, err = app.DB.Exec(stmt, userID, input.PostID, input.Content, imageFileName)
 		if err != nil {
 			sendErrorResponse(w, "Failed to save comment: "+err.Error(), http.StatusInternalServerError)
 			return
 		}
 
-		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
+		// Return comment data to frontend
+		comment := map[string]string{
+			"text":        input.Content,
+			"image":       imageFileName,
+			"created_at":  time.Now().Format("2006-01-02 15:04:05"),
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(comment)
 	}
 }
+

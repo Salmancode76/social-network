@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { FetchPostsGroup, CreateGroupPost } from "../utils/FetchGroupPosts";
+import { FetchPostsGroup, CreateGroupPost, CreateGroupComment } from "../utils/FetchGroupPosts";
 import "./group.css";
 
 export default function GroupPost({ group, onBack }) {
@@ -80,24 +80,18 @@ export default function GroupPost({ group, onBack }) {
     const comment = commentForm[postId];
     if (!comment || !comment.content?.trim()) return;
 
-    // ✅ Send to backend
-    await fetch("http://localhost:8080/api/CreateGroupComment", {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        post_id: postId,
-        content: comment.content,
-      }),
+    const res = await CreateGroupComment({
+      post_id: postId,
+      content: comment.content,
+      image_file: comment.image || "",
     });
 
-    // Add to UI
+    if (!res) return;
+
     const newComment = {
-      text: comment.content,
-      image: comment.image || null,
-      created_at: new Date().toISOString(),
+      text: res.text,
+      image: res.image || null,
+      created_at: res.created_at,
     };
 
     setPosts(prev =>
@@ -212,7 +206,7 @@ export default function GroupPost({ group, onBack }) {
                       <p>{c.text}</p>
                       {c.image && (
                         <img
-                          src={c.image}
+                          src={`http://localhost:8080/Image/Posts/${c.image}`}
                           alt="Comment"
                           style={{
                             maxWidth: "250px",
