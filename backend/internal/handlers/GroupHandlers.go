@@ -528,12 +528,53 @@ func FetchGroupPosts(app *CoreModels.App) http.HandlerFunc {
 			return
 		}
 
-		var groupPosts []models.GroupPost
-		for _, post := range posts {
-			groupPosts = append(groupPosts, post)
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(posts)
+	}
+}
+
+
+
+
+func CreateGroupComment(app *CoreModels.App) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		if CrosAllow(w, r) {
+			return
 		}
 
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(groupPosts)
+		if r.Method != "POST" {
+			sendErrorResponse(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+		var input struct {
+			PostID  int    `json:"post_id"`
+			Content string `json:"content"`
+		}
+
+		err := json.NewDecoder(r.Body).Decode(&input)
+		if err != nil {
+			sendErrorResponse(w, "Invalid input", http.StatusBadRequest)
+			return
+		}
+
+		userID, err := app.Users.GetUserIDFromSession(w, r)
+		if err != nil {
+			sendErrorResponse(w, "Unauthorized", http.StatusUnauthorized)
+			return
+		}
+
+		stmt := `
+			INSERT INTO comments (user_id, post_id, content, created_at)
+			VALUES (?, ?, ?, datetime('now'))
+		`
+
+		_, err = app.DB.Exec(stmt, userID, input.PostID, input.Content)
+		if err != nil {
+			sendErrorResponse(w, "Failed to save comment: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		json.NewEncoder(w).Encode(map[string]string{"status": "ok"})
 	}
 }

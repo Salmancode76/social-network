@@ -32,11 +32,10 @@ func SetupRoutes(app *CoreModels.App) *http.ServeMux {
 	mux.HandleFunc(("/api/FetchAllUsers"), handlers.FetchAllUsersHandler(app))
 
 	mux.HandleFunc(("/api/FetchUserByID"), handlers.UserDataHandler(app))
-	
+
 	mux.HandleFunc(("/api/FetchPostsByUserID"), handlers.FetchPostsByUserID(app))
 
 	mux.HandleFunc(("/api/GetUserIDFromSession"), handlers.GetuserIDHandler(app))
-
 
 	//groups
 	mux.HandleFunc("/api/CreateGroup", handlers.CreateGroup(app))
@@ -47,10 +46,10 @@ func SetupRoutes(app *CoreModels.App) *http.ServeMux {
 	mux.HandleFunc("/api/FetchEvents", handlers.FetchEvents(app))
 	mux.HandleFunc("/api/OptionsEvent", handlers.OptionsEvent(app))
 	mux.HandleFunc("/api/FetchGroupPosts", handlers.FetchGroupPosts(app))
-	mux.HandleFunc("/api/CreateGroupPost", handlers.CreateGroupPost(app)) 
-    
+	mux.HandleFunc("/api/CreateGroupPost", handlers.CreateGroupPost(app))
+	mux.HandleFunc("/api/CreateGroupComment", handlers.CreateGroupComment(app))
 
-	mux.HandleFunc("/api/update-profile",handlers.UpdateProfile(app))
+	mux.HandleFunc("/api/update-profile", handlers.UpdateProfile(app))
 
 	mux.HandleFunc("/api/search-users", handlers.SearchUsers(app))
 
@@ -61,9 +60,9 @@ func SetupRoutes(app *CoreModels.App) *http.ServeMux {
 
 	mux.HandleFunc("/api/MarkNotificationAsRead", handlers.MarkNotificationAsRead(app))
 
-	mux.HandleFunc("/api/FetchUninvitedUsersToGroup",handlers.FetchAllUninvitedUsersToGroup(app))
-	
-	mux.HandleFunc("/api/InviteInGroupUsers",handlers.InGroupInvite(app))
+	mux.HandleFunc("/api/FetchUninvitedUsersToGroup", handlers.FetchAllUninvitedUsersToGroup(app))
+
+	mux.HandleFunc("/api/InviteInGroupUsers", handlers.InGroupInvite(app))
 
 	//Serve Images
 	imageHandler := http.StripPrefix("/Image/", http.FileServer(http.Dir("../Image/")))
