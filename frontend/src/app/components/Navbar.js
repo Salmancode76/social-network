@@ -161,6 +161,7 @@ export default function Navbar() {
     };
   }, []);
 
+  
   useEffect(()=> {
 
     const timeout = setTimeout(async () =>{
@@ -191,7 +192,6 @@ export default function Navbar() {
 
     return () => clearTimeout(timeout);
   }, [searchQuery]);
-
 
 
   if (loading) return null;
@@ -229,7 +229,11 @@ export default function Navbar() {
         </div>
         <div className="nav-buttons">
 
-         <div className="search-container">
+         
+
+          {loggedIn && (
+            <>
+            <div className="search-container">
             <input
               type="text"
               className="search-input"
@@ -268,9 +272,6 @@ export default function Navbar() {
               </div>
             )}
           </div>
-
-          {loggedIn && (
-            <>
               <button onClick={() => router.push(`/Profile?id=${userID}`)}>
                 My Profile
               </button>

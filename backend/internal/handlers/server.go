@@ -48,6 +48,8 @@ func HandleWebSocket(app *CoreModels.App, w http.ResponseWriter, r *http.Request
 					return
 				}
 			}
+			log.Printf("Read failed: %v", err)
+			return
 		}
 		// //log.Printf("Received: %s", message)
 		// if err := conn.WriteMessage(websocket.TextMessage, message); err != nil {

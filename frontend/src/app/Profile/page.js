@@ -9,11 +9,15 @@ export default function ProfilePage(){
 
   const [user, setUser] = useState(null);
   const [posts, setPosts] = useState([]);
+  const [isFollowing, setIsFollowing] = useState(null);
+    const [profileData, setProfileData] = useState(null);
+
   const [currentUserID ,setCurrentUser] = useState([])
     const [followersCount, setFollowersCount] = useState(0);
   const [followingCount, setFollowingCount] = useState(0);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const id = searchParams.get("id");
   
      useEffect(() => {
         async function checkSession() {
@@ -51,7 +55,7 @@ export default function ProfilePage(){
         }, []);
 
 
-        const id = searchParams.get("id");
+        
 
       useEffect(() => {
         async function fetchData() {
@@ -59,10 +63,6 @@ export default function ProfilePage(){
             if (id){
               const data = await FetchUserByID(id);
               setUser(data);
-
-              
-          setFollowersCount(120);
-          setFollowingCount(75);
             }
 
           }catch(e){
@@ -83,8 +83,7 @@ export default function ProfilePage(){
               setPosts(data.Posts);
 
               
-          setFollowersCount(120);
-          setFollowingCount(75);
+         
             }
 
           }catch(e){
@@ -94,6 +93,78 @@ export default function ProfilePage(){
         }
         fetchPosts();
       },[id]);
+
+      useEffect(() => {
+        async function fetchFollowStatus() {
+          if (!currentUserID || !id || currentUserID === id) return;
+          const res = await fetch(
+             `http://localhost:8080/api/follow-status?follower_id=${currentUserID}&following_id=${id}`,
+             {
+                method: "GET",
+              headers: {
+                "Content-Type": "application/json",
+              },
+             }
+          );
+          const data = await res.json();
+          setIsFollowing(data.status);
+        }
+        fetchFollowStatus();
+
+      }, [currentUserID, id ]);
+
+      async function handleFollowClick() {
+        
+        if (isFollowing === "accepted" || isFollowing === "request"){
+          
+          const res = await fetch("http://localhost:8080/api/unfollow",{
+              method: "DELETE",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+              follower_id: currentUserID,
+              following_id: id,
+            }),
+          });
+          if (res.ok){
+            setIsFollowing(null);
+          }
+        } else{
+
+        
+        const res = await fetch("http://localhost:8080/api/follow", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+             follower_id: currentUserID,
+             following_id: id,
+             is_public: user?.User?.is_public === "1" ?"1" : "0",
+          }),
+        });
+
+        if (res.ok){
+          setIsFollowing(user?.User?.is_public == 1 ? "accepted" : "request");
+        }
+        }
+      }
+
+      useEffect(() => {
+          async function fetchCounts() {
+            if (!id) return;
+
+            const followersRes = await fetch(`http://localhost:8080/api/followers?user_id=${id}`);
+            const followers = await followersRes.json();
+            setFollowersCount(Array.isArray(followers.Users) ? followers.Users.length : 0);
+
+            const followingRes = await fetch(`http://localhost:8080/api/following?user_id=${id}`);
+            const following = await followingRes.json();
+            setFollowingCount(Array.isArray(following.Users) ? following.Users.length : 0);
+          }
+
+          fetchCounts();
+        }, [id, isFollowing]);
+
+
+
       
 
      return (
@@ -123,18 +194,37 @@ export default function ProfilePage(){
               <strong>{Array.isArray(posts) ? posts.length : 0}</strong>
               <span>Posts</span>
             </div>
-            <div style={styles.statItem}>
-              <strong>{followersCount}</strong>
+            <div style={styles.statItem} >
+              <strong style={{cursor: "pointer"}}>{followersCount}</strong>
               <span>Followers</span>
             </div>
             <div style={styles.statItem}>
-              <strong>{followingCount}</strong>
+              <strong style={{cursor: "pointer"}}>{followingCount}</strong>
               <span>Following</span>
             </div>
             {user.User.id === currentUserID && (
               <Link href={`/Profile/EditProfile?id=${user.User.id}`}>
                 <button style={styles.editButton}>Edit Profile</button>
               </Link>
+            )}
+            {user.User.id !== currentUserID && (
+              <button
+              style={{
+                ...styles.editButton,
+                backgroundColor:
+                isFollowing === "accepted" ? "#28a745"
+                : isFollowing === "request" ? "#ffc107"
+                : "#0070f3",
+                cursor:  "pointer",
+                marginLeft: "10px",
+              }}
+              onClick={handleFollowClick}
+              >
+                {isFollowing === "accepted" ? "Followed"
+                : isFollowing === "request"? "Requested"
+              : "Follow"}
+
+              </button>
             )}
           </div>
         {user.User.is_public == 0 && user.User.id !== currentUserID ? (
