@@ -3,8 +3,12 @@
 import { FetchUserIDbySession } from "../utils/FetchUserIDbySession";
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useRef } from "react";
-import {NotificationContainer,fetchNotifications} from "../utils/notification/notification_container"
+import {
+  NotificationContainer,
+  fetchNotifications,
+} from "../utils/notification/notification_container";
 import "../styles/nav.css";
+import { useWebSocket } from "../contexts/WebSocketContext";
 
 export default function Navbar() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -16,12 +20,51 @@ export default function Navbar() {
   const [notifications, setNotifications] = useState([]);
   const [notificationCount, setNotificationCount] = useState(0);
 
-
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
 
   const hoverTimeoutRef = useRef(null);
+
+  const { socket, isConnected, connect, disconnect } = useWebSocket();
+
+  useEffect(() => {
+    if (socket) {
+      const handleMessage = (event) => {
+        try {
+          const data = JSON.parse(event.data);
+          console.log("WebSocket message received:", data);
+
+          if (data.type === "notifications") {
+            setNotifications(data.notifications || []);
+            let count = 0;
+            console.log(data);
+            for (let i = 0; i < data.notifications.length; i++) {
+              console.log("Read " + data.notifications[i].is_read);
+              if (!data.notifications[i].is_read) count++;
+            }
+            setNotificationCount(count || 0);
+          }
+        } catch (error) {
+          console.error("Error parsing WebSocket message:", error);
+        }
+      };
+
+      socket.addEventListener("message", handleMessage);
+
+      return () => {
+        socket.removeEventListener("message", handleMessage);
+      };
+    }
+  }, [socket]);
+
+  useEffect(() => {
+    if (loggedIn && userID && !isConnected) {
+      connect(userID);
+    } else if (!loggedIn && isConnected) {
+      disconnect();
+    }
+  }, [loggedIn, userID, isConnected, connect, disconnect]);
 
   useEffect(() => {
     async function fetchData() {
@@ -31,6 +74,7 @@ export default function Navbar() {
       } catch (e) {
         console.error("Failed to load user data:", e);
         if (e.message.includes("401")) {
+          setLoggedIn(false);
         } else {
           console.error("Error loading session:", e);
         }
@@ -43,13 +87,14 @@ export default function Navbar() {
 
   useEffect(() => {
     async function checkSession() {
-      const res = await fetch("http://localhost:8080/api/check-session", {
-        credentials: "include",
-        method: "GET",
-      });
-      if (res.ok) {
+      try {
+        const res = await fetch("http://localhost:8080/api/check-session", {
+          credentials: "include",
+          method: "GET",
+        });
         setLoggedIn(res.ok);
-      } else {
+      } catch (error) {
+        console.error("Session check failed:", error);
         setLoggedIn(false);
       }
     }
@@ -60,7 +105,6 @@ export default function Navbar() {
       window.removeEventListener("session-changed", checkSession);
     };
   }, []);
-
 
   useEffect(() => {
     if (loggedIn && userID) {
@@ -93,16 +137,12 @@ export default function Navbar() {
         throw new Error(`HTTP error: ${response.status}`);
       }
 
-      // Refresh notifications after action
       fetchNotifications(userID, setNotifications, setNotificationCount);
     } catch (error) {
       console.error("Failed to manage request:", error);
     }
-  }
+  };
 
-
-
-  // Handle notification actions
   const manageRequest = async (
     notificationId,
     related_group_id,
@@ -128,7 +168,6 @@ export default function Navbar() {
         throw new Error(`HTTP error: ${response.status}`);
       }
 
-      // Refresh notifications after action
       fetchNotifications(userID, setNotifications, setNotificationCount);
     } catch (error) {
       console.error("Failed to manage request:", error);
@@ -145,7 +184,7 @@ export default function Navbar() {
   const handleNotificationLeave = () => {
     hoverTimeoutRef.current = setTimeout(() => {
       setShowNotifications(false);
-    }, 300); 
+    }, 300);
   };
 
   useEffect(() => {
@@ -161,38 +200,38 @@ export default function Navbar() {
     };
   }, []);
 
-  
-  useEffect(()=> {
-
-    const timeout = setTimeout(async () =>{
-       if (searchQuery.trim().length === 0) {
-      setSearchResults([]);
-      setShowSearchResults(false);
-      return;
-    }
-
-    try {
-      const res = await fetch(`http://localhost:8080/api/search-users?query=${searchQuery}`,{
-        credentials: "include",
-      });
-      if (res.ok){
-        const data = await res.json();
-        setSearchResults(data.users || [] );
-        setShowSearchResults(true);
-      }else {
-       setSearchResults([]);
-       setShowSearchResults(false); 
+  useEffect(() => {
+    const timeout = setTimeout(async () => {
+      if (searchQuery.trim().length === 0) {
+        setSearchResults([]);
+        setShowSearchResults(false);
+        return;
       }
 
-    }catch (e){
-       console.error("Search error:", e);
-    }
-
+      try {
+        const res = await fetch(
+          `http://localhost:8080/api/search-users?query=${encodeURIComponent(
+            searchQuery
+          )}`,
+          {
+            credentials: "include",
+          }
+        );
+        if (res.ok) {
+          const data = await res.json();
+          setSearchResults(data.users || []);
+          setShowSearchResults(true);
+        } else {
+          setSearchResults([]);
+          setShowSearchResults(false);
+        }
+      } catch (e) {
+        console.error("Search error:", e);
+      }
     }, 300);
 
     return () => clearTimeout(timeout);
   }, [searchQuery]);
-
 
   if (loading) return null;
   if (!userID) return null;
@@ -209,11 +248,15 @@ export default function Navbar() {
       });
 
       if (response.ok) {
+        disconnect();
         localStorage.clear();
         sessionStorage.clear();
+
         setUserID(null);
         setLoggedIn(false);
+
         window.dispatchEvent(new Event("session-changed"));
+
         router.push("/auth");
       }
     } catch (err) {
@@ -228,12 +271,7 @@ export default function Navbar() {
           King Hashem
         </div>
         <div className="nav-buttons">
-
-         
-
-          {loggedIn && (
-            <>
-            <div className="search-container">
+          <div className="search-container">
             <input
               type="text"
               className="search-input"
@@ -265,13 +303,19 @@ export default function Navbar() {
                         alt="avatar"
                         className="search-avatar"
                       />
-                      <span>{user.nickname || `${user.first_name} ${user.last_name}`}</span>
+                      <span>
+                        {user.nickname ||
+                          `${user.first_name} ${user.last_name}`}
+                      </span>
                     </div>
                   ))
                 )}
               </div>
             )}
           </div>
+
+          {loggedIn && (
+            <>
               <button onClick={() => router.push(`/Profile?id=${userID}`)}>
                 My Profile
               </button>

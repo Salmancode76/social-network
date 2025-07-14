@@ -63,6 +63,13 @@ type Event struct {
 	EventDatetime string `json:"event_datetime"`
 	CreatedAt     string `json:"created_at"`
 }
+type GroupPostComment struct {
+	UserID    int    `json:"user_id"`
+	Content   string `json:"text"`
+	Image     string `json:"image"`      // ✅ added field for image
+	CreatedAt string `json:"created_at"`
+}
+
 
 type GroupPost struct {
 	ID        int    `json:"id"`
@@ -73,13 +80,6 @@ type GroupPost struct {
 	GroupID   string `json:"group_id"`
 	CreatedAt string `json:"created_at"`
 	Comments  []GroupPostComment  `json:"comments"`
-}
-
-type GroupPostComment struct {
-	UserID    int    `json:"user_id"`
-	Content   string `json:"text"`
-	Image     string `json:"image"`      // ✅ added field for image
-	CreatedAt string `json:"created_at"`
 }
 
 
@@ -103,6 +103,7 @@ type Request struct {
 	RelatedGroupID int  `json:"related_group_id"`
 	RelatedUserID  int  `json:"related_user_id"`
 	Accepted       bool `json:"accepted"`
+	CreatorID               int `json:"creator_id"`
 }
 
 type Invite struct {

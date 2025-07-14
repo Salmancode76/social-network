@@ -2,7 +2,8 @@
 import { useState, useEffect } from "react";
 import { FetchAllGroups } from "../utils/FetchAllGroups";
 import "./group.css";
-import {socket} from "../utils/ws"
+import { WS_URL } from "../utils/ws";
+import { FetchUserIDbySession } from "../utils/FetchUserIDbySession";
 
 export default function GroupLists({ onGroupClick }) {
   const [groups, setGroups] = useState([]);
@@ -36,10 +37,11 @@ export default function GroupLists({ onGroupClick }) {
     }
   };
 
-  const handleRequestToJoin = async (id) => {
+  const handleRequestToJoin = async (id, creator_id) => {
     try {
       setRequestStatuses((prev) => ({ ...prev, [id]: "pending" }));
 
+      /*
       const response = await fetch(
         `http://localhost:8080/api/RequestJoin?id=${id}`,
         {
@@ -50,13 +52,24 @@ export default function GroupLists({ onGroupClick }) {
           },
         }
       );
+      */
+      const ws = new WebSocket(WS_URL);
 
-      if (!response.ok) {
-        throw new Error(`HTTP error: ${response.status}`);
-      }
+      ws.onopen = async () => {
+        const data = await FetchUserIDbySession();
+        const userID = data.UserID;
+        console.log("WebSocket connected! User ID:", userID);
+        const request = {
+          type: "sendRequestToJoinGroup",
+          related_user_id: parseInt(userID),
+          related_group_id: parseInt(id),
+          creator_id: parseInt(creator_id),
+        };
+        console.table(request);
+        ws.send(JSON.stringify(request));
+      };
 
       setRequestStatuses((prev) => ({ ...prev, [id]: "requested" }));
-
     } catch (e) {
       console.error("Error: ", e);
       setRequestStatuses((prev) => ({ ...prev, [id]: "error" }));
@@ -113,7 +126,7 @@ export default function GroupLists({ onGroupClick }) {
                 className="group-item clickable"
                 onClick={() =>
                   group.isMember &&
-                  group.request_status_id !="1" &&
+                  group.request_status_id != "1" &&
                   handleGroupClick(group)
                 }
               >
@@ -128,7 +141,7 @@ export default function GroupLists({ onGroupClick }) {
                       onSubmit={(e) => {
                         e.preventDefault();
                         if (!buttonInfo.disabled) {
-                          handleRequestToJoin(group.id);
+                          handleRequestToJoin(group.id, group.creator_id);
                         }
                       }}
                     >
