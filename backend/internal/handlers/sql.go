@@ -95,7 +95,7 @@ func GetChatHistory(user string, from string, offset int) []Message {
 // Get username depending on userID
 func GetUsernameFromId(db *sql.DB, id string) string {
 	// Prepare the SQL query to retrieve the user ID based on the username
-	
+
 	query := "SELECT nickname FROM Users WHERE id = ?"
 
 	// Execute the query and retrieve the user ID
@@ -150,8 +150,7 @@ func GetUserID(db *sql.DB, username string) string {
 	return userID
 }
 
-
-func GetID( username string) string {
+func GetID(username string) string {
 	db := OpenDatabase()
 	defer db.Close()
 	fmt.Println("getting user id for", username)
@@ -167,11 +166,51 @@ func GetID( username string) string {
 	return userID
 }
 
-func getAllUsers(db *sql.DB) []string {
+func getAllUsers(db *sql.DB, id string) []string {
 
-	query := "SELECT nickname FROM users"
+	//get public
+
+	//get all follwoing
+	query := "SELECT id FROM followers WHERE follower_id = ? "
 	var names []string
-	rows, err := db.Query(query)
+	rows, err := db.Query(query, id)
+	if err != nil {
+		fmt.Printf("Server >> Error getting all users: %s", err)
+	}
+	for rows.Next() {
+		var id int
+		err = rows.Scan(&id)
+		if err != nil {
+			fmt.Printf("Server >> Error getting all users: %s", err)
+		}
+		name := GetNickname(string(id))
+		names = append(names, name)
+	}
+
+	// get all following
+	query = "SELECT id FROM followers WHERE following_id = ? "
+
+	rows, err = db.Query(query, id)
+	if err != nil {
+		fmt.Printf("Server >> Error getting all users: %s", err)
+	}
+	for rows.Next() {
+		var id int
+		err = rows.Scan(&id)
+		if err != nil {
+			fmt.Printf("Server >> Error getting all users: %s", err)
+		}
+		name := GetNickname(string(id))
+		if isRedunat(names, name) {
+			continue
+		}
+		names = append(names, name)
+	}
+
+	//get public
+
+	query = "SELECT nickname FROM users WHERE is_public = 1 "
+	rows, err = db.Query(query)
 	if err != nil {
 		fmt.Printf("Server >> Error getting all users: %s", err)
 	}
@@ -181,9 +220,22 @@ func getAllUsers(db *sql.DB) []string {
 		if err != nil {
 			fmt.Printf("Server >> Error getting all users: %s", err)
 		}
+		if isRedunat(names, name) {
+			continue
+		}
 		names = append(names, name)
 	}
+
 	return names
+}
+
+func isRedunat(AllUsers []string, name string) bool {
+	for _, i := range AllUsers {
+		if i == name {
+			return true
+		}
+	}
+	return false
 }
 
 // func getFriends(db *sql.DB, to string) []string {

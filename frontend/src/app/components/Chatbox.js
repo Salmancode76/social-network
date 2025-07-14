@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { socket } from "../utils/ws";
+import { FetchUserIDbySession } from '../utils/FetchUserIDbySession';
 import ChatUser from "./ChatUser.js";
 import "./ChatBox.css";
 
@@ -31,12 +32,17 @@ export default function Chatbox() {
   }, []); 
 
   
-  useEffect(() => {
+useEffect(() => {
+  const fetchData = async () => { // <--- Make this function async
     if (isOpen) {
-      
-      socket.send(JSON.stringify({ type: "get_users" }));
+      const data = await FetchUserIDbySession();
+      const userID = data.UserID;
+      socket.send(JSON.stringify({ type: "get_users" ,from: userID })); // Send request to get all users
     }
-  }, [isOpen]); 
+  };
+
+  fetchData(); // <--- Call the async function
+}, [isOpen]); 
 
   return (
     <>

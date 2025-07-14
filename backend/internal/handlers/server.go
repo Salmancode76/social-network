@@ -76,7 +76,7 @@ func handleWebSocketMessage(app *CoreModels.App, conn *websocket.Conn, message M
 		// handleMessageMessage(conn, message)
 		// notifyMassage(conn, message)
 	case "get_users":
-		handleGetFriends(conn)
+		handleGetFriends(conn , message.From)
 		// handleGetUsersMessage(conn)
 		// onlineusers(app, conn)
 	case "get_chat_history":
@@ -98,10 +98,10 @@ func handleWebSocketMessage(app *CoreModels.App, conn *websocket.Conn, message M
 	}
 }
 
-func handleGetFriends(conn *websocket.Conn) {
+func handleGetFriends(conn *websocket.Conn, id string) {
 	db := OpenDatabase()
 	defer db.Close()
-	users := getAllUsers(db)
+	users := getAllUsers(db,id)
 	message := ServerMessage{Type: "allusers", AllUsers: users}
 	conn.WriteJSON(message)
 	fmt.Println(users)
