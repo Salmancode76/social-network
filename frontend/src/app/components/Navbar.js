@@ -323,7 +323,7 @@ export default function Navbar() {
                 Create Post
               </button>
               <button onClick={() => router.push("/groups")}>
-                Create Group
+                 Groups
               </button>
 
               <div
