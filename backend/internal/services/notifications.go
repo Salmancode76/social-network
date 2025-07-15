@@ -108,6 +108,7 @@ func (n *NotificationModel) GetAllNotifications(id int) ([]models.Notification, 
 		if err != nil {
 			return notifications, err
 		}
+		//fmt.Println(notification)
 		notifications = append(notifications, notification)
 	}
 
@@ -283,4 +284,78 @@ func (n*NotificationModel)SendInvitesInGroup( sender_id int,id  []string,group_i
 	return nil
 
 
+}
+
+func (n*NotificationModel)SendEventNofi(sender int, group_id int)([]string,error){
+
+	fmt.Println(group_id,sender)
+	stmt2:=`SELECT 
+       user_id
+  FROM group_members
+  where group_id = (?) AND (request_status_id=2 OR request_status_id=5) AND user_id <> (?);
+`
+	row,err:= n.DB.Query(stmt2,group_id,sender)
+	var userIDs []string
+
+
+	if err!=nil{
+		return userIDs,err
+	}
+
+	for row.Next(){
+	    var id string
+    	err = row.Scan(&id)
+    	if err != nil {
+       	 	return userIDs,nil 
+    	}
+    userIDs = append(userIDs, id)
+
+	
+
+	
+	}
+	//fmt.Println(userIDs)
+
+	for _,user := range userIDs{
+	stmt:=`
+
+		INSERT INTO notifications (
+		user_id,
+		notification_type_id,
+		message,
+		related_user_id,
+		related_group_id
+	)
+	VALUES (?, ?, ?, ?, ?);
+`
+
+	var name string
+	var groupName string
+	stmt4 :=`
+		SELECT 
+		CONCAT(first_name, ' ', last_name) AS full_name
+	FROM users
+	WHERE id = ?;
+	`
+	row,err = n.DB.Query(stmt4,sender)
+
+	for row.Next(){
+		row.Scan(&name)
+	}
+
+	stmt5 :=`SELECT 
+       title
+  FROM groups
+  where id = ?;
+`
+	row,err = n.DB.Query(stmt5,group_id)
+
+	for row.Next(){
+		row.Scan(&groupName)
+	}
+
+
+		_,err = n.DB.Exec(stmt,sender,4,name+" Have created an Event in "+groupName + " Group." ,user,group_id)
+	}
+	return userIDs,nil
 }

@@ -219,6 +219,8 @@ func CreateEvent(app *CoreModels.App) http.HandlerFunc {
 			return
 		}
 
+		app.Notifications.SendEventNofi(userID,event.GroupID)
+
 		w.WriteHeader(http.StatusCreated)
 		json.NewEncoder(w).Encode(map[string]string{"status": "event created"})
 	}

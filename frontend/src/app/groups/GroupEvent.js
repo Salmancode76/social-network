@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { FetchEvents, CreateEvent, OptionsEvent } from "../utils/FetchEvents";
 import "./group.css";
+import { WS_URL } from "../utils/ws";
+import { FetchUserIDbySession } from "../utils/FetchUserIDbySession";
 
 export default function GroupEvent({ group, onBack }) {
   const [events, setEvents] = useState([]);
@@ -72,27 +74,25 @@ export default function GroupEvent({ group, onBack }) {
     loadEvents();
   }, [group.id]);
 
-  const handleCreate = async (e) => {
-    e.preventDefault();
-    const newEvent = {
-      group_id: parseInt(group.id),
-      title: form.title,
-      description: form.description,
-      event_datetime: form.datetime,
+  const handleCreate = async () => {
+  
+    const ws = new WebSocket(WS_URL);
+
+    ws.onopen = async () => {
+        const data = await FetchUserIDbySession();
+      const userID = data.UserID;
+        console.log("WebSocket connected! User ID:", userID);
+
+  const newEvent = {
+    type: "createEvent",
+    group_id: parseInt(group.id),
+    title: form.title,
+    creator_id: parseInt(userID),
+    description: form.description,
+    event_datetime: form.datetime,
+  };
+      ws.send(JSON.stringify(newEvent));
     };
-
-    const created = await CreateEvent(newEvent);
-    if (created) {
-      setForm({ title: "", description: "", datetime: "" });
-      setShowModal(false);
-
-      const refreshed = await FetchEvents(group.id);
-      const { enriched, optionState } = enrichEvents(refreshed);
-      setEvents(enriched);
-      setSelectedOption(optionState);
-    } else {
-      alert("Failed to create event. Please try again.");
-    }
   };
 
   const handleRSVP = async (eventId, choice) => {
@@ -124,12 +124,16 @@ export default function GroupEvent({ group, onBack }) {
     <div className="group-chat-container">
       <div className="chat-header">
         <div className="chat-header-left">
-          <button className="back-button" onClick={onBack}>← Back</button>
+          <button className="back-button" onClick={onBack}>
+            ← Back
+          </button>
           <div className="group-info">
             <h2>Events for {group.title}</h2>
           </div>
         </div>
-        <button className="send-button" onClick={() => setShowModal(true)}>+ Create Event</button>
+        <button className="send-button" onClick={() => setShowModal(true)}>
+          + Create Event
+        </button>
       </div>
 
       <div className="messages-container">
@@ -150,8 +154,12 @@ export default function GroupEvent({ group, onBack }) {
                 </div>
                 {group.map((e) => {
                   const eventOptions = e.options || [];
-                  const totalVotes = Object.values(e.responses).reduce((acc, val) => acc + val, 0) || 1;
-                  const optionCounts = eventOptions.map(opt => ({
+                  const totalVotes =
+                    Object.values(e.responses).reduce(
+                      (acc, val) => acc + val,
+                      0
+                    ) || 1;
+                  const optionCounts = eventOptions.map((opt) => ({
                     name: opt,
                     count: e.responses[opt] || 0,
                   }));
@@ -163,12 +171,18 @@ export default function GroupEvent({ group, onBack }) {
                       <div className="event-time">
                         📅 {new Date(e.event_datetime).toLocaleDateString()}
                         <br />
-                        🕒 {new Date(e.event_datetime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        🕒{" "}
+                        {new Date(e.event_datetime).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </div>
 
                       <div className="poll-option">
                         {eventOptions.map((opt, idx) => {
-                          const count = optionCounts.find(o => o.name === opt)?.count || 0;
+                          const count =
+                            optionCounts.find((o) => o.name === opt)?.count ||
+                            0;
                           return (
                             <label className="poll-label" key={idx}>
                               <input
@@ -178,10 +192,22 @@ export default function GroupEvent({ group, onBack }) {
                                 checked={selectedOption[e.id] === opt}
                                 onChange={() => handleRSVP(e.id, opt)}
                               />
-                              <div className={`poll-choice ${selectedOption[e.id] === opt ? "selected" : ""}`}>
+                              <div
+                                className={`poll-choice ${
+                                  selectedOption[e.id] === opt ? "selected" : ""
+                                }`}
+                              >
                                 <div
-                                  className={`poll-bar-fill ${opt === "Going" ? "going" : opt === "Not Going" ? "not-going" : ""}`}
-                                  style={{ width: `${(count / totalVotes) * 100}%` }}
+                                  className={`poll-bar-fill ${
+                                    opt === "Going"
+                                      ? "going"
+                                      : opt === "Not Going"
+                                      ? "not-going"
+                                      : ""
+                                  }`}
+                                  style={{
+                                    width: `${(count / totalVotes) * 100}%`,
+                                  }}
                                 ></div>
                                 <span>{opt}</span>
                                 <span className="poll-count">{count}</span>
@@ -192,7 +218,10 @@ export default function GroupEvent({ group, onBack }) {
                       </div>
                       <div className="message-time">
                         {new Date(e.created_at).toLocaleDateString("en-GB")},{" "}
-                        {new Date(e.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        {new Date(e.created_at).toLocaleTimeString([], {
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })}
                       </div>
                     </div>
                   );
@@ -203,51 +232,65 @@ export default function GroupEvent({ group, onBack }) {
       </div>
 
       {showModal && (
-        <div className="modal-overlay" onClick={(e) => {
-          if (e.target.className === "modal-overlay") setShowModal(false);
-        }}>
+        <div
+          className="modal-overlay"
+          onClick={(e) => {
+            if (e.target.className === "modal-overlay") setShowModal(false);
+          }}
+        >
           <div className="modal-content scrollable">
-            <button className="modal-close" onClick={() => setShowModal(false)}>✖</button>
+            <button className="modal-close" onClick={() => setShowModal(false)}>
+              ✖
+            </button>
             <h2>Create New Event</h2>
-            <form onSubmit={handleCreate}>
-              <input
-                type="text"
-                placeholder="Title"
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-                required
-              />
-              <textarea
-                className={`description-textarea ${overLimit ? "limit-exceeded" : nearLimit ? "near-limit" : ""
-                  }`}
-                placeholder="Description"
-                value={form.description}
-                onChange={(e) => {
-                  const input = e.target.value;
-                  if (input.length <= maxChars) {
-                    setForm({ ...form, description: input });
-                  }
-                }}
-                required
-              />
-              <div
-                className={`char-counter ${overLimit ? "limit-exceeded" : nearLimit ? "near-limit" : ""
-                  }`}
-              >
-                {charCount}/{maxChars} characters
-              </div>
+            <input
+              type="text"
+              placeholder="Title"
+              value={form.title}
+              onChange={(e) => setForm({ ...form, title: e.target.value })}
+              required
+            />
+            <textarea
+              className={`description-textarea ${
+                overLimit ? "limit-exceeded" : nearLimit ? "near-limit" : ""
+              }`}
+              placeholder="Description"
+              value={form.description}
+              onChange={(e) => {
+                const input = e.target.value;
+                if (input.length <= maxChars) {
+                  setForm({ ...form, description: input });
+                }
+              }}
+              required
+            />
+            <div
+              className={`char-counter ${
+                overLimit ? "limit-exceeded" : nearLimit ? "near-limit" : ""
+              }`}
+            >
+              {charCount}/{maxChars} characters
+            </div>
 
-              <input
-                type="datetime-local"
-                value={form.datetime}
-                onChange={(e) => setForm({ ...form, datetime: e.target.value })}
-                required
-              />
-              <p><strong>Options:</strong> "Going" and "Not Going" will be automatically added.</p>
-              <div className="modal-buttons">
-                <button type="submit" className="send-button">Create</button>
-              </div>
-            </form>
+            <input
+              type="datetime-local"
+              value={form.datetime}
+              onChange={(e) => setForm({ ...form, datetime: e.target.value })}
+              required
+            />
+            <p>
+              <strong>Options:</strong> "Going" and "Not Going" will be
+              automatically added.
+            </p>
+            <div className="modal-buttons">
+              <button
+                type="submit"
+                className="send-button"
+                onClick={handleCreate}
+              >
+                Create
+              </button>
+            </div>
           </div>
         </div>
       )}

@@ -36,6 +36,8 @@ export function NotificationContainer({
                   ? "📩"
                   : n.notification_type_id === 3
                   ? "👥"
+                  : n.notification_type_id === 4
+                  ? "🎉"
                   : "🔔"}
               </div>
               <div className="notification-content">

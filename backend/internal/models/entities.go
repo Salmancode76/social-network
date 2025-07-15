@@ -103,10 +103,11 @@ type Request struct {
 	RelatedGroupID int  `json:"related_group_id"`
 	RelatedUserID  int  `json:"related_user_id"`
 	Accepted       bool `json:"accepted"`
-	CreatorID               int `json:"creator_id"`
+	CreatorID      int `json:"creator_id"`
 }
 
 type Invite struct {
+	SenderID int 	`json:"sender_id"`
 	UserIDs []string `json:"user_ids"`
 	GroupID int      `json:"group_id"`
 }

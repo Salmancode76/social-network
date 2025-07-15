@@ -8,10 +8,12 @@ import "./group.css";
 import "primereact/resources/themes/lara-light-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
+import { FetchUserIDbySession } from "../utils/FetchUserIDbySession";
 
 import { MultiSelect } from "primereact/multiselect";
 import { FetchAllUsers } from "../utils/FetchAllUsers";
 import CheckSession from "../utils/CheckSession";
+import { WS_URL } from "../utils/ws";
 
 export default function GroupChat({ group, onBack }) {
   const router = useRouter();
@@ -40,6 +42,7 @@ export default function GroupChat({ group, onBack }) {
 
   const HandleInGroupInviteUsers = async (group_id, users) => {
     try {
+        /*
       const response = await fetch(`http://localhost:8080/api/InviteInGroupUsers`, {
         method: "POST",
         credentials: "include",
@@ -47,14 +50,28 @@ export default function GroupChat({ group, onBack }) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
+          type : "sendInviteToGroup",
           user_ids: users,
           group_id: parseInt(group_id),
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`HTTP error: ${response.status}`);
-      }
+      */
+      const ws = new WebSocket(WS_URL);
+      ws.onopen= async()=>{
+          const data = await FetchUserIDbySession();
+          const userID = parseInt(data.UserID);
+          const Invites = {
+            type: "sendInviteToGroup",
+            sender_id: userID,
+            user_ids: users,
+            group_id: parseInt(group_id),
+          };
+
+          ws.send(JSON.stringify(Invites));
+      };
+
+
 
       setSelectedUsers([]);
       setAllUsers([]);

@@ -28,6 +28,7 @@ export default function Navbar() {
 
   const { socket, isConnected, connect, disconnect } = useWebSocket();
 
+
   useEffect(() => {
     if (socket) {
       const handleMessage = (event) => {
@@ -37,6 +38,7 @@ export default function Navbar() {
 
           if (data.type === "notifications") {
             setNotifications(data.notifications || []);
+            //alert(data.notifications);
             let count = 0;
             console.log(data);
             for (let i = 0; i < data.notifications.length; i++) {

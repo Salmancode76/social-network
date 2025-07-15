@@ -7,6 +7,8 @@ import "primereact/resources/themes/lara-light-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 import "./group.css";
+import { WS_URL } from "../utils/ws";
+import { FetchUserIDbySession } from "../utils/FetchUserIDbySession";
 
 export default function CreateGroupButton({ onGroupCreated }) {
   const [showModal, setShowModal] = useState(false);
@@ -56,6 +58,7 @@ export default function CreateGroupButton({ onGroupCreated }) {
     };
 
     try {
+      /*
       const res = await fetch("http://localhost:8080/api/CreateGroup", {
         method: "POST",
         credentials: "include",
@@ -64,10 +67,26 @@ export default function CreateGroupButton({ onGroupCreated }) {
         },
         body: JSON.stringify(formData),
       });
+      */
+         const ws = new WebSocket(WS_URL);
+      
+            ws.onopen = async () => {
+              const data = await FetchUserIDbySession();
+              const userID = data.UserID;
+              console.log("WebSocket connected! User ID:", userID);
+              const request = {
+                type: "sendCreateGroup",
+                title: formData.title,
+                description: formData.description,
+                invited_users: formData.invited_users,
+                creator: userID,
+              };
+              console.table(request);
+              ws.send(JSON.stringify(request));
+            };
 
-      if (!res.ok) throw new Error("Failed to create group");
 
-      alert(`Group "${title}" created!`);
+      //alert(`Group "${title}" created!`);
       setShowModal(false);
       setTitle("");
       setDesc("");

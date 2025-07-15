@@ -30,12 +30,10 @@ var upgrader = websocket.Upgrader{
 		return true // Allow all origins (for development only)
 	},
 }
-// Helper functions for safe connection management
 func registerSocket(userID string, conn *websocket.Conn) {
 	socketsMutex.Lock()
 	defer socketsMutex.Unlock()
 	
-	// Close existing connection if it exists
 	if existingConn, exists := userSockets[userID]; exists {
 		log.Printf("Closing existing connection for user %s", userID)
 		existingConn.Close()
@@ -93,7 +91,7 @@ func HandleWebSocket(app *CoreModels.App, w http.ResponseWriter, r *http.Request
 			Type string `json:"type"`
 		}
 		json.Unmarshal(message, &rawJson)
-		fmt.Println(message)
+		//fmt.Println(message)
 
 		switch rawJson.Type {
 		case "message", "get_users", "get_chat_history", "new_message", "logout":
@@ -130,7 +128,55 @@ func HandleWebSocket(app *CoreModels.App, w http.ResponseWriter, r *http.Request
 				currentUserID = userIDStr
 				registerSocket(currentUserID, conn)
 			}
-			
+		case "sendInviteToGroup":
+			var Invites models.Invite
+			json.Unmarshal(message,&Invites)
+			fmt.Println(Invites)
+			app.Notifications.SendInvitesInGroup(Invites.SenderID,Invites.UserIDs,Invites.GroupID)
+			for i:=0;i<len(Invites.UserIDs);i++{
+				idString,err :=strconv.Atoi(Invites.UserIDs[i])
+				if err!=nil{
+					log.Println(err)
+				}
+				sendNotificationsToUser(idString,app)
+			}
+		case "sendCreateGroup":
+			var group *models.Group
+			json.Unmarshal(message,&group)
+			fmt.Println(group)
+			group_id, err := app.Groups.CreateGroup(group)
+			creatorID,err := strconv.Atoi(group.Creator)
+			if err!=nil{
+					log.Println(err)
+			}
+			err = app.Notifications.SendInvites(creatorID, group.InvitedUsers, group_id)
+
+			for _,userID :=range group.InvitedUsers{
+					userID,err :=strconv.Atoi(userID)
+				if err!=nil{
+					log.Println(err)
+				}
+				
+				sendNotificationsToUser(userID,app)
+
+			}
+		case "createEvent":
+			var event models.Event
+			json.Unmarshal(message,&event)
+			err = app.Groups.CreateEvent(event)
+			ids,err:=app.Notifications.SendEventNofi(event.CreatorID,event.GroupID)
+			fmt.Println(event.CreatorID)
+			if err != nil {
+				sendErrorResponse(w, "Failed to save event", http.StatusInternalServerError)
+				return
+			}
+			for _,userID :=range ids{
+					userID,err :=strconv.Atoi(userID)
+				if err!=nil{
+					log.Println(err)
+				}
+				sendNotificationsToUser(userID,app)
+			}
 		default:
 			log.Println("Message Not supported")
 		}
