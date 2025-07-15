@@ -422,12 +422,12 @@ form button[type="submit"]:hover {
   margin-bottom: 5px;
 }
 
-.message-time {
+/* .message-time {
   font-size: 12px;
   color: #cccccc;
   margin-top: 10px;
   text-align: left;
-}
+} */
 
 /* .comment {
   background: #eeeeee;
@@ -753,10 +753,11 @@ form button[type="submit"]:hover {
 }
 
 .message-time {
-  font-size: 0.75rem;
-  color: #ccc;
-  margin-top: 5px;
-  align-self: flex-end;
+  font-size: 12px;
+  color: #cccccc;
+  margin-top: 10px;
+  text-align: left;
+  /* Remove if exists: align-self: flex-end */
 }
 
 .messages-container {
@@ -858,9 +859,40 @@ form button[type="submit"]:hover {
 }
 
 
-.message-time-comments{
+.message-time-comments {
   font-size: 0.75rem;
   color: #4a4a4a;
   margin-top: 5px;
-  align-self: flex-end;
+  text-align: left; /* ✅ make it left-aligned */
+}
+
+
+
+
+.description-textarea {
+  width: 100%;
+  min-height: 100px;
+  resize: vertical;
+  border: 1px solid #ccc;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.char-counter {
+  margin-top: 4px;
+  font-size: 12px;
+  color: gray;
+}
+
+/* .description-textarea.near-limit */
+.char-counter.near-limit { 
+  color: orange;
+  border-color: orange;
+}
+
+/* .description-textarea.limit-exceeded, */
+.char-counter.limit-exceeded {
+  color: red;
+  border-color: red;
 }

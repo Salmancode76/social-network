@@ -48,6 +48,7 @@ func SetupRoutes(app *CoreModels.App) *http.ServeMux {
 	mux.HandleFunc("/api/OptionsEvent", handlers.OptionsEvent(app))
 	mux.HandleFunc("/api/FetchGroupPosts", handlers.FetchGroupPosts(app))
 	mux.HandleFunc("/api/CreateGroupPost", handlers.CreateGroupPost(app))
+        mux.HandleFunc("/api/CreateGroupComment", handlers.CreateGroupComment(app))
 
 	mux.HandleFunc("/api/update-profile", handlers.UpdateProfile(app))
 

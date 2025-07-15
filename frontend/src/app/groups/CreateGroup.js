@@ -15,13 +15,18 @@ export default function CreateGroupButton({ onGroupCreated }) {
   const [loading, setLoading] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
+  const maxChars = 80;
+  const charCount = desc.length;
+  const nearCharLimit = charCount > 60 && charCount < maxChars;
+  const overCharLimit = charCount >= maxChars;
+
 
   useEffect(() => {
     if (showModal) {
       const fetchUsers = async () => {
         try {
           setLoading(true);
-          
+
           // Use the working approach from CreateGroup/page.js
           const users = await FetchAllUsers();
           const formatted = users.map((user) => ({
@@ -30,7 +35,7 @@ export default function CreateGroupButton({ onGroupCreated }) {
             value: user.id,
           }));
           setAllUsers(formatted);
-          
+
         } catch (err) {
           console.error("Error loading users:", err);
         } finally {
@@ -67,7 +72,7 @@ export default function CreateGroupButton({ onGroupCreated }) {
       setTitle("");
       setDesc("");
       setSelectedUsers([]);
-      
+
       // Notify parent component that a group was created
       if (onGroupCreated) {
         onGroupCreated();
@@ -102,11 +107,25 @@ export default function CreateGroupButton({ onGroupCreated }) {
               <label>
                 Description:
                 <textarea
+                  className={`description-textarea ${overCharLimit ? "limit-exceeded" : nearCharLimit ? "near-limit" : ""
+                    }`}
                   value={desc}
-                  onChange={(e) => setDesc(e.target.value)}
+                  onChange={(e) => {
+                    const input = e.target.value;
+                    if (input.length <= maxChars) {
+                      setDesc(input);
+                    }
+                  }}
                   required
                 />
+                <div
+                  className={`char-counter ${overCharLimit ? "limit-exceeded" : nearCharLimit ? "near-limit" : ""
+                    }`}
+                >
+                  {charCount}/{maxChars} characters
+                </div>
               </label>
+
 
               <label>
                 Invite Users:
