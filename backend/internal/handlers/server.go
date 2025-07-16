@@ -72,13 +72,14 @@ func HandleWebSocket(app *CoreModels.App, w http.ResponseWriter, r *http.Request
 	}
 
 	var currentUserID string
-
-	defer func() {
-		if currentUserID != "" {
-			removeSocket(currentUserID)
-		}
-		conn.Close()
-	}()
+	//this made the connection close immediately
+	// defer func() {
+	// 	if currentUserID != "" {
+	// 		removeSocket(currentUserID)
+	// 	}
+	// 	fmt.Println("WebSocket connection closed for user:", currentUserID)
+	// 	conn.Close()
+	// }()
 
 	for {
 		_, message, err := conn.ReadMessage()
@@ -258,7 +259,7 @@ func handleWebSocketMessage(app *CoreModels.App, conn *websocket.Conn, message M
 		// handleGetUsersMessage(conn)
 		// onlineusers(app, conn)
 	case "get_chat_history":
-		//fmt.Println("Get chat history request received", message)
+		fmt.Println("Get chat history request received", message)
 		handleGetChatHistoryMessage(conn, message)
 		// SetRead(message.From, message.To)
 	case "new_message":
