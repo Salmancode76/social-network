@@ -258,7 +258,7 @@ func handleWebSocketMessage(app *CoreModels.App, conn *websocket.Conn, message M
 		// handleGetUsersMessage(conn)
 		// onlineusers(app, conn)
 	case "get_chat_history":
-
+		//fmt.Println("Get chat history request received", message)
 		handleGetChatHistoryMessage(conn, message)
 		// SetRead(message.From, message.To)
 	case "new_message":
@@ -308,7 +308,7 @@ func handleGetChatHistoryMessage(conn *websocket.Conn, m MyMessage) {
 	message := ServerMessage{Type: "oldmessages", ChatHistory: messages}
 
 	conn.WriteJSON(message)
-	// fmt.Println(message)
+	fmt.Println(message)
 
 }
 
@@ -327,6 +327,10 @@ func notifyNewMessage(m MyMessage) {
 	from := GetNickname(m.From)
 	message := MyMessage{Type: "new", From: from, To: m.To, Text: m.Text}
 	to := GetID(m.To)
+	if _, ok := (userSockets)[to]; !ok {
+		fmt.Println("User not connected: ", to)
+		return
+	}
 	conn := (userSockets)[to]
 	conn.WriteJSON(message)
 }
