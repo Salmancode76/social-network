@@ -234,6 +234,14 @@ func getAllUsers(db *sql.DB, id string) []string {
 	}
 	return names
 }
+func isRedunat(AllUsers []string, name string) bool {
+	for _, i := range AllUsers {
+		if i == name {
+			return true
+		}
+	}
+	return false
+}
 
 // func getFriends(db *sql.DB, to string) []string {
 
