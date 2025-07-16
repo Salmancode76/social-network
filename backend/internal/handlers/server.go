@@ -15,6 +15,7 @@ import (
 
 	"github.com/gorilla/websocket"
 )
+
 var socketsMutex sync.RWMutex
 
 var allUsers []ServerUser
@@ -30,15 +31,16 @@ var upgrader = websocket.Upgrader{
 		return true // Allow all origins (for development only)
 	},
 }
+
 func registerSocket(userID string, conn *websocket.Conn) {
 	socketsMutex.Lock()
 	defer socketsMutex.Unlock()
-	
+
 	if existingConn, exists := userSockets[userID]; exists {
 		log.Printf("Closing existing connection for user %s", userID)
 		existingConn.Close()
 	}
-	
+
 	userSockets[userID] = conn
 	log.Printf("Registered user %s with WebSocket connection", userID)
 }
@@ -46,7 +48,7 @@ func registerSocket(userID string, conn *websocket.Conn) {
 func removeSocket(userID string) {
 	socketsMutex.Lock()
 	defer socketsMutex.Unlock()
-	
+
 	if conn, exists := userSockets[userID]; exists {
 		conn.Close()
 		delete(userSockets, userID)
@@ -57,7 +59,7 @@ func removeSocket(userID string) {
 func getSocket(userID string) (*websocket.Conn, bool) {
 	socketsMutex.RLock()
 	defer socketsMutex.RUnlock()
-	
+
 	conn, exists := userSockets[userID]
 	return conn, exists
 }
@@ -70,7 +72,7 @@ func HandleWebSocket(app *CoreModels.App, w http.ResponseWriter, r *http.Request
 	}
 
 	var currentUserID string
-	
+
 	defer func() {
 		if currentUserID != "" {
 			removeSocket(currentUserID)
@@ -97,32 +99,32 @@ func HandleWebSocket(app *CoreModels.App, w http.ResponseWriter, r *http.Request
 		case "message", "get_users", "get_chat_history", "new_message", "logout":
 			var myMessage MyMessage
 			json.Unmarshal(message, &myMessage)
-			
+
 			// Register connection only once per user
 			if currentUserID == "" {
 				currentUserID = myMessage.From
 				registerSocket(currentUserID, conn)
 			}
-			
+
 			handleWebSocketMessage(app, conn, myMessage)
-			
+
 		case "sendRequestToJoinGroup":
 			var request models.Request
 			json.Unmarshal(message, &request)
-			
+
 			userIDStr := strconv.Itoa(request.RelatedUserID)
 			if currentUserID == "" {
 				currentUserID = userIDStr
 				registerSocket(currentUserID, conn)
 			}
-			
+
 			handleWebSocket_Request_Group(app, conn, request)
 			sendNotificationsToUser(request.CreatorID, app)
-			
+
 		case "get_all_notifications":
 			var notificationRequest models.Notification
 			json.Unmarshal(message, &notificationRequest)
-			
+
 			userIDStr := strconv.Itoa(notificationRequest.UserID)
 			if currentUserID == "" {
 				currentUserID = userIDStr
@@ -130,52 +132,52 @@ func HandleWebSocket(app *CoreModels.App, w http.ResponseWriter, r *http.Request
 			}
 		case "sendInviteToGroup":
 			var Invites models.Invite
-			json.Unmarshal(message,&Invites)
+			json.Unmarshal(message, &Invites)
 			fmt.Println(Invites)
-			app.Notifications.SendInvitesInGroup(Invites.SenderID,Invites.UserIDs,Invites.GroupID)
-			for i:=0;i<len(Invites.UserIDs);i++{
-				idString,err :=strconv.Atoi(Invites.UserIDs[i])
-				if err!=nil{
+			app.Notifications.SendInvitesInGroup(Invites.SenderID, Invites.UserIDs, Invites.GroupID)
+			for i := 0; i < len(Invites.UserIDs); i++ {
+				idString, err := strconv.Atoi(Invites.UserIDs[i])
+				if err != nil {
 					log.Println(err)
 				}
-				sendNotificationsToUser(idString,app)
+				sendNotificationsToUser(idString, app)
 			}
 		case "sendCreateGroup":
 			var group *models.Group
-			json.Unmarshal(message,&group)
+			json.Unmarshal(message, &group)
 			fmt.Println(group)
 			group_id, err := app.Groups.CreateGroup(group)
-			creatorID,err := strconv.Atoi(group.Creator)
-			if err!=nil{
-					log.Println(err)
+			creatorID, err := strconv.Atoi(group.Creator)
+			if err != nil {
+				log.Println(err)
 			}
 			err = app.Notifications.SendInvites(creatorID, group.InvitedUsers, group_id)
 
-			for _,userID :=range group.InvitedUsers{
-					userID,err :=strconv.Atoi(userID)
-				if err!=nil{
+			for _, userID := range group.InvitedUsers {
+				userID, err := strconv.Atoi(userID)
+				if err != nil {
 					log.Println(err)
 				}
-				
-				sendNotificationsToUser(userID,app)
+
+				sendNotificationsToUser(userID, app)
 
 			}
 		case "createEvent":
 			var event models.Event
-			json.Unmarshal(message,&event)
+			json.Unmarshal(message, &event)
 			err = app.Groups.CreateEvent(event)
-			ids,err:=app.Notifications.SendEventNofi(event.CreatorID,event.GroupID)
+			ids, err := app.Notifications.SendEventNofi(event.CreatorID, event.GroupID)
 			fmt.Println(event.CreatorID)
 			if err != nil {
 				sendErrorResponse(w, "Failed to save event", http.StatusInternalServerError)
 				return
 			}
-			for _,userID :=range ids{
-					userID,err :=strconv.Atoi(userID)
-				if err!=nil{
+			for _, userID := range ids {
+				userID, err := strconv.Atoi(userID)
+				if err != nil {
 					log.Println(err)
 				}
-				sendNotificationsToUser(userID,app)
+				sendNotificationsToUser(userID, app)
 			}
 		default:
 			log.Println("Message Not supported")
@@ -184,7 +186,7 @@ func HandleWebSocket(app *CoreModels.App, w http.ResponseWriter, r *http.Request
 }
 func sendNotificationsToUser(userID int, app *CoreModels.App) {
 	userIDStr := strconv.Itoa(userID)
-	
+
 	conn, ok := getSocket(userIDStr)
 	if !ok || conn == nil {
 		log.Printf("No active WebSocket connection for user %d", userID)
@@ -217,14 +219,14 @@ func handleWebSocket_Request_Group(app *CoreModels.App, conn *websocket.Conn, Re
 
 	CreatorStr := strconv.Itoa(Request.CreatorID)
 	creatorConn, ok := getSocket(CreatorStr)
-	
+
 	fmt.Println("Currently registered connections:")
 	socketsMutex.RLock()
 	for userID, _ := range userSockets {
 		fmt.Printf("  User ID: %s\n", userID)
 	}
 	socketsMutex.RUnlock()
-	
+
 	if ok {
 		response := map[string]interface{}{
 			"type":     "recivesReq",
@@ -250,7 +252,7 @@ func handleWebSocketMessage(app *CoreModels.App, conn *websocket.Conn, message M
 		// handleMessageMessage(conn, message)
 		// notifyMassage(conn, message)
 	case "get_users":
-		handleGetFriends(conn)
+		handleGetFriends(conn, message.From)
 		// handleGetUsersMessage(conn)
 		// onlineusers(app, conn)
 	case "get_chat_history":
@@ -272,10 +274,10 @@ func handleWebSocketMessage(app *CoreModels.App, conn *websocket.Conn, message M
 	}
 }
 
-func handleGetFriends(conn *websocket.Conn) {
+func handleGetFriends(conn *websocket.Conn, userID string) {
 	db := OpenDatabase()
 	defer db.Close()
-	users := getAllUsers(db)
+	users := getAllUsers(db, userID)
 	message := ServerMessage{Type: "allusers", AllUsers: users}
 	conn.WriteJSON(message)
 	fmt.Println(users)
