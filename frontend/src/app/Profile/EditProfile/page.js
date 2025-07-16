@@ -56,6 +56,8 @@ export default function ProfilePage(){
     last_name: "",
     nickname: "",
     about_me: "",
+    is_public: false ,
+    
   });
   const [userID, setUserID] = useState(null);
 
@@ -78,6 +80,7 @@ export default function ProfilePage(){
           last_name: u.last_name || "",
           nickname: u.nickname || "",
           about_me: u.about_me || "",
+          is_public: u.is_public ,
         });
       } catch (err) {
         console.error("Error loading user:", err);
@@ -153,6 +156,21 @@ export default function ProfilePage(){
         value={userData.about_me}
         onChange={handleChange}
       />
+      <label style={styles.label}>Account Privacy</label>
+    <select
+      style={styles.input}
+      name="is_private"
+      value={userData.is_public }
+      onChange={(e) =>
+        setUserData({
+          ...userData,
+          is_public: e.target.value,
+        })
+      }
+    >
+      <option value="1">Public</option>
+      <option value="0">Private</option>
+    </select>
 
       <button style={styles.button} onClick={handleSave}>Save Changes</button>
       <button

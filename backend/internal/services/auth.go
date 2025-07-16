@@ -205,11 +205,12 @@ func (U *UserModel) UpdateUserByData (user models.User)(error){
 		SET first_name = ?, 
 		    last_name = ?, 
 		    nickname = ?, 
-		    about_me = ? 
+		    about_me = ?,
+			is_public = ? 
 		WHERE id = ?
 	`
 
-	_, err := U.DB.Exec(stmt, user.FirstN, user.LastN, user.Nickname, user.Aboutme, user.ID)
+	_, err := U.DB.Exec(stmt, user.FirstN, user.LastN, user.Nickname, user.Aboutme,user.IsPublic, user.ID)
 	if err != nil {
 		log.Printf("Update error: %v", err)
 		return err

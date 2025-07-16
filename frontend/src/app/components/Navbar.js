@@ -273,7 +273,11 @@ export default function Navbar() {
           King Hashem
         </div>
         <div className="nav-buttons">
-          <div className="search-container">
+          
+
+          {loggedIn && (
+            <>
+            <div className="search-container">
             <input
               type="text"
               className="search-input"
@@ -315,9 +319,7 @@ export default function Navbar() {
               </div>
             )}
           </div>
-
-          {loggedIn && (
-            <>
+          
               <button onClick={() => router.push(`/Profile?id=${userID}`)}>
                 My Profile
               </button>
