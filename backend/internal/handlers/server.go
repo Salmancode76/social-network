@@ -247,6 +247,8 @@ func handleWebSocket_Request_Group(app *CoreModels.App, conn *websocket.Conn, Re
 func handleWebSocketMessage(app *CoreModels.App, conn *websocket.Conn, message MyMessage) {
 
 	switch message.Type {
+	case "get_group_chat_history":
+		fmt.Println("Get group chat history request received", message)
 	case "message":
 
 		// handleMessageMessage(conn, message)
