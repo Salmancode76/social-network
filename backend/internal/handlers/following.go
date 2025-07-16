@@ -71,7 +71,7 @@ func FollowStatusHandler(app *CoreModels.App) http.HandlerFunc {
 		case 2:
 			response["status"] = "accepted"
 		case 3:
-			response["status"] = "pending"
+			response["status"] = "requested"
 		case 4:
 			response["status"] = "declined"
 		}

@@ -115,7 +115,7 @@ export default function ProfilePage(){
 
       async function handleFollowClick() {
         
-        if (isFollowing === "accepted" || isFollowing === "request"){
+        if (isFollowing === "accepted" || isFollowing === "requested"){
           
           const res = await fetch("http://localhost:8080/api/unfollow",{
               method: "DELETE",
@@ -142,7 +142,7 @@ export default function ProfilePage(){
         });
 
         if (res.ok){
-          setIsFollowing(user?.User?.is_public == 1 ? "accepted" : "request");
+          setIsFollowing(user?.User?.is_public == 1 ? "accepted" : "requested");
         }
         }
       }
@@ -213,7 +213,7 @@ export default function ProfilePage(){
                 ...styles.editButton,
                 backgroundColor:
                 isFollowing === "accepted" ? "#28a745"
-                : isFollowing === "request" ? "#ffc107"
+                : isFollowing === "requested" ? "#ffc107"
                 : "#0070f3",
                 cursor:  "pointer",
                 marginLeft: "10px",
@@ -221,7 +221,7 @@ export default function ProfilePage(){
               onClick={handleFollowClick}
               >
                 {isFollowing === "accepted" ? "Followed"
-                : isFollowing === "request"? "Requested"
+                : isFollowing === "requested"? "Requested"
               : "Follow"}
 
               </button>
