@@ -6,13 +6,10 @@ import { FetchPostsByUserID } from "../../utils/FetchPostsByUserID";
 import { FetchUserIDbySession } from "../../utils/FetchUserIDbySession";
 import Link from "next/link";
 export default function ProfilePage(){
-        const [user, setUser] = useState(null);
-        const [posts, setPosts] = useState([]);
         const [currentUserID ,setCurrentUser] = useState([])
-        const [followersCount, setFollowersCount] = useState(0);
-        const [followingCount, setFollowingCount] = useState(0);
         const router = useRouter();
         const searchParams = useSearchParams();
+        const [errors, setErrors] = useState({});
 
        useEffect(() => {
               async function checkSession() {
@@ -95,6 +92,32 @@ export default function ProfilePage(){
   }
 
   async function handleSave() {
+
+    const newErrors = {};
+
+
+      if (!userData.first_name) {
+      newErrors.first_name = "First name is required.";
+      }else if (!/^[a-zA-Z0-9]+$/.test(userData.first_name)) {
+      newErrors.first_name = "Only letters and numbers are allowed.";
+    }
+
+
+    if (!userData.last_name) {
+      newErrors.last_name = "Last name is required.";
+    } else if (!/^[a-zA-Z0-9]+$/.test(userData.last_name)) {
+      newErrors.last_name = "Only letters and numbers are allowed.";
+    }
+
+    if (userData.nickname && !/^[a-zA-Z0-9_.-]+$/.test(userData.nickname)) {
+    newErrors.nickname = "Only letters, numbers, '.', '-', '_' are allowed.";
+    }
+
+     setErrors(newErrors);
+
+     if (Object.keys(newErrors).length > 0) {
+    return; 
+    } 
     try {
       const res = await fetch("http://localhost:8080/api/update-profile", {
         method: "POST",
@@ -110,10 +133,11 @@ export default function ProfilePage(){
       if (res.ok) {
         router.push(`/Profile?id=${userID}`);
       } else {
-        alert("Error updating profile.");
+        setErrors({ general: "Error updating profile." });
       }
     } catch (err) {
       console.error("Save error:", err);
+      setErrors({ general: "An error occurred during save." });
     }
   }
 
@@ -129,7 +153,11 @@ export default function ProfilePage(){
         name="first_name"
         value={userData.first_name}
         onChange={handleChange}
+        required
       />
+      {errors.first_name && (
+  <p style={styles.error}>{errors.first_name}</p>
+)}
 
       <label style={styles.label}>Last Name</label>
       <input
@@ -138,7 +166,11 @@ export default function ProfilePage(){
         name="last_name"
         value={userData.last_name}
         onChange={handleChange}
+        required
       />
+      {errors.last_name && (
+  <p style={styles.error}>{errors.last_name}</p>
+)}
 
       <label style={styles.label}>Nickname</label>
       <input
@@ -148,6 +180,9 @@ export default function ProfilePage(){
         value={userData.nickname}
         onChange={handleChange}
       />
+      {errors.nickname && (
+  <p style={styles.error}>{errors.nickname}</p>
+)}
 
       <label style={styles.label}>About Me</label>
       <textarea
@@ -179,6 +214,9 @@ export default function ProfilePage(){
         >
           Back
         </button>
+        {errors.general && (
+  <p style={styles.error}>{errors.general}</p>
+)}
     </div>
     );
     
@@ -218,4 +256,10 @@ const styles = {
     borderRadius: "5px",
     cursor: "pointer",
   },
+  error: {
+  color: "red",
+  fontSize: "0.9em",
+  marginTop: "-10px",
+  marginBottom: "10px",
+},
 };
