@@ -7,6 +7,8 @@ import "primereact/resources/themes/lara-light-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 import "./group.css";
+import { WS_URL } from "../utils/ws";
+import { FetchUserIDbySession } from "../utils/FetchUserIDbySession";
 
 export default function CreateGroupButton({ onGroupCreated }) {
   const [showModal, setShowModal] = useState(false);
@@ -15,13 +17,18 @@ export default function CreateGroupButton({ onGroupCreated }) {
   const [loading, setLoading] = useState(false);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [allUsers, setAllUsers] = useState([]);
+  const maxChars = 80;
+  const charCount = desc.length;
+  const nearCharLimit = charCount > 60 && charCount < maxChars;
+  const overCharLimit = charCount >= maxChars;
+
 
   useEffect(() => {
     if (showModal) {
       const fetchUsers = async () => {
         try {
           setLoading(true);
-          
+
           // Use the working approach from CreateGroup/page.js
           const users = await FetchAllUsers();
           const formatted = users.map((user) => ({
@@ -30,7 +37,7 @@ export default function CreateGroupButton({ onGroupCreated }) {
             value: user.id,
           }));
           setAllUsers(formatted);
-          
+
         } catch (err) {
           console.error("Error loading users:", err);
         } finally {
@@ -51,6 +58,7 @@ export default function CreateGroupButton({ onGroupCreated }) {
     };
 
     try {
+      /*
       const res = await fetch("http://localhost:8080/api/CreateGroup", {
         method: "POST",
         credentials: "include",
@@ -59,15 +67,31 @@ export default function CreateGroupButton({ onGroupCreated }) {
         },
         body: JSON.stringify(formData),
       });
+      */
+         const ws = new WebSocket(WS_URL);
+      
+            ws.onopen = async () => {
+              const data = await FetchUserIDbySession();
+              const userID = data.UserID;
+              console.log("WebSocket connected! User ID:", userID);
+              const request = {
+                type: "sendCreateGroup",
+                title: formData.title,
+                description: formData.description,
+                invited_users: formData.invited_users,
+                creator: userID,
+              };
+              console.table(request);
+              ws.send(JSON.stringify(request));
+            };
 
-      if (!res.ok) throw new Error("Failed to create group");
 
-      alert(`Group "${title}" created!`);
+      //alert(`Group "${title}" created!`);
       setShowModal(false);
       setTitle("");
       setDesc("");
       setSelectedUsers([]);
-      
+
       // Notify parent component that a group was created
       if (onGroupCreated) {
         onGroupCreated();
@@ -102,11 +126,25 @@ export default function CreateGroupButton({ onGroupCreated }) {
               <label>
                 Description:
                 <textarea
+                  className={`description-textarea ${overCharLimit ? "limit-exceeded" : nearCharLimit ? "near-limit" : ""
+                    }`}
                   value={desc}
-                  onChange={(e) => setDesc(e.target.value)}
+                  onChange={(e) => {
+                    const input = e.target.value;
+                    if (input.length <= maxChars) {
+                      setDesc(input);
+                    }
+                  }}
                   required
                 />
+                <div
+                  className={`char-counter ${overCharLimit ? "limit-exceeded" : nearCharLimit ? "near-limit" : ""
+                    }`}
+                >
+                  {charCount}/{maxChars} characters
+                </div>
               </label>
+
 
               <label>
                 Invite Users:

@@ -49,7 +49,7 @@ export default function Chatbox() {
         </div>
         <div className="chatbox-body">
           {users.map((user) => (
-            <ChatUser key={user.id} user={user} />
+            <ChatUser key={user} user={user} />
           ))}
         </div>
       </div>

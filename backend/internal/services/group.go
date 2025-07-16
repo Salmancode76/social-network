@@ -363,12 +363,10 @@ func (g *GroupModel) GetPostsByGroupID(groupID int) ([]models.GroupPost, error) 
 			return nil, err
 		}
 
-		// ✅ Always initialize comments slice (prevents null in JSON)
 		post.Comments = []models.GroupPostComment{}
 
-		// 🔍 Fetch comments for this post
 		commentsStmt := `
-			SELECT user_id, content, created_at
+			SELECT user_id, content, image_path, created_at
 			FROM comments
 			WHERE post_id = ?
 			ORDER BY created_at ASC
@@ -379,7 +377,7 @@ func (g *GroupModel) GetPostsByGroupID(groupID int) ([]models.GroupPost, error) 
 			defer commentRows.Close()
 			for commentRows.Next() {
 				var c models.GroupPostComment
-				err := commentRows.Scan(&c.UserID, &c.Content, &c.CreatedAt)
+				err := commentRows.Scan(&c.UserID, &c.Content, &c.Image, &c.CreatedAt)
 				if err == nil {
 					post.Comments = append(post.Comments, c)
 				}
@@ -394,8 +392,8 @@ func (g *GroupModel) GetPostsByGroupID(groupID int) ([]models.GroupPost, error) 
 
 func (g *GroupModel) SaveGroupComment(comment models.Comment) error {
 	stmt := `
-	INSERT INTO post_comments (post_id, user_id, content, image_path, created_at)
-	VALUES (?, ?, ?, ?, datetime('now'))
+		INSERT INTO post_comments (post_id, user_id, content, image_path, created_at)
+		VALUES (?, ?, ?, ?, datetime('now'))
 	`
 	_, err := g.DB.Exec(stmt, comment.PostID, comment.UserID, comment.Comment, comment.ImageFile)
 	return err

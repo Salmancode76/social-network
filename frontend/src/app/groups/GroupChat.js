@@ -1,27 +1,24 @@
 "use client";
 import React from "react";
 import { useRouter } from "next/navigation";
-
 import { useState, useEffect, useRef } from "react";
 import GroupEvent from "./GroupEvent";
 import GroupPost from "./GroupPost";
+//import { ws } from "../utils/ws";
 import "./group.css";
 import "primereact/resources/themes/lara-light-blue/theme.css";
-
 import "primereact/resources/primereact.min.css";
-
 import "primeicons/primeicons.css";
+import { FetchUserIDbySession } from "../utils/FetchUserIDbySession";
 
 import { MultiSelect } from "primereact/multiselect";
-
 import { FetchAllUsers } from "../utils/FetchAllUsers";
 import CheckSession from "../utils/CheckSession";
-
+import { WS_URL } from "../utils/ws";
 
 export default function GroupChat({ group, onBack }) {
   const router = useRouter();
   const [showUserPopup, setShowUserPopup] = useState(false);
-
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [selectedImage, setSelectedImage] = useState(null);
@@ -38,32 +35,48 @@ export default function GroupChat({ group, onBack }) {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+
+
+
   useEffect(() => {
     if (showUserPopup) {
       setSelectedUsers([]);
+      
     }
   }, [showUserPopup]);
 
   const HandleInGroupInviteUsers = async (group_id, users) => {
     try {
-      const response = await fetch(
-        `http://localhost:8080/api/InviteInGroupUsers`,
-        {
-          method: "POST",
-          credentials: "include",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
+        /*
+      const response = await fetch(`http://localhost:8080/api/InviteInGroupUsers`, {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          type : "sendInviteToGroup",
+          user_ids: users,
+          group_id: parseInt(group_id),
+        }),
+      });
+
+      */
+      const ws = new WebSocket(WS_URL);
+      ws.onopen= async()=>{
+          const data = await FetchUserIDbySession();
+          const userID = parseInt(data.UserID);
+          const Invites = {
+            type: "sendInviteToGroup",
+            sender_id: userID,
             user_ids: users,
             group_id: parseInt(group_id),
-          }),
-        }
-      );
+          };
+          console.log("Invites: ", Invites);
+          ws.send(JSON.stringify(Invites));
+      };
 
-      if (!response.ok) {
-        throw new Error(`HTTP error: ${response.status}`);
-      }
+
 
       setSelectedUsers([]);
       setAllUsers([]);
@@ -101,7 +114,6 @@ export default function GroupChat({ group, onBack }) {
         throw new Error(`HTTP error: ${response.status}`);
       }
       const data = await response.json();
-      console.log(data);
       return data;
     } catch (e) {
       console.error("Error: ", e);
@@ -114,7 +126,6 @@ export default function GroupChat({ group, onBack }) {
   }, [messages]);
 
   useEffect(() => {
-    console.log("Groups " + group);
     const fetchSessionId = async () => {
       const ok = await CheckSession(router);
       if (ok) {
@@ -125,7 +136,6 @@ export default function GroupChat({ group, onBack }) {
             throw new Error("Failed to fetch session");
           }
           const data = await res.json();
-          console.log(data);
 
           const non_group_users = await FetchUsersInvites(group.id);
           if (non_group_users) {
@@ -137,7 +147,6 @@ export default function GroupChat({ group, onBack }) {
           }
         } catch (err) {
           console.error("Failed to fetch session ID", err);
-          setError("Failed to load session. Please refresh the page.");
         } finally {
           setLoading(false);
         }
@@ -185,6 +194,7 @@ export default function GroupChat({ group, onBack }) {
 
   const handleSendMessage = (e) => {
     e.preventDefault();
+
     if (!newMessage.trim() && !selectedImage) return;
 
     if (selectedImage) {
@@ -207,31 +217,38 @@ export default function GroupChat({ group, onBack }) {
         imageInputRef.current.value = "";
       };
       reader.readAsDataURL(selectedImage);
-    } else {
-      const tempMessage = {
-        id: Date.now(),
-        user_name: "You",
-        content: newMessage,
-        image: null,
-        created_at: new Date().toISOString(),
-        group_id: group.id,
-      };
-      const updatedMessages = [...messages, tempMessage];
-      setMessages(updatedMessages);
-      saveMessagesToStorage(updatedMessages);
-      setNewMessage("");
+      return;
     }
+
+    const tempMessage = {
+      id: Date.now(),
+      user_name: "You",
+      content: newMessage,
+      image: null,
+      created_at: new Date().toISOString(),
+      group_id: group.id,
+    };
+    const updatedMessages = [...messages, tempMessage];
+    setMessages(updatedMessages);
+    saveMessagesToStorage(updatedMessages);
+    setNewMessage("");
   };
 
   if (showEventPage) {
     return <GroupEvent group={group} onBack={() => setShowEventPage(false)} />;
   }
 
-
   if (showPostPage) {
     return <GroupPost group={group} onBack={() => setShowPostPage(false)} />;
   }
 
+  // ✅ Group messages by day
+  const groupedMessages = messages.reduce((acc, message) => {
+    const label = formatMessageDate(message.created_at);
+    if (!acc[label]) acc[label] = [];
+    acc[label].push(message);
+    return acc;
+  }, {});
 
   return (
     <div className="group-chat-container">
@@ -273,7 +290,7 @@ export default function GroupChat({ group, onBack }) {
           </div>
         </div>
       )}
-      {/* Header */}
+
       <div className="chat-header">
         <div className="chat-header-left">
           <button className="back-button" onClick={onBack}>
@@ -286,55 +303,67 @@ export default function GroupChat({ group, onBack }) {
         </div>
         <div className="chat-header-buttons">
           <button className="create-btn">Chat</button>
-          {/* post button */}
           <button className="create-btn" onClick={() => setShowPostPage(true)}>
             Post
           </button>
-          {/* event button */}
           <button className="create-btn" onClick={() => setShowEventPage(true)}>
             Event
           </button>
-          {/* invite button */}
           <button className="create-btn" onClick={() => setShowUserPopup(true)}>
             Invite
           </button>
         </div>
       </div>
 
-      {/* Messages */}
       <div className="messages-container">
         {loading ? (
           <div className="loading-message">Loading messages...</div>
         ) : messages.length > 0 ? (
           <>
-            {messages.map((message) => (
-              <div key={message.id} className="message">
-                <div className="message-header">
-                  <span className="message-author">{message.user_name}</span>
-                  <span className="message-time">
-                    {new Date(message.created_at).toLocaleTimeString()}
-                  </span>
+            {Object.entries(groupedMessages).map(([label, msgs]) => (
+              <div key={label} className="message-group">
+                <div className="message-date-wrapper">
+                  <div className="message-date-label">{label}</div>
                 </div>
-                <div className="message-content">{message.content}</div>
-                {message.image && (
-                  <img
-                    src={message.image}
-                    alt="attachment"
-                    style={{ maxWidth: "200px", borderRadius: "10px" }}
-                  />
-                )}
+                {msgs.map((message) => (
+                  <div
+                    key={message.id}
+                    className={`message ${message.user_name === "You" ? "you" : "other"}`}
+                  >
+                    <div className="message-header">
+                      <span className="message-author">{message.user_name}</span>
+                    </div>
+                    <div className="message-content">{message.content}</div>
+                    {message.image && (
+                      <img
+                        src={message.image}
+                        alt="attachment"
+                        style={{
+                          maxWidth: "200px",
+                          borderRadius: "10px",
+                          marginTop: "10px",
+                        }}
+                      />
+                    )}
+                    <div className="message-time">
+                      {new Date(message.created_at).toLocaleDateString("en-US")},{" "}
+                      {new Date(message.created_at).toLocaleTimeString("en-US", {
+                        hour: "numeric",
+                        minute: "2-digit",
+                        hour12: true,
+                      }).toLowerCase()}
+                    </div>
+                  </div>
+                ))}
               </div>
             ))}
             <div ref={messagesEndRef} />
           </>
         ) : (
-          <div className="no-messages">
-            No messages yet. Start the conversation!
-          </div>
+          <div className="no-messages">No messages yet. Start the conversation!</div>
         )}
       </div>
 
-      {/* Send message form */}
       <form className="message-form" onSubmit={handleSendMessage}>
         <input
           type="file"
@@ -343,7 +372,6 @@ export default function GroupChat({ group, onBack }) {
           style={{ display: "none" }}
           onChange={(e) => setSelectedImage(e.target.files[0])}
         />
-
         <button
           type="button"
           className="image-button"
@@ -377,4 +405,29 @@ export default function GroupChat({ group, onBack }) {
       </form>
     </div>
   );
+}
+
+// ✅ Date formatting helper
+function formatMessageDate(dateStr) {
+  const msgDate = new Date(dateStr);
+  const today = new Date();
+  const yesterday = new Date();
+  yesterday.setDate(today.getDate() - 1);
+
+  const isSameDay = (d1, d2) =>
+    d1.getDate() === d2.getDate() &&
+    d1.getMonth() === d2.getMonth() &&
+    d1.getFullYear() === d2.getFullYear();
+
+  if (isSameDay(msgDate, today)) return "Today";
+  if (isSameDay(msgDate, yesterday)) return "Yesterday";
+
+  const oneWeekAgo = new Date();
+  oneWeekAgo.setDate(today.getDate() - 7);
+
+  if (msgDate > oneWeekAgo) {
+    return msgDate.toLocaleDateString("en-US", { weekday: "long" });
+  }
+
+  return msgDate.toLocaleDateString("en-US");
 }

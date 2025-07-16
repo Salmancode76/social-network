@@ -6,7 +6,7 @@
   color: white;
   font-size: 14px; /* Reduced from 16px */
   border: none;
-  border-radius: 6px;
+  border-radius: 7px;
   cursor: pointer;
 }
 
@@ -272,10 +272,10 @@ form button[type="submit"]:hover {
   font-size: 14px;
 }
 
-.message-time {
+/* .message-time {
   font-size: 11px;
   color: #999;
-}
+} */
 
 .message-content {
   color: #333;
@@ -355,7 +355,7 @@ form button[type="submit"]:hover {
 
 .poll-option {
   margin: 20px 0;
-  background: #fff;
+  background-color: #c5c3c3 !important; /* Light gray */
   border-radius: 12px;
   padding: 16px;
   box-shadow: 0 2px 6px rgba(0,0,0,0.05);
@@ -405,6 +405,50 @@ form button[type="submit"]:hover {
   margin: 6px 0;
   color: #555;
 }
+
+
+
+.message {
+  background: #474747;
+  color: #f4eee2;
+  padding: 16px;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.message p:first-child {
+  color: #2196f3;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+/* .message-time {
+  font-size: 12px;
+  color: #cccccc;
+  margin-top: 10px;
+  text-align: left;
+} */
+
+/* .comment {
+  background: #eeeeee;
+  padding: 10px;
+  border-radius: 10px;
+  margin-top: 10px;
+} */
+
+.comment p:first-child {
+  color: #555;
+  font-weight: bold;
+  margin-bottom: 5px;
+}
+
+.message-time-comments {
+  font-size: 12px;
+  color: #888;
+  margin-top: 8px;
+  text-align: left;
+}
+
 
 
 
@@ -515,8 +559,8 @@ form button[type="submit"]:hover {
 }
 
 .comment {
-  background-color: #f9f9f9;
-  border: 1px solid #ddd;
+  background-color: #c5c3c3 !important; /* Light gray */
+  border: 2px solid #020970;
   border-radius: 10px;
   padding: 12px;
   margin-bottom: 10px;
@@ -577,11 +621,11 @@ form button[type="submit"]:hover {
 
 
 .comment-timestamp {
+  font-size: 12px;
+  color: #666;
+  margin-top: 8px;
+  font-weight: 500;
   display: block;
-  margin-top: 10px;
-  color: #777;
-  font-size: 0.8rem;
-  line-height: 1.4;
 }
 
 
@@ -656,9 +700,199 @@ form button[type="submit"]:hover {
 .event-time {
   margin-top: 8px;
   font-size: 0.85rem;
-  color: #777;
+  color: #dadada;
   line-height: 1.5;
 }
 
 
+/* group.css - Chat message alignment + polished colors */
 
+.message {
+  max-width: 80%;
+  padding: 10px;
+  margin: 10px;
+  border-radius: 10px;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.message.you {
+  align-self: flex-end;
+  background-color: #474747;
+  color: white;
+  border-top-right-radius: 0;
+}
+
+.message.other {
+  align-self: flex-start;
+  background-color: #e8e8e8;
+  color: black;
+  border-top-left-radius: 0;
+}
+
+.message-header {
+  font-size: 0.85rem;
+  font-weight: normal;
+  margin-bottom: 5px;
+  display: flex;
+  justify-content: space-between;
+}
+
+
+.message-content {
+  word-wrap: break-word;
+  /* white-space: pre-wrap; */
+  color: rgb(244, 238, 226);
+}
+
+.message img {
+  margin-top: 10px;
+  max-width: 200px;
+  border-radius: 8px;
+}
+
+.message-time {
+  font-size: 12px;
+  color: #cccccc;
+  margin-top: 10px;
+  text-align: left;
+  /* Remove if exists: align-self: flex-end */
+}
+
+.messages-container {
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+  overflow-y: auto;
+  height: 60vh;
+  background-color: #f9f9f9;
+}
+
+.message-form {
+  display: flex;
+  align-items: center;
+  padding: 10px;
+  background-color: #fff;
+}
+
+.message-input {
+  flex: 1;
+  padding: 8px;
+  margin: 0 10px;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+.send-button,
+.image-button {
+  background-color: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.send-button:hover,
+.image-button:hover {
+  background-color: #0056b3;
+}
+
+
+.message-date-wrapper {
+  display: flex;
+  justify-content: center;
+  width: 100%;
+}
+
+
+.message-date-label {
+  display: inline-block;
+  background-color: #e0e0e0;
+  color: #333;
+  font-size: 12px;
+  font-weight: 500;
+  padding: 4px 12px;
+  border-radius: 5px;
+  margin: 16px auto 10px;
+  text-align: center;
+}
+
+
+
+.comment-button-wrapper {
+  /* text-align: center; */
+  margin-top: 12px;
+}
+
+.fancy-comment-button {
+  background-color:  #e5e3e3d8;
+  color: rgb(255, 255, 255);
+  font-weight: bold;
+  padding: 8px 20px;
+  border: 2px solid #020970;
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 16px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  transition: background-color 0.3s ease;
+}
+
+.fancy-comment-button:hover {
+  background-color: #000000d8;
+  color: white;
+}
+
+.comment-icon {
+  font-size: 18px;
+}
+
+.no-posts-message {
+  text-align: center;
+  color: #666;
+  font-size: 16px;
+  margin-top: 30px;
+  font-style: italic;
+}
+
+
+.message-time-comments {
+  font-size: 0.75rem;
+  color: #4a4a4a;
+  margin-top: 5px;
+  text-align: left; /* ✅ make it left-aligned */
+}
+
+
+
+
+.description-textarea {
+  width: 100%;
+  min-height: 100px;
+  resize: vertical;
+  border: 1px solid #ccc;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 14px;
+}
+
+.char-counter {
+  margin-top: 4px;
+  font-size: 12px;
+  color: gray;
+}
+
+/* .description-textarea.near-limit */
+.char-counter.near-limit { 
+  color: orange;
+  border-color: orange;
+}
+
+/* .description-textarea.limit-exceeded, */
+.char-counter.limit-exceeded {
+  color: red;
+  border-color: red;
+}

@@ -37,7 +37,8 @@ func SetupRoutes(app *CoreModels.App) *http.ServeMux {
 
 	mux.HandleFunc(("/api/GetUserIDFromSession"), handlers.GetuserIDHandler(app))
 
-	//groups
+
+        //Groups
 	mux.HandleFunc("/api/CreateGroup", handlers.CreateGroup(app))
 	mux.HandleFunc("/api/FetchAllGroups", handlers.FetchAllGroups(app))
 	mux.HandleFunc("/api/group/messages", handlers.GetGroupMessages(app))
@@ -46,21 +47,14 @@ func SetupRoutes(app *CoreModels.App) *http.ServeMux {
 	mux.HandleFunc("/api/FetchEvents", handlers.FetchEvents(app))
 	mux.HandleFunc("/api/OptionsEvent", handlers.OptionsEvent(app))
 	mux.HandleFunc("/api/FetchGroupPosts", handlers.FetchGroupPosts(app))
-	mux.HandleFunc("/api/CreateGroupPost", handlers.CreateGroupPost(app)) 
-    
-	mux.HandleFunc("/api/follow", handlers.FollowHandler(app) ) 
-	mux.HandleFunc("/api/unfollow", handlers.UnfollowHandler(app) ) 
-	mux.HandleFunc("/api/follow-status", handlers.FollowStatusHandler(app) )
-	mux.HandleFunc("/api/followers", handlers.GetFollowersHandler(app) )
-	mux.HandleFunc("/api/following", handlers.GetFollowingHandler(app) )
-
-	mux.HandleFunc("/api/CreateGroupComment", handlers.CreateGroupComment(app))
+	mux.HandleFunc("/api/CreateGroupPost", handlers.CreateGroupPost(app))
+        mux.HandleFunc("/api/CreateGroupComment", handlers.CreateGroupComment(app))
 
 	mux.HandleFunc("/api/update-profile", handlers.UpdateProfile(app))
 
 	mux.HandleFunc("/api/search-users", handlers.SearchUsers(app))
 
-	mux.HandleFunc("/api/RequestJoin", handlers.SendRequestToJoin(app))
+	//mux.HandleFunc("/api/RequestJoin", handlers.SendRequestToJoin(app))
 	mux.HandleFunc("/api/GetAllNotifications", handlers.GetAllNotifications(app))
 	mux.HandleFunc("/api/ManageRequest", handlers.ManageRequestGroups(app))
 	mux.HandleFunc("/api/ManageInvites", handlers.ManageInvitestGroups(app))
