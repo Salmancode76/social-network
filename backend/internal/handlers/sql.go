@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -169,26 +170,31 @@ func GetID(username string) string {
 func getAllUsers(db *sql.DB, id string) []string {
 
 	//get public
-
+	fmt.Println("getting all users")
 	//get all follwoing
-	query := "SELECT id FROM followers WHERE follower_id = ? "
+	query := "SELECT following_id FROM followers WHERE follower_id = ? "
 	var names []string
 	rows, err := db.Query(query, id)
 	if err != nil {
-		fmt.Printf("Server >> Error getting all users: %s", err)
-	}
-	for rows.Next() {
-		var id int
-		err = rows.Scan(&id)
-		if err != nil {
-			fmt.Printf("Server >> Error getting all users: %s", err)
+		fmt.Printf("Server >> Error getting all users: %s\n", err)
+	} else {
+		defer rows.Close()
+		for rows.Next() {
+			var id int
+			err = rows.Scan(&id)
+			if err != nil {
+				fmt.Printf("Server >> Error scanning user ID: %s\n", err)
+				continue
+			}
+
+			// Convert int to string properly
+			name := GetNickname(fmt.Sprintf("%d", id))
+			names = append(names, name)
 		}
-		name := GetNickname(string(id))
-		names = append(names, name)
 	}
 
 	// get all following
-	query = "SELECT id FROM followers WHERE following_id = ? "
+	query = "SELECT follower_id FROM followers WHERE following_id = ? "
 
 	rows, err = db.Query(query, id)
 	if err != nil {
@@ -200,17 +206,17 @@ func getAllUsers(db *sql.DB, id string) []string {
 		if err != nil {
 			fmt.Printf("Server >> Error getting all users: %s", err)
 		}
-		name := GetNickname(string(id))
+
+		name := GetNickname(strconv.Itoa(id))
 		if isRedunat(names, name) {
 			continue
 		}
 		names = append(names, name)
 	}
-
 	//get public
 
-	query = "SELECT nickname FROM users WHERE is_public = 1 "
-	rows, err = db.Query(query)
+	query = "SELECT nickname FROM users WHERE is_public = 1   AND id != ?"
+	rows, err = db.Query(query, id)
 	if err != nil {
 		fmt.Printf("Server >> Error getting all users: %s", err)
 	}
@@ -220,12 +226,12 @@ func getAllUsers(db *sql.DB, id string) []string {
 		if err != nil {
 			fmt.Printf("Server >> Error getting all users: %s", err)
 		}
+
 		if isRedunat(names, name) {
 			continue
 		}
 		names = append(names, name)
 	}
-
 	return names
 }
 
