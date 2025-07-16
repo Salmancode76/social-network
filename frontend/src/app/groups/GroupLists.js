@@ -11,6 +11,31 @@ export default function GroupLists({ onGroupClick }) {
   const [error, setError] = useState(null);
   const [requestStatuses, setRequestStatuses] = useState({}); // Track per group
 
+  const sendWebSocketMessage = (group) => {
+      if (!('WebSocket' in window)) {
+        console.error('WebSockets are not supported by your browser.');
+        return;
+      }
+  
+    const socket  = new WebSocket(WS_URL);
+  socket.onopen = async () => {
+        const data = await FetchUserIDbySession();
+        const userID = data.UserID;
+        console.log('WebSocket connected! User ID:', userID);
+  
+        const message = {
+          type: 'get_group_chat_history',
+          to: group.id,
+          from: userID,
+        };
+  
+        socket.send(JSON.stringify(message));
+        console.log('JSON WebSocket message sent:', message);
+      };
+  }
+  
+  
+  
   const fetchGroups = async () => {
     try {
       setLoading(true);
@@ -125,10 +150,16 @@ export default function GroupLists({ onGroupClick }) {
                 key={group.id}
                 className="group-item clickable"
                 onClick={() =>
-                  group.isMember &&
-                  group.request_status_id != "1" &&
+                { if(group.isMember &&
+                  group.request_status_id != "1"
+                  ){
                   handleGroupClick(group)
+                  sendWebSocketMessage(group);
+                  console.log("Group clicked:", group.id);
+                  }
+                  
                 }
+              }
               >
                 <h3>{group.title}</h3>
                 <p>{group.description}</p>

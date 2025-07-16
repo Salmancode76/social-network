@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import GroupEvent from "./GroupEvent";
 import GroupPost from "./GroupPost";
-import { socket } from "../utils/ws";
+//import { ws } from "../utils/ws";
 import "./group.css";
 import "primereact/resources/themes/lara-light-blue/theme.css";
 import "primereact/resources/primereact.min.css";
@@ -36,45 +36,12 @@ export default function GroupChat({ group, onBack }) {
   };
 
 
-// useEffect(() => {
-//     const handleNewMessage = (event) => {
-//       const message = JSON.parse(event.data);
-//       if (message.type === "new" && (message.from === userName || message.to === userName)) {
-//         // Ensure the received message has a createdat, or add one if missing (e.g., from server)
-//         const formattedMessage = {
-//           ...message,
-//           createdat: message.createdat ? formatTimestamp(message.createdat) : formatTimestamp(new Date().toISOString()),
-//         };
-//         setCurrentChatHistory((prevHistory) => [...prevHistory, formattedMessage]);
-//       }
-//     };
 
-//     socket.addEventListener("message", handleNewMessage);
-
-//     return () => {
-//       socket.removeEventListener("message", handleNewMessage);
-//     };
-//   }, [userName]);
-useEffect(() => {
-socket.onopen = async () => {
-      const data = await FetchUserIDbySession();
-      const userID = data.UserID;
-      console.log('WebSocket connected! User ID:', userID);
-
-      const message = {
-        type: 'get_group_chat_history',
-        to: group.id,
-        from: userID,
-      };
-
-      socket.send(JSON.stringify(message));
-      console.log('JSON WebSocket message sent:', message);
-    };
-}, [group.id]);
 
   useEffect(() => {
     if (showUserPopup) {
       setSelectedUsers([]);
+      
     }
   }, [showUserPopup]);
 
@@ -105,7 +72,7 @@ socket.onopen = async () => {
             user_ids: users,
             group_id: parseInt(group_id),
           };
-
+          console.log("Invites: ", Invites);
           ws.send(JSON.stringify(Invites));
       };
 
