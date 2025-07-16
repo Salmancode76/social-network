@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"log"
+	"strconv"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -95,7 +96,7 @@ func GetChatHistory(user string, from string, offset int) []Message {
 // Get username depending on userID
 func GetUsernameFromId(db *sql.DB, id string) string {
 	// Prepare the SQL query to retrieve the user ID based on the username
-	
+
 	query := "SELECT nickname FROM Users WHERE id = ?"
 
 	// Execute the query and retrieve the user ID
@@ -150,8 +151,7 @@ func GetUserID(db *sql.DB, username string) string {
 	return userID
 }
 
-
-func GetID( username string) string {
+func GetID(username string) string {
 	db := OpenDatabase()
 	defer db.Close()
 	fmt.Println("getting user id for", username)
@@ -167,11 +167,56 @@ func GetID( username string) string {
 	return userID
 }
 
-func getAllUsers(db *sql.DB) []string {
+func getAllUsers(db *sql.DB, id string) []string {
 
-	query := "SELECT nickname FROM users"
+	//get public
+	fmt.Println("getting all users")
+	//get all follwoing
+	query := "SELECT following_id FROM followers WHERE follower_id = ? "
 	var names []string
-	rows, err := db.Query(query)
+	rows, err := db.Query(query, id)
+	if err != nil {
+		fmt.Printf("Server >> Error getting all users: %s\n", err)
+	} else {
+		defer rows.Close()
+		for rows.Next() {
+			var id int
+			err = rows.Scan(&id)
+			if err != nil {
+				fmt.Printf("Server >> Error scanning user ID: %s\n", err)
+				continue
+			}
+
+			// Convert int to string properly
+			name := GetNickname(fmt.Sprintf("%d", id))
+			names = append(names, name)
+		}
+	}
+
+	// get all following
+	query = "SELECT follower_id FROM followers WHERE following_id = ? "
+
+	rows, err = db.Query(query, id)
+	if err != nil {
+		fmt.Printf("Server >> Error getting all users: %s", err)
+	}
+	for rows.Next() {
+		var id int
+		err = rows.Scan(&id)
+		if err != nil {
+			fmt.Printf("Server >> Error getting all users: %s", err)
+		}
+
+		name := GetNickname(strconv.Itoa(id))
+		if isRedunat(names, name) {
+			continue
+		}
+		names = append(names, name)
+	}
+	//get public
+
+	query = "SELECT nickname FROM users WHERE is_public = 1   AND id != ?"
+	rows, err = db.Query(query, id)
 	if err != nil {
 		fmt.Printf("Server >> Error getting all users: %s", err)
 	}
@@ -180,6 +225,10 @@ func getAllUsers(db *sql.DB) []string {
 		err = rows.Scan(&name)
 		if err != nil {
 			fmt.Printf("Server >> Error getting all users: %s", err)
+		}
+
+		if isRedunat(names, name) {
+			continue
 		}
 		names = append(names, name)
 	}
