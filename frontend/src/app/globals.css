@@ -10,7 +10,7 @@ html {
   padding: 0;
   background: linear-gradient(135deg, #90E0EF 0%, #03045E 100%, #0077b6 50%) !important;
   min-height: 100vh;
-  
+
 }
 
 /****************************************** NAVBAR *********************************************/
@@ -41,18 +41,18 @@ html {
   gap: 12px;
 }
 
-.nav-buttons button {
+/* .nav-buttons button {
   background-color: #0079d3;
   color: white;
   border: none;
   padding: 6px 12px;
   border-radius: 4px;
   cursor: pointer;
-}
-
+} */
+/* 
 .nav-buttons button:hover {
   background-color: #005fa3;
-}
+} */
 
 /****************************************** SIDEBAR *********************************************/
 .left-sidebar {
@@ -110,10 +110,12 @@ html {
 
 
 .sidebar-icon {
-  font-size: 20px; /* keep it large */
+  font-size: 20px;
+  /* keep it large */
   min-width: 24px;
   text-align: center;
-  margin-right: 0; /* optional: remove extra margin when collapsed */
+  margin-right: 0;
+  /* optional: remove extra margin when collapsed */
 }
 
 
@@ -123,7 +125,8 @@ html {
 
 .left-sidebar.collapsed .side-btn {
   justify-content: center;
-  padding: 12px 0; /* reduce padding to center nicely */
+  padding: 12px 0;
+  /* reduce padding to center nicely */
 }
 
 
@@ -145,7 +148,7 @@ html {
   border-radius: 8px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   margin-bottom: 20px;
- 
+
 }
 
 .main-content {
@@ -171,4 +174,35 @@ html {
 .post-date {
   color: #666;
   font-size: 12px;
+}
+
+
+
+
+/****************************************** SIGNUP + LOGIN + LOGOUT *********************************************/
+
+
+.btn-login,
+.btn-signup,
+.btn-logout {
+  color: #FFFFFF;
+  background: linear-gradient(to right, #003973, #0077B6);
+  padding: 12px 32px;
+  border: none;
+  border-radius: 999px;
+  font-size: 16px;
+  /* font-weight: bold; */
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transform: translateX(0);
+  box-shadow: 0 4px 12px rgba(0, 119, 182, 0.3);
+}
+
+.btn-login:hover,
+.btn-signup:hover,
+.btn-logout:hover {
+  background: linear-gradient(to right, #005f99, #00b4d8);
+  box-shadow: 0 8px 20px rgba(0, 119, 182, 0.5);
+  transform: translateY(-2px);
 }

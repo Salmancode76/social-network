@@ -349,7 +349,7 @@ export default function Navbar() {
                 />
               </div>
 
-              <button onClick={logout}>Logout</button>
+              <button className="btn-logout" onClick={logout}>Logout</button>
             </>
           )}
         </div>
