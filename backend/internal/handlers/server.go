@@ -150,5 +150,9 @@ func notifyNewMessage(m MyMessage) {
 	message := MyMessage{Type: "new", From: from, To: m.To, Text: m.Text}
 	to := GetID(m.To)
 	conn := (*userSockets)[to]
+	if _, ok := (*userSockets)[to]; !ok {
+		fmt.Println("User not connected: ", to)
+		return
+	}
 	conn.WriteJSON(message)
 }
