@@ -9,6 +9,9 @@ import {
 } from "../utils/notification/notification_container";
 import "../styles/nav.css";
 import { useWebSocket } from "../contexts/WebSocketContext";
+import { AiFillHome, AiOutlinePlus } from "react-icons/ai";
+import { FaUser, FaUsers } from "react-icons/fa";
+
 
 export default function Navbar() {
   const [loggedIn, setLoggedIn] = useState(false);
@@ -27,6 +30,8 @@ export default function Navbar() {
   const hoverTimeoutRef = useRef(null);
 
   const { socket, isConnected, connect, disconnect } = useWebSocket();
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+
 
 
   useEffect(() => {
@@ -268,16 +273,13 @@ export default function Navbar() {
 
   return (
     <>
+      {/* Navbar always first */}
       <nav className="navbar">
         <div className="logo" onClick={() => router.push("/")}>
           King Hashem
         </div>
         <div className="nav-buttons">
-          
-
-          {loggedIn && (
-            <>
-            <div className="search-container">
+          <div className="search-container">
             <input
               type="text"
               className="search-input"
@@ -288,7 +290,6 @@ export default function Navbar() {
                 if (searchResults.length > 0) setShowSearchResults(true);
               }}
             />
-
             {showSearchResults && (
               <div className="search-results">
                 {searchResults.length === 0 ? (
@@ -319,26 +320,17 @@ export default function Navbar() {
               </div>
             )}
           </div>
-          
-              <button onClick={() => router.push(`/Profile?id=${userID}`)}>
-                My Profile
-              </button>
-              <button onClick={() => router.push("/CreatePost")}>
-                Create Post
-              </button>
-              <button onClick={() => router.push("/groups")}>
-                 Groups
-              </button>
 
+          {loggedIn && (
+            <>
               <div
                 className="notification-container"
                 onMouseEnter={handleNotificationEnter}
                 onMouseLeave={handleNotificationLeave}
               >
                 <button
-                  className={`notification-bell ${
-                    showNotifications ? "active" : ""
-                  }`}
+                  className={`notification-bell ${showNotifications ? "active" : ""
+                    }`}
                 >
                   🔔
                   {notificationCount > 0 && (
@@ -357,11 +349,53 @@ export default function Navbar() {
                 />
               </div>
 
-              <button onClick={logout}>Logout</button>
+              <button className="btn-logout" onClick={logout}>Logout</button>
             </>
           )}
         </div>
       </nav>
+
+      {/* Page Layout after Navbar */}
+      <aside>
+        <div className="page-container">
+          <div className={`left-sidebar ${sidebarOpen ? "expanded" : "collapsed"}`}>
+            {/* Toggle Sidebar Button */}
+            <button className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+              {sidebarOpen ? "←" : "☰"}
+            </button>
+
+            {/* HOME */}
+            <button className="side-btn" onClick={() => router.push("/")}>
+              <AiFillHome className="sidebar-icon" />
+              {sidebarOpen && <span>Home</span>}
+            </button>
+
+            {/* MY PROFILE */}
+            <button className="side-btn" onClick={() => router.push(`/Profile?id=${userID}`)}>
+              <FaUser className="sidebar-icon" />
+              {sidebarOpen && <span>My Profile</span>}
+            </button>
+
+            {/* CREATE POST */}
+            <button className="side-btn" onClick={() => router.push("/CreatePost")}>
+              <AiOutlinePlus className="sidebar-icon" />
+              {sidebarOpen && <span>Create Post</span>}
+            </button>
+
+            {/* GROUPS */}
+            <button className="side-btn" onClick={() => router.push("/groups")}>
+              <FaUsers className="sidebar-icon" />
+              {sidebarOpen && <span>Groups</span>}
+            </button>
+          </div>
+
+
+          <div className="main-content">
+            {/* This will hold the main routed content or page-specific elements */}
+          </div>
+        </div>
+      </aside>
     </>
   );
+
 }

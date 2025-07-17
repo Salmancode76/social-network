@@ -34,7 +34,7 @@ export default function Home() {
 
     init();
   }, [router]);
-  
+
 
   if (hasError) {
     return <Internal505 />;
@@ -42,7 +42,7 @@ export default function Home() {
 
   return (
     <Suspense fallback={<div>Loading...</div>}>
-      <div>
+      <div className="main-content">
         <h1>Frontend</h1>
         {loading ? (
           <div>Loading posts...</div>
@@ -61,9 +61,8 @@ export default function Home() {
                     <div className="avatar_div">
                       <img
                         className="avatar-img"
-                        src={`http://localhost:8080/Image/Users/${
-                          x.userImage?.String || "profile_notfound.png"
-                        }`}
+                        src={`http://localhost:8080/Image/Users/${x.userImage?.String || "profile_notfound.png"
+                          }`}
                         onError={(e) => {
                           e.target.onerror = null;
                           e.target.src =
@@ -93,8 +92,8 @@ export default function Home() {
                       {x.privacy_type_id === "1"
                         ? "Public"
                         : x.privacy_type_id === "2"
-                        ? "Followers"
-                        : "Private"}
+                          ? "Followers"
+                          : "Private"}
                     </span>
                     <p>{x.UserFullname}</p>
                     <p>{x.UserNickname != "" ? "AKA " + x.UserNickname : ""}</p>
@@ -106,7 +105,7 @@ export default function Home() {
             )}
           </>
         )}
-         <Chatbox />
+        <Chatbox />
       </div>
     </Suspense>
   );
