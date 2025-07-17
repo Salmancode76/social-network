@@ -20,8 +20,7 @@ html, body {
   display: flex;
   flex-direction: column;
   gap: 20px;
-  width: 100vw; /* العرض الكامل للنافذة */
-  max-width: 100%; /* مش محدد بعرض معين */
+    max-width: 100%; /* مش محدد بعرض معين */
   box-sizing: border-box;
 }
 
