@@ -222,13 +222,19 @@ func CheckSessionHandler(app *CoreModels.App) http.HandlerFunc {
 		}
 		userID, err := app.Users.GetUserIDFromSession(w, r)
 		if err != nil {
-			http.Error(w, "Unauthorized", http.StatusUnauthorized)
+				w.Header().Set("Content-Type", "application/json")
+				w.WriteHeader(http.StatusOK)
+				json.NewEncoder(w).Encode(map[string]interface{}{
+					"authenticated": false,
+			})
 			return
 		}
-		fmt.Println("User ID from session:", userID)
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(fmt.Sprintf("UserID: %d", userID)))
+		json.NewEncoder(w).Encode(map[string]interface{}{
+			"authenticated": true,
+			"userID":        userID,
+		})
 	}
 }
 

@@ -11,6 +11,7 @@ import "../styles/nav.css";
 import { useWebSocket } from "../contexts/WebSocketContext";
 import { AiFillHome, AiOutlinePlus } from "react-icons/ai";
 import { FaUser, FaUsers } from "react-icons/fa";
+import { usePathname } from "next/navigation";
 
 
 export default function Navbar() {
@@ -31,6 +32,9 @@ export default function Navbar() {
 
   const { socket, isConnected, connect, disconnect } = useWebSocket();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  const pathname = usePathname();
+  const isAuthPage = pathname.startsWith("/auth");
 
 
 
@@ -99,7 +103,10 @@ export default function Navbar() {
           credentials: "include",
           method: "GET",
         });
-        setLoggedIn(res.ok);
+         const data = await res.json();
+         if (data.authenticated == true) {
+           setLoggedIn(res.ok);
+         }
       } catch (error) {
         console.error("Session check failed:", error);
         setLoggedIn(false);
@@ -240,8 +247,8 @@ export default function Navbar() {
     return () => clearTimeout(timeout);
   }, [searchQuery]);
 
-  if (loading) return null;
-  if (!userID) return null;
+  if (loading || !userID || isAuthPage) return null;
+
 
   async function logout() {
     try {
@@ -274,6 +281,7 @@ export default function Navbar() {
   return (
     <>
       {/* Navbar always first */}
+      {loggedIn && (
       <nav className="navbar">
         <div className="logo" onClick={() => router.push("/")}>
           King Hashem
@@ -321,7 +329,7 @@ export default function Navbar() {
             )}
           </div>
 
-          {loggedIn && (
+          
             <>
               <div
                 className="notification-container"
@@ -351,11 +359,13 @@ export default function Navbar() {
 
               <button className="btn-logout" onClick={logout}>Logout</button>
             </>
-          )}
         </div>
       </nav>
+          )}
 
+      
       {/* Page Layout after Navbar */}
+      {loggedIn && (
       <aside>
         <div className="page-container">
           <div className={`left-sidebar ${sidebarOpen ? "expanded" : "collapsed"}`}>
@@ -371,10 +381,12 @@ export default function Navbar() {
             </button>
 
             {/* MY PROFILE */}
+            {userID && userID > 0 && (
             <button className="side-btn" onClick={() => router.push(`/Profile?id=${userID}`)}>
               <FaUser className="sidebar-icon" />
               {sidebarOpen && <span>My Profile</span>}
             </button>
+            )}
 
             {/* CREATE POST */}
             <button className="side-btn" onClick={() => router.push("/CreatePost")}>
@@ -395,6 +407,7 @@ export default function Navbar() {
           </div>
         </div>
       </aside>
+      )}
     </>
   );
 

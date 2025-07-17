@@ -21,14 +21,14 @@ export default function AuthPage() {
         method: "GET",
       });
 
-      if (res.ok) {
+      const data = await res.json();
+
+      if (data.authenticated == true) {
         router.push("/"); 
+      }else if (data.authenticated == false){
+        return
       }
-      if (!res.ok) {
-      if (res.status === 401) {
-        return null; 
-      }
-    }
+    
     }
 
     checkSession();
@@ -115,8 +115,10 @@ window.dispatchEvent(new Event("session-changed"));
         body: JSON.stringify(payload),
       });
       const data = await res.json();
-      if (data.status === "ok") router.push("/");
-      else setErrorMsg(data.message || "Registration failed");
+      if (data.status === "ok"){
+        window.dispatchEvent(new Event("session-changed"));
+        router.push("/");
+      }else setErrorMsg(data.message || "Registration failed");
     } catch (err) {
       setErrorMsg("Registration error");
     }
@@ -124,7 +126,8 @@ window.dispatchEvent(new Event("session-changed"));
 
   return (
     <section className="forms-section">
-      <h1 className="section-title">Welcome</h1>
+      <h1 className="section-title">Welcome</h1> 
+  <p className="subtitle">Let's get you started with your account! </p>
       <div className="forms">
         <div className={`form-wrapper ${isLogin ? "is-active" : ""}`}>
           <button

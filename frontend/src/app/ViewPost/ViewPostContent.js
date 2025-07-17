@@ -7,7 +7,7 @@ import { Lost404 } from "../Errors/page";
 import { Internal505 } from "../Errors/page";
 import { fileChangeHandler } from "../utils/fileChangeHandler";
 import CheckSession from "../utils/CheckSession";
-
+import "../styles/ViewPost.css";
 export default function ViewPostContent() {
   const [post, setPost] = useState(null);
   const fileInputRef = useRef();
@@ -143,113 +143,104 @@ export default function ViewPostContent() {
 
   return (
     <>
-      <div>
-        <h2>Post Details</h2>
-        {post?.image_file ? (
-          <img
-            src={`http://localhost:8080/Image/Posts/${post.image_file}`}
-            onError={(e) => {
-              e.target.onerror = null;
-              e.target.src =
-                "http://localhost:8080/Image/Posts/images_notfound.png";
-            }}
-          />
-        ) : null}
+      <div className="viewpost-container">
+  <h2>Post Details</h2>
 
-        <p>ID: {post?.ID}</p>
-        <p>User ID: {post?.user_id}</p>
-        <p>Content: {post?.content}</p>
-        <p>Created At: {post?.CreatedAt}</p>
-        <p>Privacy Type ID: {post?.privacy_type_id}</p>
-      </div>
+  {post?.image_file && (
+    <img
+      className="viewpost-image"
+      src={`http://localhost:8080/Image/Posts/${post.image_file}`}
+      onError={(e) => {
+        e.target.onerror = null;
+        e.target.src = "http://localhost:8080/Image/Posts/images_notfound.png";
+      }}
+      alt="Post image"
+    />
+  )}
 
-      <div>
-        <form onSubmit={HandleCommentSubmit}>
-          {error && <div>{errorMessage}</div>}
+  <div className="post-details">
+    <p>ID: {post?.ID}</p>
+    <p>User ID: {post?.user_id}</p>
+    <p>Content: {post?.content}</p>
+    <p>Created At: {post?.CreatedAt}</p>
+    <p>Privacy Type ID: {post?.privacy_type_id}</p>
+  </div>
 
-          <textarea
-            onChange={(e) => setComment(e.target.value)}
-            maxLength={1500}
-            value={comment}
-          />
-          <label>Image Path:</label>
-          <div ref={ImageDiv} className="image"></div>
+  <form className="comment-form" onSubmit={HandleCommentSubmit}>
+    {error && <div style={{ color: 'red', marginBottom: '10px' }}>{errorMessage}</div>}
 
-          <input
-            type="file"
-            accept="image/*"
-            ref={fileInputRef}
-            onChange={fileChangeHandler(
-              setError,
-              seterrorMessage,
-              setFormData,
-              ImageDiv,
-              fileInputRef
-            )}
-          />
-          <button type="submit" disabled={error}>
-            Post
-          </button>
-        </form>
-        <h3>Comments:</h3>
-        {post?.Comments && post?.Comments.length > 0 ? (
-          post.Comments.map((commentObj, index) => (
-            <div
-              key={index}
-              style={{
-                border: "1px solid #ccc",
-                padding: "10px",
-                margin: "5px 0",
+    <textarea
+      onChange={(e) => setComment(e.target.value)}
+      maxLength={1500}
+      value={comment}
+      placeholder="Write your comment here..."
+    />
+
+    <label>Attach an image (optional):</label>
+    <div ref={ImageDiv} className="image"></div>
+
+    <input
+      type="file"
+      accept="image/*"
+      ref={fileInputRef}
+      onChange={fileChangeHandler(
+        setError,
+        seterrorMessage,
+        setFormData,
+        ImageDiv,
+        fileInputRef
+      )}
+    />
+
+    <button type="submit" disabled={error}>
+      Post
+    </button>
+  </form>
+
+  <div className="comments-section">
+    <h3>Comments:</h3>
+    {post?.Comments && post?.Comments.length > 0 ? (
+      post.Comments.map((commentObj, index) => (
+        <div key={index} className="comment-card">
+          <div className="comment-avatar">
+            <img
+              src={`http://localhost:8080/Image/Users/${
+                commentObj.userImage?.String || "profile_notfound.png"
+              }`}
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "http://localhost:8080/Image/Users/profile_notfound.png";
               }}
-            >
-              <div className="avatar_div">
-                <img
-                  className="avatar-img"
-                  src={`http://localhost:8080/Image/Users/${
-                    commentObj.userImage?.String || "profile_notfound.png"
-                  }`}
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src =
-                      "http://localhost:8080/Image/Users/profile_notfound.png";
-                  }}
-                  alt="User avatar"
-                />
-              </div>
-              {console.table(commentObj)}
-              <p>
-                <strong>User:</strong>{" "}
-                {commentObj.Username || `${commentObj.user_id}`}
-              </p>
-              {commentObj.image_file ? (
-                <img
-                  src={`http://localhost:8080/Image/Posts/${commentObj.image_file}`}
-                  alt={`Comment image ${index}`}
-                />
-              ) : null}
-              <p>
-                <strong>Comment:</strong> {commentObj.content}
-              </p>
-
-              <p>
-                <strong>FullName:</strong>
-                {commentObj.UserFname}
-              </p>
-              <p>
-                {commentObj.UserNickname !== ""
-                  ? "Username: " + commentObj.UserNickname
-                  : ""}
-              </p>
-              <p>
-                <strong>Date:</strong>{" "}
-                {commentObj.createdAt || commentObj.CreatedAt}
-              </p>
-            </div>
-          ))
-        ) : (
-          <p>No comments yet</p>
-        )}
-      </div>
+              alt="User avatar"
+            />
+          </div>
+          <div className="comment-content">
+            <p className="comment-username">
+              {commentObj.Username || `User #${commentObj.user_id}`}
+            </p>
+            <p>{commentObj.content}</p>
+            {commentObj.image_file && (
+              <img
+                src={`http://localhost:8080/Image/Posts/${commentObj.image_file}`}
+                alt={`Comment image ${index}`}
+              />
+            )}
+            <p className="comment-meta">
+              Full Name: {commentObj.UserFname} <br />
+              {commentObj.UserNickname !== ""
+                ? "Username: " + commentObj.UserNickname
+                : ""}{" "}
+              <br />
+              Date: {commentObj.createdAt || commentObj.CreatedAt}
+            </p>
+          </div>
+        </div>
+      ))
+    ) : (
+      <p>No comments yet</p>
+    )}
+  </div>
+</div>
     </>
   );
 }

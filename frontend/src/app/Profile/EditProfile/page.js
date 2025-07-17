@@ -2,9 +2,9 @@
 import {useSearchParams, useRouter } from "next/navigation";
 import { useState,useEffect } from "react";
 import { FetchUserByID } from "../../utils/FetchUserByID";
-import { FetchPostsByUserID } from "../../utils/FetchPostsByUserID";
 import { FetchUserIDbySession } from "../../utils/FetchUserIDbySession";
-import Link from "next/link";
+import "../../styles/EditProfile.css";
+
 export default function ProfilePage(){
         const [currentUserID ,setCurrentUser] = useState([])
         const router = useRouter();
@@ -17,8 +17,8 @@ export default function ProfilePage(){
                   const res = await fetch("http://localhost:8080/api/check-session", {
                     credentials: "include",
                   });
-          
-                  if (!res.ok) {
+                   const data = await res.json();
+                  if (data.authenticated == false) {
                     router.push("/auth");
                   }
                 } catch (error) {
@@ -142,13 +142,13 @@ export default function ProfilePage(){
   }
 
     
-              return (
-    <div style={styles.container}>
+  return (
+      <div className="container">
       <h2>Edit Profile</h2>
 
-      <label style={styles.label}>First Name</label>
+      <label className="label">First Name</label>
       <input
-        style={styles.input}
+        className="input"
         type="text"
         name="first_name"
         value={userData.first_name}
@@ -156,12 +156,12 @@ export default function ProfilePage(){
         required
       />
       {errors.first_name && (
-  <p style={styles.error}>{errors.first_name}</p>
-)}
+        <p className="error">{errors.first_name}</p>
+      )}
 
-      <label style={styles.label}>Last Name</label>
+      <label className="label">Last Name</label>
       <input
-        style={styles.input}
+        className="input"
         type="text"
         name="last_name"
         value={userData.last_name}
@@ -169,97 +169,57 @@ export default function ProfilePage(){
         required
       />
       {errors.last_name && (
-  <p style={styles.error}>{errors.last_name}</p>
-)}
+        <p className="error">{errors.last_name}</p>
+      )}
 
-      <label style={styles.label}>Nickname</label>
+      <label className="label">Nickname</label>
       <input
-        style={styles.input}
+        className="input"
         type="text"
         name="nickname"
         value={userData.nickname}
         onChange={handleChange}
       />
       {errors.nickname && (
-  <p style={styles.error}>{errors.nickname}</p>
-)}
+        <p className="error">{errors.nickname}</p>
+      )}
 
-      <label style={styles.label}>About Me</label>
+      <label className="label">About Me</label>
       <textarea
-        style={styles.textarea}
+        className="textarea"
         name="about_me"
         value={userData.about_me}
         onChange={handleChange}
       />
-      <label style={styles.label}>Account Privacy</label>
-    <select
-      style={styles.input}
-      name="is_private"
-      value={userData.is_public }
-      onChange={(e) =>
-        setUserData({
-          ...userData,
-          is_public: e.target.value,
-        })
-      }
-    >
-      <option value="1">Public</option>
-      <option value="0">Private</option>
-    </select>
 
-      <button style={styles.button} onClick={handleSave}>Save Changes</button>
+      <label className="label">Account Privacy</label>
+      <select
+        className="input"
+        name="is_private"
+        value={userData.is_public}
+        onChange={(e) =>
+          setUserData({
+            ...userData,
+            is_public: e.target.value,
+          })
+        }
+      >
+        <option value="1">Public</option>
+        <option value="0">Private</option>
+      </select>
+
+      <button className="button" onClick={handleSave}>Save Changes</button>
       <button
-          style={{ ...styles.button, backgroundColor: "#999", marginLeft: "10px" }}
-          onClick={() => router.back()}
-        >
-          Back
-        </button>
-        {errors.general && (
-  <p style={styles.error}>{errors.general}</p>
-)}
+        className="button button-secondary"
+        onClick={() => router.back()}
+      >
+        Back
+      </button>
+
+      {errors.general && (
+        <p className="error">{errors.general}</p>
+      )}
     </div>
     );
     
 }
-const styles = {
-  container: {
-    maxWidth: "600px",
-    margin: "0 auto",
-    padding: "20px",
-    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-  },
-  label: {
-    display: "block",
-    marginBottom: "5px",
-    fontWeight: "bold",
-  },
-  input: {
-    width: "100%",
-    padding: "8px",
-    marginBottom: "15px",
-    borderRadius: "4px",
-    border: "1px solid #ccc",
-  },
-  textarea: {
-    width: "100%",
-    height: "100px",
-    padding: "8px",
-    borderRadius: "4px",
-    border: "1px solid #ccc",
-    marginBottom: "15px",
-  },
-  button: {
-    padding: "10px 20px",
-    backgroundColor: "#0070f3",
-    color: "white",
-    border: "none",
-    borderRadius: "5px",
-    cursor: "pointer",
-  },
-  error: {
-  color: "red",
-  fontSize: "0.9em",
-  marginTop: "-10px",
-  marginBottom: "10px",
-},
-};

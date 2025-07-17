@@ -1,0 +1,168 @@
+/* profile.css */
+
+.container {
+  max-width: 650px;
+  margin: 30px auto;
+  padding: 0 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 100vh; 
+}
+
+
+
+
+
+.profileHeader {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  border-bottom: 1.5px solid #eee;
+  padding-bottom: 20px;
+  margin-bottom: 30px;
+}
+
+.avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #0070f3;
+  transition: transform 0.3s ease;
+  cursor: pointer;
+}
+
+.avatar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 0 10px #0070f3aa;
+}
+
+.userInfo h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #222;
+}
+
+.userInfo h2 span {
+  display: block;
+  font-size: 14px;
+  color: #666;
+  margin-top: 4px;
+}
+
+.userInfo p {
+  color: #555;
+  font-style: italic;
+  white-space: pre-line;
+  margin-top: 10px;
+  line-height: 1.4;
+}
+
+.stats {
+  display: flex;
+  justify-content: space-around;
+  padding: 18px 0;
+  border-top: 1.5px solid #eee;
+  border-bottom: 1.5px solid #eee;
+  margin-bottom: 30px;
+}
+
+.statItem {
+  text-align: center;
+  cursor: default;
+}
+
+.statItem strong {
+  display: block;
+  font-size: 1.3rem;
+  color: #0070f3;
+  margin-bottom: 4px;
+  user-select: none;
+}
+
+.statItem span {
+  font-size: 0.9rem;
+  color: #777;
+}
+
+.editButton {
+  padding: 10px 20px;
+  background-color: #0070f3;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background-color 0.25s ease;
+  margin-top: 10px;
+}
+
+.editButton:hover {
+  background-color: #005bb5;
+}
+
+.postsSection {
+  margin-top: 20px;
+}
+
+.postsSection h3 {
+  font-size: 1.5rem;
+  margin-bottom: 18px;
+  color: #333;
+}
+
+.postCard {
+  border: 1.5px solid #ddd;
+  border-radius: 10px;
+  padding: 18px 20px;
+  margin-bottom: 15px;
+  box-shadow: 0 3px 10px rgba(0,0,0,0.04);
+  transition: box-shadow 0.3s ease;
+  background-color: #fafafa;
+  cursor: pointer;
+}
+
+.postCard:hover {
+  box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+}
+
+.postHeader {
+  display: flex;
+  justify-content: space-between;
+  color: #888;
+  font-size: 13px;
+  margin-bottom: 12px;
+  user-select: none;
+}
+
+.postImage {
+  width: 100%;
+  max-height: 300px;
+  object-fit: contain;
+  border-radius: 8px;
+  margin-top: 14px;
+  background-color: #fefefe;
+  border: 1px solid #ddd;
+}
+
+/* Responsive tweaks */
+@media (max-width: 600px) {
+  .container {
+    padding: 0 15px;
+  }
+
+  .profileHeader {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .avatar {
+    width: 80px;
+    height: 80px;
+  }
+}

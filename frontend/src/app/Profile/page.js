@@ -5,6 +5,8 @@ import { FetchUserByID } from "../utils/FetchUserByID";
 import { FetchPostsByUserID } from "../utils/FetchPostsByUserID";
 import { FetchUserIDbySession } from "../utils/FetchUserIDbySession";
 import Link from "next/link";
+import "../styles/Profile.css";
+
 export default function ProfilePage(){
 
   const [user, setUser] = useState(null);
@@ -25,8 +27,9 @@ export default function ProfilePage(){
             const res = await fetch("http://localhost:8080/api/check-session", {
               credentials: "include",
             });
-    
-            if (!res.ok) {
+        const data = await res.json();
+
+            if (data.authenticated == false) {
               router.push("/auth");
             }
           } catch (error) {
@@ -168,103 +171,97 @@ export default function ProfilePage(){
       
 
      return (
-      
-    <div style={styles.container}>
+    <div className="container">
       {user ? (
         <>
-          <div style={styles.profileHeader}>
+          <div className="profileHeader">
             <img
               src={`http://localhost:8080/Image/Users/${user.User.avatar}`}
               alt="User Avatar"
-              style={styles.avatar}
+              className="avatar"
             />
-            <div style={styles.userInfo}>
-              <h2 style={{ margin: 0 }}>
+            <div className="userInfo">
+              <h2>
                 {user.User.nickname}
-                <span style={{ display: "block", fontSize: "14px", color: "#888" }}>
+                <span>
                   {user.User.first_name} {user.User.last_name}
                 </span>
               </h2>
-              <p style={{ color: "#666", fontStyle: "italic" , whiteSpace: "pre-line" }}>{user.User.about_me}</p>
+              <p>{user.User.about_me}</p>
             </div>
           </div>
 
-          <div style={styles.stats}>
-            <div style={styles.statItem}>
+          <div className="stats">
+            <div className="statItem">
               <strong>{Array.isArray(posts) ? posts.length : 0}</strong>
               <span>Posts</span>
             </div>
-            <div style={styles.statItem} >
+            <div className="statItem">
               <strong style={{cursor: "pointer"}}>{followersCount}</strong>
               <span>Followers</span>
             </div>
-            <div style={styles.statItem}>
+            <div className="statItem">
               <strong style={{cursor: "pointer"}}>{followingCount}</strong>
               <span>Following</span>
             </div>
             {user.User.id === currentUserID && (
               <Link href={`/Profile/EditProfile?id=${user.User.id}`}>
-                <button style={styles.editButton}>Edit Profile</button>
+                <button className="editButton">Edit Profile</button>
               </Link>
             )}
             {user.User.id !== currentUserID && (
               <button
-              style={{
-                ...styles.editButton,
-                backgroundColor:
-                isFollowing === "accepted" ? "#28a745"
-                : isFollowing === "requested" ? "#ffc107"
-                : "#0070f3",
-                cursor:  "pointer",
-                marginLeft: "10px",
-              }}
-              onClick={handleFollowClick}
+                className="editButton"
+                style={{
+                  backgroundColor:
+                    isFollowing === "accepted" ? "#28a745"
+                    : isFollowing === "requested" ? "#ffc107"
+                    : "#0070f3",
+                  cursor: "pointer",
+                  marginLeft: "10px",
+                }}
+                onClick={handleFollowClick}
               >
                 {isFollowing === "accepted" ? "Followed"
                 : isFollowing === "requested"? "Requested"
-              : "Follow"}
-
+                : "Follow"}
               </button>
             )}
           </div>
-        {user.User.is_public == 0 && user.User.id !== currentUserID ? (
-        <p>This account is private.</p>
-      ) : (
-      
-          <div style={styles.postsSection}>
-            <h3>Posts</h3>
-            {Array.isArray(posts) && posts.length > 0  ? (
-              posts.map((post) => (
-               <Link  href={`/ViewPost?id=${post.ID}`} key={post.ID} >
-                <div style={styles.postCard}>
-      
-      <div style={styles.postHeader}>
-        <span>{user.User.nickname || `${user.User.first_name} ${user.User.last_name}`}</span>
-        <span>{new Date(post.CreatedAt).toLocaleString()}</span>
-      </div>
+          {user.User.is_public == 0 && user.User.id !== currentUserID ? (
+            <p>This account is private.</p>
+          ) : (
+            <div className="postsSection">
+              <h3>Posts</h3>
+              {Array.isArray(posts) && posts.length > 0  ? (
+                posts.map((post) => (
+                  <Link href={`/ViewPost?id=${post.ID}`} key={post.ID}>
+                    <div className="postCard">
+                      <div className="postHeader">
+                        <span>{user.User.nickname || `${user.User.first_name} ${user.User.last_name}`}</span>
+                        <span>{new Date(post.CreatedAt).toLocaleString()}</span>
+                      </div>
 
-     
-      <p style={{ marginBottom: post.image_file ? "10px" : "0" }}>{post.content}</p>
+                      <p style={{ marginBottom: post.image_file ? "10px" : "0" }}>{post.content}</p>
 
-      
-      {post.image_file && post.image_file.trim() !== "" && (
-        <img
-          src={`http://localhost:8080/Image/Posts/${post.image_file}`}
-          onError={(e) => {
-            e.target.onerror = null;
-            e.target.src = "http://localhost:8080/Image/Posts/images_notfound.png";
-          }}
-          alt="Post image"
-          style={styles.postImage}
-        />
-      )}
-    </div>
-                </Link>
-              ))
-            ) : (
-              <p>No posts yet.</p>
-            )}
-          </div>
+                      {post.image_file && post.image_file.trim() !== "" && (
+                        <img
+                          src={`http://localhost:8080/Image/Posts/${post.image_file}`}
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.src = "http://localhost:8080/Image/Posts/images_notfound.png";
+                          }}
+                          alt="Post image"
+                          className="postImage"
+                        />
+                      )}
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <p>No posts yet.</p>
+              )}
+            </div>
           )}
         </>
       ) : (
@@ -274,76 +271,3 @@ export default function ProfilePage(){
   );
 }
 
-const styles = {
-  container: {
-    maxWidth: "600px",
-    margin: "20px auto",
-    padding: "0 15px",
-    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-  },
-  profileHeader: {
-    display: "flex",
-    alignItems: "center",
-    gap: "15px",
-    borderBottom: "1px solid #ddd",
-    paddingBottom: "15px",
-    marginBottom: "20px",
-  },
-  avatar: {
-    width: "90px",
-    height: "90px",
-    borderRadius: "50%",
-    objectFit: "cover",
-    border: "3px solid #0070f3",
-  },
-  userInfo: {
-    flex: 1,
-  },
-  stats: {
-    display: "flex",
-    justifyContent: "space-around",
-    marginBottom: "25px",
-    borderTop: "1px solid #eee",
-    borderBottom: "1px solid #eee",
-    padding: "15px 0",
-  },
-  statItem: {
-    textAlign: "center",
-  },
-  postsSection: {
-    marginTop: "20px",
-  },
-  postCard: {
-    border: "1px solid #ddd",
-    borderRadius: "8px",
-    padding: "15px",
-    marginBottom: "12px",
-    boxShadow: "0 2px 5px rgba(0,0,0,0.05)",
-  },
- postHeader: {
-  display: "flex",
-  justifyContent: "space-between",
-  alignItems: "center",
-  marginBottom: "10px",
-  color: "#888",
-  fontSize: "12px",
-},
-
-postImage: {
-  width: "100%",
-  maxHeight: "300px",
-  objectFit: "contain",
-  borderRadius: "8px",
-  marginTop: "10px",
-  backgroundColor: "#f9f9f9",
-},
-editButton: {
-  padding: "8px 15px",
-  backgroundColor: "#0070f3",
-  color: "#fff",
-  border: "none",
-  borderRadius: "5px",
-  cursor: "pointer",
-  marginTop: "10px",
-}
-};

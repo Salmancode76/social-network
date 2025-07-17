@@ -41,7 +41,7 @@ html {
   gap: 12px;
 }
 
-/* .nav-buttons button {
+.nav-buttons button {
   background-color: #0079d3;
   color: white;
   border: none;
@@ -49,10 +49,10 @@ html {
   border-radius: 4px;
   cursor: pointer;
 } */
-/* 
+ 
 .nav-buttons button:hover {
   background-color: #005fa3;
-} */
+}
 
 /****************************************** SIDEBAR *********************************************/
 .left-sidebar {
@@ -119,9 +119,9 @@ html {
 }
 
 
-/* .left-sidebar.collapsed .side-btn span {
+.left-sidebar.collapsed .side-btn span {
   display: none;
-} */
+}
 
 .left-sidebar.collapsed .side-btn {
   justify-content: center;
@@ -191,7 +191,7 @@ html {
   border: none;
   border-radius: 999px;
   font-size: 16px;
-  /* font-weight: bold; */
+  font-weight: bold;
   text-transform: uppercase;
   cursor: pointer;
   transition: transform 0.2s ease, box-shadow 0.2s ease;
@@ -206,3 +206,4 @@ html {
   box-shadow: 0 8px 20px rgba(0, 119, 182, 0.5);
   transform: translateY(-2px);
 }
+

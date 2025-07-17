@@ -6,7 +6,9 @@ async function CheckSession(router) {
       credentials: "include",
     });
 
-    if (!res.ok) {
+    const data = await res.json();
+    
+    if (data.authenticated == false) {
       router.push("/auth");
       return false;
     }
