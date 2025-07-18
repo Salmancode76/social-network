@@ -10,7 +10,7 @@ export default function GroupLists({ onGroupClick }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [requestStatuses, setRequestStatuses] = useState({}); // Track per group
-
+  const WS_URL = 'ws://localhost:8080/ws';
   const sendWebSocketMessage = (group) => {
       if (!('WebSocket' in window)) {
         console.error('WebSockets are not supported by your browser.');

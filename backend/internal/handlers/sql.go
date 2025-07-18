@@ -41,6 +41,17 @@ func AddMessageToHistory(fromUSer string, toUser string, messageText string) {
 	}
 }
 
+func AddMessageToGroupHistory(fromUSer string, toUser string, messageText string) {
+	db := OpenDatabase()
+	defer CloseDB(db)
+	//inserting data into table
+	_, err := db.Exec("INSERT INTO group_messeges (user_id,group_id,text,time) VALUES (?,?,?,?)", fromUSer, toUser, messageText, time.Now().Format("2006-01-02 15:04:05"))
+	if err != nil {
+		// Handle error
+		fmt.Printf("Server >> Error adding message to database: %s ", err)
+	}
+}
+
 func GetChatHistory(user string, from string, offset int) []Message {
 	db := OpenDatabase()
 	defer db.Close()
@@ -71,6 +82,56 @@ func GetChatHistory(user string, from string, offset int) []Message {
 			From:      fromUser,
 			To:        toUser,
 			Read:      isread,
+			Text:      message,
+			CreatedAt: time,
+		}
+		messages = append(messages, msg)
+	}
+
+	// stmt, err := db.Prepare(`
+	// 	UPDATE messages
+	// 	SET is_read = 1
+	// 	WHERE (from_id = ? AND to_id = ?) OR (from_id = ? AND to_id = ?)
+	// `)
+
+	// Execute the prepared statement with the user IDs
+	// // result, err := stmt.Exec(user, from, from, user)
+	// // if err != nil {
+	// // 	fmt.Printf("Server >> Error getting chat history: %s", err)
+	// // }
+	// fmt.Println("is read executed result", result)
+
+	return messages
+}
+
+func GetGroupChatHistory(group string, from string) []Message {
+	db := OpenDatabase()
+	defer db.Close()
+	fmt.Println("fromUser is=", from)
+	fmt.Println("The group is=", group)
+	rows, err := db.Query("SELECT group_id, user_id, text, time FROM group_messages WHERE (group_id=?) ORDER BY time ASC", group)
+
+	if err != nil {
+		fmt.Printf("Server >> Error getting chat history: %s", err)
+	}
+
+	messages := []Message{}
+	for rows.Next() {
+		var GroupID, userID string
+		var message string
+		var time string
+		err = rows.Scan(&GroupID, &userID, &message, &time)
+		if err != nil {
+			fmt.Printf("Server >> Error reading chat history: %s", err)
+		}
+		if userID == from {
+			userID = "You"
+		} else {
+			userID = GetUsernameFromId(db, userID)
+		}
+
+		msg := Message{
+			From:      userID,
 			Text:      message,
 			CreatedAt: time,
 		}

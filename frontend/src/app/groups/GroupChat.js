@@ -36,8 +36,23 @@ export default function GroupChat({ group, onBack }) {
   };
 
 
+const sendText= async (group,message) => {
+  const socket  = new WebSocket(WS_URL);
+  console.log("Sending message to group:", group.id, "Message:", message);
+    const data = await FetchUserIDbySession();
+    const userID = data.UserID;
+    
 
-
+    const payload = {
+      type: "group_message",
+      from: userID,
+      to: group.id,
+      text: message,
+    };
+    console.log("Sending group message:", payload);
+    socket.send(JSON.stringify(payload));
+    
+  }
   useEffect(() => {
     if (showUserPopup) {
       setSelectedUsers([]);
@@ -194,7 +209,7 @@ export default function GroupChat({ group, onBack }) {
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-
+    sendText(group, newMessage)
     if (!newMessage.trim() && !selectedImage) return;
 
     if (selectedImage) {
@@ -232,6 +247,7 @@ export default function GroupChat({ group, onBack }) {
     setMessages(updatedMessages);
     saveMessagesToStorage(updatedMessages);
     setNewMessage("");
+    
   };
 
   if (showEventPage) {

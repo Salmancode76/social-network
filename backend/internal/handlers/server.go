@@ -48,15 +48,14 @@ func registerSocket(userID string, conn *websocket.Conn) {
 func removeSocket(userID string) {
 	socketsMutex.Lock()
 	defer socketsMutex.Unlock()
-		delete(userSockets, userID)
+	delete(userSockets, userID)
 
-	
 	if conn, exists := userSockets[userID]; exists {
 		conn.Close()
 		delete(userSockets, userID)
 		log.Printf("Removed connection for user %s", userID)
 	}
-		
+
 }
 
 func getSocket(userID string) (*websocket.Conn, bool) {
@@ -68,25 +67,25 @@ func getSocket(userID string) (*websocket.Conn, bool) {
 }
 
 func HandleWebSocket(app *CoreModels.App, w http.ResponseWriter, r *http.Request) {
-    conn, err := upgrader.Upgrade(w, r, nil)
-    if err != nil {
-        log.Printf("WebSocket upgrade failed: %v", err)
-        return
-    }
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		log.Printf("WebSocket upgrade failed: %v", err)
+		return
+	}
 
-    var currentUserID string
-    var once sync.Once
-    closeConn := func() {
-        once.Do(func() {
-            if currentUserID != "" {
-                removeSocket(currentUserID)
-            }
-            conn.Close()
-            log.Println("WebSocket connection closed for user:", currentUserID)
-        })
-    }
-    
-    defer closeConn()
+	var currentUserID string
+	var once sync.Once
+	closeConn := func() {
+		once.Do(func() {
+			if currentUserID != "" {
+				removeSocket(currentUserID)
+			}
+			conn.Close()
+			log.Println("WebSocket connection closed for user:", currentUserID)
+		})
+	}
+
+	defer closeConn()
 
 	for {
 		_, message, err := conn.ReadMessage()
@@ -104,7 +103,7 @@ func HandleWebSocket(app *CoreModels.App, w http.ResponseWriter, r *http.Request
 		//fmt.Println(message)
 
 		switch rawJson.Type {
-		case "message", "get_users", "get_chat_history", "new_message", "logout":
+		case "message", "get_users", "get_chat_history", "new_message", "logout", "get_group_chat_history", "group_message":
 			var myMessage MyMessage
 			json.Unmarshal(message, &myMessage)
 
@@ -188,24 +187,23 @@ func HandleWebSocket(app *CoreModels.App, w http.ResponseWriter, r *http.Request
 				sendNotificationsToUser(userID, app)
 			}
 		case "sendFollowRequest":
-		var req models.FollowRequest
-		json.Unmarshal(message,&req)
+			var req models.FollowRequest
+			json.Unmarshal(message, &req)
 			userIDStr := req.FollowerID
 			if currentUserID == "" {
 				currentUserID = userIDStr
 				registerSocket(currentUserID, conn)
 			}
-		handleFollowRequest(app,conn,req)
-		userID,err := strconv.Atoi(req.FollowingID)
-		if err!=nil{
-			log.Println(err)
-		}
-		sendNotificationsToUser(userID,app)
+			handleFollowRequest(app, conn, req)
+			userID, err := strconv.Atoi(req.FollowingID)
+			if err != nil {
+				log.Println(err)
+			}
+			sendNotificationsToUser(userID, app)
 
-
-    log.Printf("Follow request processed from %s to %s", req.FollowerID, req.FollowingID)
+			log.Printf("Follow request processed from %s to %s", req.FollowerID, req.FollowingID)
 		default:
-			log.Println("Message Not supported" ,rawJson)
+			log.Println("Message Not supported", rawJson)
 		}
 	}
 }
@@ -270,33 +268,32 @@ func handleWebSocket_Request_Group(app *CoreModels.App, conn *websocket.Conn, Re
 	}
 }
 func handleFollowRequest(app *CoreModels.App, conn *websocket.Conn, Request models.FollowRequest) {
-	err:= app.Notifications.SendFollowReqNotfi(Request.FollowerID,Request.FollowingID)
+	err := app.Notifications.SendFollowReqNotfi(Request.FollowerID, Request.FollowingID)
 	if err != nil {
 		log.Println(err)
 	}
 
-	   // Process follow
-    statusID := 3
-    if Request.IsPublic == "1" {
-        statusID = 2
-    }
-    
-    if err := app.Follow.MakeFollow(Request, statusID); err != nil {
-        log.Printf("MakeFollow error: %v", err)
-        return
-    }
+	// Process follow
+	statusID := 3
+	if Request.IsPublic == "1" {
+		statusID = 2
+	}
 
-    // Send notification
-    followingID, err := strconv.Atoi(Request.FollowingID)
-    if err != nil {
-        log.Printf("ID conversion error: %v", err)
-        return
-    }
+	if err := app.Follow.MakeFollow(Request, statusID); err != nil {
+		log.Printf("MakeFollow error: %v", err)
+		return
+	}
 
-    // Register connection once and keep it stable
-    CreatorStr := (Request.FollowingID)
+	// Send notification
+	followingID, err := strconv.Atoi(Request.FollowingID)
+	if err != nil {
+		log.Printf("ID conversion error: %v", err)
+		return
+	}
+
+	// Register connection once and keep it stable
+	CreatorStr := (Request.FollowingID)
 	creatorConn, ok := getSocket(CreatorStr)
-
 
 	fmt.Println("Currently registered connections:")
 	socketsMutex.RLock()
@@ -305,40 +302,41 @@ func handleFollowRequest(app *CoreModels.App, conn *websocket.Conn, Request mode
 	}
 	socketsMutex.RUnlock()
 
-	if ok{
-    // Ensure we have the recipient's connection
-        notifications, err := app.Notifications.GetAllNotifications(followingID)
-        if err != nil {
-            log.Printf("GetNotifications error: %v", err)
-            return
-        }
+	if ok {
+		// Ensure we have the recipient's connection
+		notifications, err := app.Notifications.GetAllNotifications(followingID)
+		if err != nil {
+			log.Printf("GetNotifications error: %v", err)
+			return
+		}
 
-        payload := map[string]interface{}{
-            "type":          "follow_notification",
-            "notifications": notifications,
-        }
+		payload := map[string]interface{}{
+			"type":          "follow_notification",
+			"notifications": notifications,
+		}
 
-				fmt.Printf("Looking for key: %s\n", CreatorStr)
+		fmt.Printf("Looking for key: %s\n", CreatorStr)
 
-        if err := creatorConn.WriteJSON(payload); err != nil {
-            log.Printf("Notification send error: %v", err)
-            removeSocket(Request.FollowingID)
-        } else {
-            log.Printf("Follow notification successfully sent to user %s", Request.FollowingID)
-        }
-	
-    } else {
-        log.Printf("Recipient %s not currently connected", Request.FollowingID)
-    }
+		if err := creatorConn.WriteJSON(payload); err != nil {
+			log.Printf("Notification send error: %v", err)
+			removeSocket(Request.FollowingID)
+		} else {
+			log.Printf("Follow notification successfully sent to user %s", Request.FollowingID)
+		}
+
+	} else {
+		log.Printf("Recipient %s not currently connected", Request.FollowingID)
+	}
 }
 func handleWebSocketMessage(app *CoreModels.App, conn *websocket.Conn, message MyMessage) {
 
 	switch message.Type {
 	case "get_group_chat_history":
 		fmt.Println("Get group chat history request received", message)
-	case "message":
-
-		// handleMessageMessage(conn, message)
+		handleGetGroupChatHistoryMessage(conn, message)
+	case "group_message":
+		fmt.Println("Group message received: ", message)
+		handleGroupMessage(conn, message)
 		// notifyMassage(conn, message)
 	case "get_users":
 		handleGetFriends(conn, message.From)
@@ -399,6 +397,26 @@ func handleGetChatHistoryMessage(conn *websocket.Conn, m MyMessage) {
 
 }
 
+
+func handleGetGroupChatHistoryMessage(conn *websocket.Conn, m MyMessage) {
+	db := OpenDatabase()
+	defer db.Close()
+	From := m.From
+	To := m.To
+	fmt.Println(To)
+	fmt.Println(From)
+	fmt.Println("get group history for  ", m)
+
+	messages := GetGroupChatHistory(To, From)
+
+	message := ServerMessage{Type: "oldmessages", ChatHistory: messages}
+
+	conn.WriteJSON(message)
+	fmt.Println(message)
+
+}
+
+
 func handleNewMessage(conn *websocket.Conn, m MyMessage) {
 	db := OpenDatabase()
 	defer db.Close()
@@ -408,6 +426,17 @@ func handleNewMessage(conn *websocket.Conn, m MyMessage) {
 	fmt.Println(From)
 	fmt.Println("New message  ", m.Text)
 	AddMessageToHistory(From, To, m.Text)
+}
+
+func handleGroupMessage(conn *websocket.Conn, m MyMessage) {
+	db := OpenDatabase()
+	defer db.Close()
+	From := m.From
+	To := m.To
+	fmt.Println(To)
+	fmt.Println(From)
+	fmt.Println("New message  ", m.Text)
+	AddMessageToGroupHistory(From, To, m.Text)
 }
 
 func notifyNewMessage(m MyMessage) {
