@@ -5,6 +5,7 @@ import { FetchUserByID } from "../utils/FetchUserByID";
 import { FetchPostsByUserID } from "../utils/FetchPostsByUserID";
 import { FetchUserIDbySession } from "../utils/FetchUserIDbySession";
 import Link from "next/link";
+import { WS_URL } from "../utils/ws";
 import "../styles/Profile.css";
 
 export default function ProfilePage(){
@@ -118,7 +119,7 @@ export default function ProfilePage(){
 
       async function handleFollowClick() {
         
-        if (isFollowing === "accepted" || isFollowing === "requested"){
+        if (isFollowing === "accepted"){
           
           const res = await fetch("http://localhost:8080/api/unfollow",{
               method: "DELETE",
@@ -131,29 +132,47 @@ export default function ProfilePage(){
           if (res.ok){
             setIsFollowing(null);
           }
-        } else{
+        }else if (user.User.is_public == 0) {
+          const ws = new WebSocket(WS_URL);
+          ws.onopen = async () => {
+            const data = await FetchUserIDbySession();
+            const userID = data.UserID;
+            console.log("WebSocket connected! User ID:", userID);
 
-        
-        const res = await fetch("http://localhost:8080/api/follow", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-             follower_id: currentUserID,
-             following_id: id,
-             is_public: user?.User?.is_public === "1" ?"1" : "0",
-          }),
-        });
+            const request = {
+              type: "sendFollowRequest",
+              follower_id: currentUserID,
+              following_id: id,
+              is_public: "0",
+              userID: parseInt(userID),
+            };
+            console.table(request);
+            ws.send(JSON.stringify(request));
+          };
+          setIsFollowing("requested");
+        } else {
+          const res = await fetch("http://localhost:8080/api/follow", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              follower_id: currentUserID,
+              following_id: id,
+              is_public: user?.User?.is_public === "1" ? "1" : "0",
+            }),
+          });
 
-        if (res.ok){
-          setIsFollowing(user?.User?.is_public == 1 ? "accepted" : "requested");
-        }
+          if (res.ok) {
+            setIsFollowing(
+              user?.User?.is_public == 1 ? "accepted" : "requested"
+            );
+          }
         }
       }
 
       useEffect(() => {
           async function fetchCounts() {
             if (!id) return;
-
+            
             const followersRes = await fetch(`http://localhost:8080/api/followers?user_id=${id}`);
             const followers = await followersRes.json();
             setFollowersCount(Array.isArray(followers.Users) ? followers.Users.length : 0);
@@ -171,103 +190,122 @@ export default function ProfilePage(){
       
 
      return (
-    <div className="container">
-      {user ? (
-        <>
-          <div className="profileHeader">
-            <img
-              src={`http://localhost:8080/Image/Users/${user.User.avatar}`}
-              alt="User Avatar"
-              className="avatar"
-            />
-            <div className="userInfo">
-              <h2>
-                {user.User.nickname}
-                <span>
-                  {user.User.first_name} {user.User.last_name}
-                </span>
-              </h2>
-              <p>{user.User.about_me}</p>
-            </div>
-          </div>
+       <div className="container">
+         {user ? (
+           <>
+             <div className="profileHeader">
+               <img
+                 src={`http://localhost:8080/Image/Users/${user.User.avatar}`}
+                 alt="User Avatar"
+                 className="avatar"
+               />
+               <div className="userInfo">
+                 <h2>
+                   {user.User.nickname}
+                   <span>
+                     {user.User.first_name} {user.User.last_name}
+                   </span>
+                 </h2>
+                 <p>{user.User.about_me}</p>
+                 Account Privacy:{" "}
+                 {user.User.is_public == "0" ? "Private" : "Public"}
+               </div>
+             </div>
 
-          <div className="stats">
-            <div className="statItem">
-              <strong>{Array.isArray(posts) ? posts.length : 0}</strong>
-              <span>Posts</span>
-            </div>
-            <div className="statItem">
-              <strong style={{cursor: "pointer"}}>{followersCount}</strong>
-              <span>Followers</span>
-            </div>
-            <div className="statItem">
-              <strong style={{cursor: "pointer"}}>{followingCount}</strong>
-              <span>Following</span>
-            </div>
-            {user.User.id === currentUserID && (
-              <Link href={`/Profile/EditProfile?id=${user.User.id}`}>
-                <button className="editButton">Edit Profile</button>
-              </Link>
-            )}
-            {user.User.id !== currentUserID && (
-              <button
-                className="editButton"
-                style={{
-                  backgroundColor:
-                    isFollowing === "accepted" ? "#28a745"
-                    : isFollowing === "requested" ? "#ffc107"
-                    : "#0070f3",
-                  cursor: "pointer",
-                  marginLeft: "10px",
-                }}
-                onClick={handleFollowClick}
-              >
-                {isFollowing === "accepted" ? "Followed"
-                : isFollowing === "requested"? "Requested"
-                : "Follow"}
-              </button>
-            )}
-          </div>
-          {user.User.is_public == 0 && user.User.id !== currentUserID ? (
-            <p>This account is private.</p>
-          ) : (
-            <div className="postsSection">
-              <h3>Posts</h3>
-              {Array.isArray(posts) && posts.length > 0  ? (
-                posts.map((post) => (
-                  <Link href={`/ViewPost?id=${post.ID}`} key={post.ID}>
-                    <div className="postCard">
-                      <div className="postHeader">
-                        <span>{user.User.nickname || `${user.User.first_name} ${user.User.last_name}`}</span>
-                        <span>{new Date(post.CreatedAt).toLocaleString()}</span>
-                      </div>
+             <div className="stats">
+               <div className="statItem">
+                 <strong>{Array.isArray(posts) ? posts.length : 0}</strong>
+                 <span>Posts</span>
+               </div>
+               <div className="statItem">
+                 <strong style={{ cursor: "pointer" }}>{followersCount}</strong>
+                 <span>Followers</span>
+               </div>
+               <div className="statItem">
+                 <strong style={{ cursor: "pointer" }}>{followingCount}</strong>
+                 <span>Following</span>
+               </div>
+               {user.User.id === currentUserID && (
+                 <Link href={`/Profile/EditProfile?id=${user.User.id}`}>
+                   <button className="editButton">Edit Profile</button>
+                 </Link>
+               )}
+               {user.User.id !== currentUserID && (
+                 <button
+                   className="editButton"
+                   style={{
+                     backgroundColor:
+                       isFollowing === "accepted"
+                         ? "#28a745"
+                         : isFollowing === "requested"
+                         ? "#ffc107"
+                         : "#0070f3",
+                     cursor: "pointer",
+                     marginLeft: "10px",
+                   }}
+                   onClick={handleFollowClick}
+                   disabled={isFollowing === "requested"}
+                 >
+                   {isFollowing === "accepted"
+                     ? "Followed"
+                     : isFollowing === "requested"
+                     ? "Requested"
+                     : "Follow"}
+                 </button>
+               )}
+             </div>
+             {user.User.is_public == 0 && user.User.id !== currentUserID ? (
+               <p>This account is private.</p>
+             ) : (
+               <div className="postsSection">
+                 <h3>Posts</h3>
+                 {Array.isArray(posts) && posts.length > 0 ? (
+                   posts.map((post) => (
+                     <Link href={`/ViewPost?id=${post.ID}`} key={post.ID}>
+                       <div className="postCard">
+                         <div className="postHeader">
+                           <span>
+                             {user.User.nickname ||
+                               `${user.User.first_name} ${user.User.last_name}`}
+                           </span>
+                           <span>
+                             {new Date(post.CreatedAt).toLocaleString()}
+                           </span>
+                         </div>
 
-                      <p style={{ marginBottom: post.image_file ? "10px" : "0" }}>{post.content}</p>
+                         <p
+                           style={{
+                             marginBottom: post.image_file ? "10px" : "0",
+                           }}
+                         >
+                           {post.content}
+                         </p>
 
-                      {post.image_file && post.image_file.trim() !== "" && (
-                        <img
-                          src={`http://localhost:8080/Image/Posts/${post.image_file}`}
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.src = "http://localhost:8080/Image/Posts/images_notfound.png";
-                          }}
-                          alt="Post image"
-                          className="postImage"
-                        />
-                      )}
-                    </div>
-                  </Link>
-                ))
-              ) : (
-                <p>No posts yet.</p>
-              )}
-            </div>
-          )}
-        </>
-      ) : (
-        <p>User Not Found</p>
-      )}
-    </div>
-  );
+                         {post.image_file && post.image_file.trim() !== "" && (
+                           <img
+                             src={`http://localhost:8080/Image/Posts/${post.image_file}`}
+                             onError={(e) => {
+                               e.target.onerror = null;
+                               e.target.src =
+                                 "http://localhost:8080/Image/Posts/images_notfound.png";
+                             }}
+                             alt="Post image"
+                             className="postImage"
+                           />
+                         )}
+                       </div>
+                     </Link>
+                   ))
+                 ) : (
+                   <p>No posts yet.</p>
+                 )}
+               </div>
+             )}
+           </>
+         ) : (
+           <p>User Not Found</p>
+         )}
+       </div>
+     );
 }
 

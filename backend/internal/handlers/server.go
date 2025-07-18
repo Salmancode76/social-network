@@ -48,12 +48,15 @@ func registerSocket(userID string, conn *websocket.Conn) {
 func removeSocket(userID string) {
 	socketsMutex.Lock()
 	defer socketsMutex.Unlock()
+		delete(userSockets, userID)
 
+	
 	if conn, exists := userSockets[userID]; exists {
 		conn.Close()
 		delete(userSockets, userID)
 		log.Printf("Removed connection for user %s", userID)
 	}
+		
 }
 
 func getSocket(userID string) (*websocket.Conn, bool) {
@@ -65,21 +68,25 @@ func getSocket(userID string) (*websocket.Conn, bool) {
 }
 
 func HandleWebSocket(app *CoreModels.App, w http.ResponseWriter, r *http.Request) {
-	conn, err := upgrader.Upgrade(w, r, nil)
-	if err != nil {
-		log.Printf("WebSocket upgrade failed: %v", err)
-		return
-	}
+    conn, err := upgrader.Upgrade(w, r, nil)
+    if err != nil {
+        log.Printf("WebSocket upgrade failed: %v", err)
+        return
+    }
 
-	var currentUserID string
-	//this made the connection close immediately
-	// defer func() {
-	// 	if currentUserID != "" {
-	// 		removeSocket(currentUserID)
-	// 	}
-	// 	fmt.Println("WebSocket connection closed for user:", currentUserID)
-	// 	conn.Close()
-	// }()
+    var currentUserID string
+    var once sync.Once
+    closeConn := func() {
+        once.Do(func() {
+            if currentUserID != "" {
+                removeSocket(currentUserID)
+            }
+            conn.Close()
+            log.Println("WebSocket connection closed for user:", currentUserID)
+        })
+    }
+    
+    defer closeConn()
 
 	for {
 		_, message, err := conn.ReadMessage()
@@ -180,8 +187,25 @@ func HandleWebSocket(app *CoreModels.App, w http.ResponseWriter, r *http.Request
 				}
 				sendNotificationsToUser(userID, app)
 			}
+		case "sendFollowRequest":
+		var req models.FollowRequest
+		json.Unmarshal(message,&req)
+			userIDStr := req.FollowerID
+			if currentUserID == "" {
+				currentUserID = userIDStr
+				registerSocket(currentUserID, conn)
+			}
+		handleFollowRequest(app,conn,req)
+		userID,err := strconv.Atoi(req.FollowingID)
+		if err!=nil{
+			log.Println(err)
+		}
+		sendNotificationsToUser(userID,app)
+
+
+    log.Printf("Follow request processed from %s to %s", req.FollowerID, req.FollowingID)
 		default:
-			log.Println("Message Not supported")
+			log.Println("Message Not supported" ,rawJson)
 		}
 	}
 }
@@ -244,6 +268,68 @@ func handleWebSocket_Request_Group(app *CoreModels.App, conn *websocket.Conn, Re
 	} else {
 		log.Printf("No active connection found for CreatorID %s", CreatorStr)
 	}
+}
+func handleFollowRequest(app *CoreModels.App, conn *websocket.Conn, Request models.FollowRequest) {
+	err:= app.Notifications.SendFollowReqNotfi(Request.FollowerID,Request.FollowingID)
+	if err != nil {
+		log.Println(err)
+	}
+
+	   // Process follow
+    statusID := 3
+    if Request.IsPublic == "1" {
+        statusID = 2
+    }
+    
+    if err := app.Follow.MakeFollow(Request, statusID); err != nil {
+        log.Printf("MakeFollow error: %v", err)
+        return
+    }
+
+    // Send notification
+    followingID, err := strconv.Atoi(Request.FollowingID)
+    if err != nil {
+        log.Printf("ID conversion error: %v", err)
+        return
+    }
+
+    // Register connection once and keep it stable
+    CreatorStr := (Request.FollowingID)
+	creatorConn, ok := getSocket(CreatorStr)
+
+
+	fmt.Println("Currently registered connections:")
+	socketsMutex.RLock()
+	for userID, _ := range userSockets {
+		fmt.Printf("  User ID: %s\n", userID)
+	}
+	socketsMutex.RUnlock()
+
+	if ok{
+    // Ensure we have the recipient's connection
+        notifications, err := app.Notifications.GetAllNotifications(followingID)
+        if err != nil {
+            log.Printf("GetNotifications error: %v", err)
+            return
+        }
+
+        payload := map[string]interface{}{
+            "type":          "follow_notification",
+            "notifications": notifications,
+        }
+
+				fmt.Printf("Looking for key: %s\n", CreatorStr)
+
+        if err := creatorConn.WriteJSON(payload); err != nil {
+            log.Printf("Notification send error: %v", err)
+            removeSocket(Request.FollowingID)
+        } else {
+            log.Printf("Follow notification successfully sent to user %s", Request.FollowingID)
+        }
+	
+    } else {
+        log.Printf("Recipient %s not currently connected", Request.FollowingID)
+    }
 }
 func handleWebSocketMessage(app *CoreModels.App, conn *websocket.Conn, message MyMessage) {
 

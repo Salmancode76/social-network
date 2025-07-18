@@ -114,3 +114,20 @@ func (F *FollowModel) DeleteFollow(followerID string, followingID string) error 
 	_, err := F.DB.Exec(query, followerID, followingID)
 	return err
 }
+
+func (F *FollowModel)RequestFollow(requesterID string, receiverID string)(error){
+	stmt :=` UPDATE followers
+			SET 
+				request_status_id = 3
+			WHERE 
+			follower_id = (?) AND following_id = (?);`
+
+	_,err:=F.DB.Exec(stmt,requesterID,receiverID)
+
+	if err!=nil{
+		return err
+	}
+
+	return nil
+
+}

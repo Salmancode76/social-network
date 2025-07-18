@@ -64,23 +64,23 @@ func (n *NotificationModel) GetAllNotifications(id int) ([]models.Notification, 
 	var notifications []models.Notification
 
 	stmt := `
-	SELECT n.id,
-		n.user_id,
-	u.first_name || ' ' || u.last_name AS sender_full_name,
-                 g.title,
-		n.notification_type_id,
-		n.message,
-		n.related_user_id,
-		n.related_group_id,
-		n.related_event_id,
-		n.is_read,
-		n.created_at
-	FROM notifications n
-         JOIN users u on
-         u.id = n.user_id
-         JOIN groups g on
-         g.id = n.related_group_id
-	WHERE n.related_user_id = (?);
+	 SELECT 
+        n.id,
+        n.user_id,
+		u.first_name || ' ' || u.last_name AS sender_full_name,
+        COALESCE(g.title, '') AS group_title,
+        n.notification_type_id,
+        n.message,
+        n.related_user_id,
+        n.related_group_id,
+        n.related_event_id,
+        n.is_read,
+        n.created_at
+    FROM notifications n
+    LEFT JOIN users u ON u.id = n.user_id
+    LEFT JOIN groups g ON g.id = n.related_group_id
+    WHERE n.related_user_id = $1
+    ORDER BY n.created_at DESC
 	`
 
 	rows, err := n.DB.Query(stmt, id)
@@ -358,4 +358,37 @@ func (n*NotificationModel)SendEventNofi(sender int, group_id int)([]string,error
 		_,err = n.DB.Exec(stmt,sender,4,name+" Have created an Event in "+groupName + " Group." ,user,group_id)
 	}
 	return userIDs,nil
+}
+
+func(n* NotificationModel) SendFollowReqNotfi(requesterID string, receiver string )(error){
+
+	stmt:=`		INSERT INTO notifications (
+		user_id,
+		notification_type_id,
+		message,
+		related_user_id
+	)
+	VALUES (?, ?, ?, ?);`
+
+
+var name string
+	stmt2 :=`
+		SELECT 
+		CONCAT(first_name, ' ', last_name) AS full_name
+	FROM users
+	WHERE id = ?;
+	`
+	row,err := n.DB.Query(stmt2,receiver)
+
+	for row.Next(){
+		row.Scan(&name)
+	}
+
+
+	_,err=n.DB.Exec(stmt,requesterID,5, name+" Wants to follow you",receiver)
+
+	if err!=nil{
+		return err
+	}
+	return nil
 }

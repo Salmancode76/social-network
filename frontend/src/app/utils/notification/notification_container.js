@@ -20,6 +20,7 @@ export function NotificationContainer({
           Mark all as read
         </div>
       </div>
+      {console.table(notifications)}
       <div className="notification-list">
         {notifications.length === 0 ? (
           <div className="notification-empty">
@@ -35,9 +36,11 @@ export function NotificationContainer({
                 {n.notification_type_id === 2
                   ? "📩"
                   : n.notification_type_id === 3
-                  ? "👥"
+                  ? "➕"
                   : n.notification_type_id === 4
                   ? "🎉"
+                  : n.notification_type_id === 5
+                  ? "👥"
                   : "🔔"}
               </div>
               <div className="notification-content">
@@ -108,6 +111,27 @@ export function NotificationContainer({
                             false
                           )
                         }
+                      >
+                        Decline
+                      </button>
+                    </div>
+                  </div>
+                ) : n.notification_type_id === 5 ? (
+                  <div>
+                    <div className="notification-text">
+                      <div className="notification-text">{n.message}</div>
+                    </div>
+                    <div className="notification-time">Just now</div>
+                    <div className="notification-actions">
+                      <button
+                        className="accept-btn"
+                     
+                      >
+                        Accept
+                      </button>
+                      <button
+                        className="decline-btn"
+                 
                       >
                         Decline
                       </button>
