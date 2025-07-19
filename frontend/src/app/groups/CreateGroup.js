@@ -7,7 +7,7 @@ import "primereact/resources/themes/lara-light-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 import "./group.css";
-import { WS_URL } from "../utils/ws";
+import { socket, WS_URL } from "../utils/ws";
 import { FetchUserIDbySession } from "../utils/FetchUserIDbySession";
 
 export default function CreateGroupButton({ onGroupCreated }) {
@@ -68,9 +68,7 @@ export default function CreateGroupButton({ onGroupCreated }) {
         body: JSON.stringify(formData),
       });
       */
-         const ws = new WebSocket(WS_URL);
       
-            ws.onopen = async () => {
               const data = await FetchUserIDbySession();
               const userID = data.UserID;
               console.log("WebSocket connected! User ID:", userID);
@@ -82,8 +80,7 @@ export default function CreateGroupButton({ onGroupCreated }) {
                 creator: userID,
               };
               console.table(request);
-              ws.send(JSON.stringify(request));
-            };
+              socket.send(JSON.stringify(request));
 
 
       //alert(`Group "${title}" created!`);

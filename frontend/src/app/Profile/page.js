@@ -5,8 +5,9 @@ import { FetchUserByID } from "../utils/FetchUserByID";
 import { FetchPostsByUserID } from "../utils/FetchPostsByUserID";
 import { FetchUserIDbySession } from "../utils/FetchUserIDbySession";
 import Link from "next/link";
-import { WS_URL } from "../utils/ws";
+import { socket, WS_URL } from "../utils/ws";
 import "../styles/Profile.css";
+import { useWebSocket } from "../contexts/WebSocketContext";
 
 export default function ProfilePage(){
 
@@ -21,7 +22,8 @@ export default function ProfilePage(){
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
-  
+  const { socket, isConnected, connect, disconnect } = useWebSocket();
+
      useEffect(() => {
         async function checkSession() {
           try {
@@ -133,8 +135,6 @@ export default function ProfilePage(){
             setIsFollowing(null);
           }
         }else if (user.User.is_public == 0) {
-          const ws = new WebSocket(WS_URL);
-          ws.onopen = async () => {
             const data = await FetchUserIDbySession();
             const userID = data.UserID;
             console.log("WebSocket connected! User ID:", userID);
@@ -147,8 +147,8 @@ export default function ProfilePage(){
               userID: parseInt(userID),
             };
             console.table(request);
-            ws.send(JSON.stringify(request));
-          };
+            socket.send(JSON.stringify(request));
+          
           setIsFollowing("requested");
         } else {
           const res = await fetch("http://localhost:8080/api/follow", {

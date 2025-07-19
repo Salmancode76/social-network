@@ -4,6 +4,7 @@ import { FetchEvents, CreateEvent, OptionsEvent } from "../utils/FetchEvents";
 import "./group.css";
 import { WS_URL } from "../utils/ws";
 import { FetchUserIDbySession } from "../utils/FetchUserIDbySession";
+import { useWebSocket } from "../contexts/WebSocketContext";
 
 export default function GroupEvent({ group, onBack }) {
   const [events, setEvents] = useState([]);
@@ -14,7 +15,8 @@ export default function GroupEvent({ group, onBack }) {
   const charCount = form.description.length;
   const nearLimit = charCount > 130 && charCount < maxChars;
   const overLimit = charCount >= maxChars;
-
+  const { socket } = useWebSocket();
+  
 
   const enrichEvents = (data) => {
     const optionState = {};
@@ -76,12 +78,10 @@ export default function GroupEvent({ group, onBack }) {
 
   const handleCreate = async () => {
   
-    const ws = new WebSocket(WS_URL);
 
-    ws.onopen = async () => {
-        const data = await FetchUserIDbySession();
-      const userID = data.UserID;
-        console.log("WebSocket connected! User ID:", userID);
+    const data = await FetchUserIDbySession();
+    const userID = data.UserID;
+    console.log("WebSocket connected! User ID:", userID);
 
   const newEvent = {
     type: "createEvent",
@@ -91,9 +91,9 @@ export default function GroupEvent({ group, onBack }) {
     description: form.description,
     event_datetime: form.datetime,
   };
-      ws.send(JSON.stringify(newEvent));
+    socket.send(JSON.stringify(newEvent));
     };
-  };
+  
 
   const handleRSVP = async (eventId, choice) => {
     const success = await OptionsEvent(eventId, choice);
@@ -279,8 +279,8 @@ export default function GroupEvent({ group, onBack }) {
               required
             />
             <p>
-              <strong>Options:</strong> 
-              Going and Not Going will be automatically added.
+              <strong>Options:</strong> "Going" and "Not Going" will be
+              automatically added.
             </p>
             <div className="modal-buttons">
               <button
