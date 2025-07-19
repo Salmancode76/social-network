@@ -1,11 +1,13 @@
 import React, { useState } from 'react';
 import { FetchUserIDbySession } from '../utils/FetchUserIDbySession';
 import ChattingScreen from './ChattingScreen';
+import { socket } from "../utils/ws";
+
 
 export default function ChatUser({ user }) {
   const [showChattingScreen, setShowChattingScreen] = useState(false);
   const [chatHistory, setChatHistory] = useState([]);
-  const WS_URL = 'ws://localhost:8080/ws';
+  
 
   const handleUserClick = () => {
     sendWebSocketMessage(user);
@@ -17,15 +19,12 @@ export default function ChatUser({ user }) {
     setChatHistory([]); // Optional: clear chat when closing
   };
 
-  const sendWebSocketMessage = (targetUser) => {
+  const sendWebSocketMessage = async (targetUser) => {
     if (!('WebSocket' in window)) {
       console.error('WebSockets are not supported by your browser.');
       return;
     }
 
-    const ws = new WebSocket(WS_URL);
-
-    ws.onopen = async () => {
       const data = await FetchUserIDbySession();
       const userID = data.UserID;
       console.log('WebSocket connected! User ID:', userID);
@@ -36,11 +35,11 @@ export default function ChatUser({ user }) {
         from: userID,
       };
 
-      ws.send(JSON.stringify(message));
+      socket.send(JSON.stringify(message));
       console.log('JSON WebSocket message sent:', message);
-    };
+    
 
-    ws.onmessage = (event) => {
+    socket.onmessage = (event) => {
       console.log('WebSocket message received:', event.data);
       const data = JSON.parse(event.data);
 
@@ -49,13 +48,7 @@ export default function ChatUser({ user }) {
       }
     };
 
-    ws.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
 
-    ws.onclose = (event) => {
-      console.log('WebSocket closed:', event.code, event.reason);
-    };
   };
 
   return (

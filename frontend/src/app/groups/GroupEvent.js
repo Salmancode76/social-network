@@ -279,8 +279,8 @@ export default function GroupEvent({ group, onBack }) {
               required
             />
             <p>
-              <strong>Options:</strong> "Going" and "Not Going" will be
-              automatically added.
+              <strong>Options:</strong> 
+              Going and Not Going will be automatically added.
             </p>
             <div className="modal-buttons">
               <button

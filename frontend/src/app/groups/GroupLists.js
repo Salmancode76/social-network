@@ -5,6 +5,7 @@ import "./group.css";
 import { WS_URL } from "../utils/ws";
 import { FetchUserIDbySession } from "../utils/FetchUserIDbySession";
 
+
 export default function GroupLists({ onGroupClick }) {
   const [groups, setGroups] = useState([]);
   const [loading, setLoading] = useState(true);

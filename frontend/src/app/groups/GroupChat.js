@@ -10,7 +10,7 @@ import "primereact/resources/themes/lara-light-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 import { FetchUserIDbySession } from "../utils/FetchUserIDbySession";
-
+import { socket } from "../utils/ws";
 import { MultiSelect } from "primereact/multiselect";
 import { FetchAllUsers } from "../utils/FetchAllUsers";
 import CheckSession from "../utils/CheckSession";
@@ -37,7 +37,7 @@ export default function GroupChat({ group, onBack }) {
 
 
 const sendText= async (group,message) => {
-  const socket  = new WebSocket(WS_URL);
+  
   console.log("Sending message to group:", group.id, "Message:", message);
     const data = await FetchUserIDbySession();
     const userID = data.UserID;
@@ -77,8 +77,8 @@ const sendText= async (group,message) => {
       });
 
       */
-      const ws = new WebSocket(WS_URL);
-      ws.onopen= async()=>{
+      
+      socket.onopen= async()=>{
           const data = await FetchUserIDbySession();
           const userID = parseInt(data.UserID);
           const Invites = {
@@ -88,7 +88,7 @@ const sendText= async (group,message) => {
             group_id: parseInt(group_id),
           };
           console.log("Invites: ", Invites);
-          ws.send(JSON.stringify(Invites));
+          socket.send(JSON.stringify(Invites));
       };
 
 
@@ -135,7 +135,17 @@ const sendText= async (group,message) => {
       throw e;
     }
   }
-
+useEffect(() => {
+    const handleSocketMessage = (event) => {
+        const data = JSON.parse(event.data);
+        console.log("Received message:", data);
+    }
+    console.log("WebSocket state:", socket.readyState); 
+    socket.addEventListener("message", handleSocketMessage);
+    return () => {
+      socket.removeEventListener("message", handleSocketMessage);
+    };
+  }, []); 
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
