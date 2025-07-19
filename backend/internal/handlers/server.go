@@ -409,7 +409,7 @@ func handleGetGroupChatHistoryMessage(conn *websocket.Conn, m MyMessage) {
 
 	messages := GetGroupChatHistory(To, From)
 
-	message := ServerMessage{Type: "oldmessages", ChatHistory: messages}
+	message := ServerMessage{Type: "oldgroupmessages", ChatHistory: messages}
 
 	conn.WriteJSON(message)
 	fmt.Println(message)
