@@ -4,6 +4,7 @@ import { FetchAllGroups } from "../utils/FetchAllGroups";
 import "./group.css";
 import { WS_URL } from "../utils/ws";
 import { FetchUserIDbySession } from "../utils/FetchUserIDbySession";
+import { socket } from "../utils/ws";
 
 
 export default function GroupLists({ onGroupClick }) {
@@ -12,14 +13,14 @@ export default function GroupLists({ onGroupClick }) {
   const [error, setError] = useState(null);
   const [requestStatuses, setRequestStatuses] = useState({}); // Track per group
   const WS_URL = 'ws://localhost:8080/ws';
-  const sendWebSocketMessage = (group) => {
+  const sendWebSocketMessage = async (group) => {
       if (!('WebSocket' in window)) {
         console.error('WebSockets are not supported by your browser.');
         return;
       }
   
-    const socket  = new WebSocket(WS_URL);
-  socket.onopen = async () => {
+  
+  
         const data = await FetchUserIDbySession();
         const userID = data.UserID;
         console.log('WebSocket connected! User ID:', userID);
@@ -32,7 +33,7 @@ export default function GroupLists({ onGroupClick }) {
   
         socket.send(JSON.stringify(message));
         console.log('JSON WebSocket message sent:', message);
-      };
+      
   }
   
   
@@ -79,9 +80,7 @@ export default function GroupLists({ onGroupClick }) {
         }
       );
       */
-      const ws = new WebSocket(WS_URL);
-
-      ws.onopen = async () => {
+    
         const data = await FetchUserIDbySession();
         const userID = data.UserID;
         console.log("WebSocket connected! User ID:", userID);
@@ -92,8 +91,8 @@ export default function GroupLists({ onGroupClick }) {
           creator_id: parseInt(creator_id),
         };
         console.table(request);
-        ws.send(JSON.stringify(request));
-      };
+        socket.send(JSON.stringify(request));
+    
 
       setRequestStatuses((prev) => ({ ...prev, [id]: "requested" }));
     } catch (e) {

@@ -53,6 +53,14 @@ const sendText= async (group,message) => {
     socket.send(JSON.stringify(payload));
     
   }
+  
+
+  useEffect(() => {
+    socket.onmessage = (event) => {
+      console.log("WebSocket message received:", event.data);
+    } 
+  }, []);
+
   useEffect(() => {
     if (showUserPopup) {
       setSelectedUsers([]);
@@ -78,7 +86,7 @@ const sendText= async (group,message) => {
 
       */
       
-      socket.onopen= async()=>{
+      
           const data = await FetchUserIDbySession();
           const userID = parseInt(data.UserID);
           const Invites = {
@@ -89,7 +97,7 @@ const sendText= async (group,message) => {
           };
           console.log("Invites: ", Invites);
           socket.send(JSON.stringify(Invites));
-      };
+    
 
 
 
@@ -135,17 +143,7 @@ const sendText= async (group,message) => {
       throw e;
     }
   }
-useEffect(() => {
-    const handleSocketMessage = (event) => {
-        const data = JSON.parse(event.data);
-        console.log("Received message:", data);
-    }
-    console.log("WebSocket state:", socket.readyState); 
-    socket.addEventListener("message", handleSocketMessage);
-    return () => {
-      socket.removeEventListener("message", handleSocketMessage);
-    };
-  }, []); 
+
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
