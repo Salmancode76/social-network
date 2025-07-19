@@ -7,8 +7,9 @@ import "primereact/resources/themes/lara-light-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 import "./group.css";
-import { socket, WS_URL } from "../utils/ws";
+//import { socket, WS_URL } from "../utils/ws";
 import { FetchUserIDbySession } from "../utils/FetchUserIDbySession";
+import { useWebSocket } from "../contexts/WebSocketContext";
 
 export default function CreateGroupButton({ onGroupCreated }) {
   const [showModal, setShowModal] = useState(false);
@@ -22,6 +23,7 @@ export default function CreateGroupButton({ onGroupCreated }) {
   const nearCharLimit = charCount > 60 && charCount < maxChars;
   const overCharLimit = charCount >= maxChars;
 
+  const { socket } = useWebSocket();
 
   useEffect(() => {
     if (showModal) {

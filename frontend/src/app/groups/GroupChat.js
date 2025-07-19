@@ -14,7 +14,7 @@ import { socket } from "../utils/ws";
 import { MultiSelect } from "primereact/multiselect";
 import { FetchAllUsers } from "../utils/FetchAllUsers";
 import CheckSession from "../utils/CheckSession";
-import { WS_URL } from "../utils/ws";
+import { useWebSocket } from "../contexts/WebSocketContext";
 
 export default function GroupChat({ group, onBack }) {
   const router = useRouter();
@@ -30,6 +30,7 @@ export default function GroupChat({ group, onBack }) {
 
   const messagesEndRef = useRef(null);
   const imageInputRef = useRef();
+  const { socket } = useWebSocket();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });

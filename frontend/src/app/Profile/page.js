@@ -5,7 +5,7 @@ import { FetchUserByID } from "../utils/FetchUserByID";
 import { FetchPostsByUserID } from "../utils/FetchPostsByUserID";
 import { FetchUserIDbySession } from "../utils/FetchUserIDbySession";
 import Link from "next/link";
-import { socket, WS_URL } from "../utils/ws";
+//import { socket, WS_URL } from "../utils/ws";
 import "../styles/Profile.css";
 import { useWebSocket } from "../contexts/WebSocketContext";
 
@@ -22,7 +22,7 @@ export default function ProfilePage(){
   const router = useRouter();
   const searchParams = useSearchParams();
   const id = searchParams.get("id");
-  const { socket, isConnected, connect, disconnect } = useWebSocket();
+  const { socket } = useWebSocket();
 
      useEffect(() => {
         async function checkSession() {
