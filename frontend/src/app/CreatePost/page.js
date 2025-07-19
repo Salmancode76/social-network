@@ -177,30 +177,6 @@ function CreatePostPage() {
 
   return (
     <div>
-      {showUserPopup && (
-        <div className="modal">
-          <div className="modal-content">
-            <h3>Select users to share with</h3>
-
-            <MultiSelect
-              value={selectedUsers}
-              onChange={(e) => setSelectedUsers(e.target.value)}
-              options={allUsers}
-              optionLabel="label"
-              optionValue="id"
-              display="chip"
-              placeholder="Select Users"
-              maxSelectedLabels={5}
-              style={{ width: "100%" }}
-            />
-
-            <button className="btn" onClick={() => PrivateUsers()}>
-              Done
-            </button>
-          </div>
-        </div>
-      )}
-
       <div className="creatPost">
         <div className="creatPost-content">
           <div className="creatPost-header">Create Post</div>
@@ -248,58 +224,113 @@ function CreatePostPage() {
             <div className="creatPost-section">
               <FaLock className="creatPost-section-icon" />
               <div className="creatPost-section-content">
-                <label>Privacy:</label><br />
-                <input
-                  type="radio"
-                  name="privacy_type_id"
-                  value="1"
-                  onChange={(e) =>
-                    setFormData({ ...formData, privacy_type_id: e.target.value })
-                  }
-                  defaultChecked
-                /> Public<br />
-                <input
-                  type="radio"
-                  name="privacy_type_id"
-                  value="2"
-                  onChange={(e) =>
-                    setFormData({ ...formData, privacy_type_id: e.target.value })
-                  }
-                /> Friends<br />
-                <input
-                  type="radio"
-                  name="privacy_type_id"
-                  value="3"
-                  onChange={() => {
-                    setFormData({ ...formData, privacy_type_id: "3" });
-                    setShowUserPopup(true);
-                  }}
-                /> Private
+                <label>Privacy:</label>
+                <div className="radio-group">
+                  <label className="radio-button">
+                    <input
+                      type="radio"
+                      name="privacy_type_id"
+                      value="1"
+                      onChange={(e) =>
+                        setFormData({ ...formData, privacy_type_id: e.target.value })
+                      }
+                      defaultChecked
+                    />
+                    <span className="custom-radio"></span>
+                    Public
+                  </label>
+
+                  <label className="radio-button">
+                    <input
+                      type="radio"
+                      name="privacy_type_id"
+                      value="2"
+                      onChange={(e) =>
+                        setFormData({ ...formData, privacy_type_id: e.target.value })
+                      }
+                    />
+                    <span className="custom-radio"></span>
+                    Friends
+                  </label>
+
+                  <label className="radio-button">
+                    <input
+                      type="radio"
+                      name="privacy_type_id"
+                      value="3"
+                      onChange={() => {
+                        setFormData({ ...formData, privacy_type_id: "3" });
+                        setShowUserPopup(true);
+                      }}
+                    />
+                    <span className="custom-radio"></span>
+                    Private
+                  </label>
+                </div>
               </div>
             </div>
 
+            {/* Private Users Preview */}
             {selectedUsers.length > 0 && formData.privacy_type_id === "3" && (
               <div className="creatPost-section">
                 <div className="creatPost-section-content">
-                  <h1>Private Users</h1>
-                  {selectedUsers.map((id) => {
-                    const user = allUsers.find((u) => u.id === id);
-                    return <h3 key={id}>{user.label || "Unknown User"}</h3>;
-                  })}
+                  <h3>Private Users</h3>
+                  <ul className="private-users-list">
+                    {selectedUsers.map((id) => {
+                      const user = allUsers.find((u) => u.id === id);
+                      return (
+                        <li key={id}>
+                          <span className="user-name">{user.first_name} {user.last_name}</span>
+                          <span className="user-email">({user.email})</span>
+                        </li>
+                      );
+                    })}
+                  </ul>
                 </div>
               </div>
             )}
 
-            <div ref={ImageDiv} className="image"></div>
 
+            {/* privet users popup */}
+            {showUserPopup && (
+              <div className="modal-overlay">
+                <div className="modal-window">
+                  <button className="close-button" onClick={() => setShowUserPopup(false)}>×</button>
+                  <h3>Select users to share with</h3>
+
+                  <MultiSelect
+                    value={selectedUsers}
+                    onChange={(e) => setSelectedUsers(e.target.value)}
+                    options={allUsers}
+                    optionLabel="label"
+                    optionValue="id"
+                    display="chip"
+                    placeholder="Select Users"
+                    maxSelectedLabels={5}
+                    style={{ width: "100%", marginBottom: "1em" }}
+                  />
+
+                  <button className="done-button" onClick={PrivateUsers}>
+                    Done
+                  </button>
+                </div>
+              </div>
+            )}
+
+
+            {/* image section */}
+            <div ref={ImageDiv} className="image"></div>
+            {/* creat button section */}
             <button disabled={error} type="submit">Create Post</button>
-            {error && <div className="error-message"> {errorMessage} </div>}
+            {/* error message section */}
+            {error && <div className="error-message">{errorMessage}</div>}
+
           </form>
         </div>
       </div>
-
     </div>
   );
+
 }
 
 

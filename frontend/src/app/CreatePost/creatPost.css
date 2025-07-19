@@ -1,58 +1,62 @@
+.modal {
+  margin-top: 20em;
+}
+
+
+
 .creatPost {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    /* width: 100%; */
-    margin: 2em;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  /* width: 100%; */
+  margin: 2em;
 }
 
 
 
 .creatPost-content {
-    background-image: url(content.jpg);
-    /* background-position: center; */
-    background-size: cover;
-    padding: 60px;
-    border-radius: 20px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
-    text-align: center;
-    width: 65%;
-    /* box-sizing: border-box; */
-    animation: zoomInOut 7s ease infinite;
+  background-image: url(content.jpg);
+  /* background-position: center; */
+  background-size: cover;
+  padding: 40px;
+  border-radius: 20px;
+  box-shadow: 0 0 10px rgba(242, 14, 14, 0.1);
+  text-align: center;
+  width: 65%;
+  /* box-sizing: border-box; */
+  animation: zoomInOut 7s ease infinite;
 }
 
 
 @keyframes zoomInOut {
-    0% {
-        background-size: 100%;
-    }
+  0% {
+    background-size: 100%;
+  }
 
-    50% {
-        background-size: 120%;
-    }
+  50% {
+    background-size: 120%;
+  }
 
-    100% {
-        background-size: 100%;
-    }
+  100% {
+    background-size: 100%;
+  }
 }
 
 .creatPost-header {
-    font-size: 3em;
-    font-family: 'Franklin Gothic Medium', 'Arial Narrow', Arial, sans-serif;
-    /* font-weight: 600; */
-    /* font-style: italic; */
-    color: #caf0f8;
-    font-weight: bold;
+  font-size: 2em;
+  font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
+  /* font-weight: 600; */
+  /* font-style: italic; */
+  color: #caf0f8;
+  font-weight: bold;
 
 }
 
-/* form {
-    
-} */
+
 label {
   color: #90e0ef;
-  font-size: 1.3em;
-  font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 1em !important;
+  font-family: Cambria, Cochin, Georgia, Times, 'Times New Roman', serif;
   font-weight: 600;
   letter-spacing: 0.5px;
 }
@@ -62,8 +66,8 @@ label {
 .creatPost-section {
   display: flex;
   align-items: center;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 40px;
+  /* background: rgba(255, 255, 255, 0.1); */
+  border-radius: 10px;
   padding: 10px 20px;
   margin: 20px 0;
   color: white;
@@ -114,7 +118,7 @@ label {
 }
 
 
-textarea{
+textarea {
   background-color: rgb(214, 213, 212);
 }
 
@@ -157,4 +161,156 @@ button[type="submit"]:disabled {
   cursor: not-allowed;
   box-shadow: none;
   color: #666;
+}
+
+
+
+.radio-group {
+  display: flex;
+  gap: 1em;
+  margin-top: 1em;
+  flex-wrap: wrap;
+}
+
+.radio-button {
+  display: flex;
+  align-items: center;
+  border: 2px solid #0077b6;
+  border-radius: 10px;
+  padding: 5px 5px;
+  cursor: pointer;
+  font-size: 1.1em;
+  font-weight: 500;
+  color: #02659a;
+  background: rgb(9, 54, 83);
+  transition: all 0.3s ease;
+  user-select: none;
+  position: relative;
+}
+
+.radio-button:hover {
+  background: #9bd9ee;
+  color: #ffffff;
+}
+
+.radio-button input[type="radio"] {
+  display: none;
+}
+
+.radio-button .custom-radio {
+  display: inline-block;
+  width: 18px;
+  height: 18px;
+  border: 3px solid #0077b6;
+  border-radius: 50%;
+  margin-right: 10px;
+  position: relative;
+  background: white;
+  transition: all 0.3s ease;
+}
+
+.radio-button input[type="radio"]:checked+.custom-radio {
+  background-color: #0077b6;
+  border-color: #0077b6;
+}
+
+.radio-button input[type="radio"]:checked+.custom-radio::after {
+  content: "";
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 8px;
+  height: 8px;
+  background: white;
+  border-radius: 50%;
+}
+
+
+
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 1000;
+  height: 100vh;
+  width: 100vw;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.modal-window {
+  background: white;
+  color: #03045e;
+  border-radius: 20px;
+  padding: 2em;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+  font-family: 'Segoe UI', 'Roboto', sans-serif;
+  position: relative;
+  animation: fadeInScale 0.3s ease;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.close-button {
+  position: absolute;
+  top: 15px;
+  right: 20px;
+  background: none;
+  border: none;
+  font-size: 1.8em;
+  color: #0077b6;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.close-button:hover {
+  color: #023e8a;
+}
+
+
+
+
+.private-users-list {
+  list-style: none;
+  padding-left: 0;
+  margin-top: 1em;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  font-size: 0.9em;
+  color: #caf0f8;
+}
+
+.private-users-list li {
+  display: flex;
+  align-items: center;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-family: 'Segoe UI', 'Roboto', sans-serif;
+}
+
+.user-name {
+  font-weight: 500;
+  margin-right: 10px;
+}
+
+.user-email {
+  font-style: italic;
+  color: #90e0ef;
 }
