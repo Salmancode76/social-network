@@ -254,7 +254,7 @@ export default function ProfilePage(){
                  </button>
                )}
              </div>
-             {user.User.is_public == 0 && user.User.id !== currentUserID ? (
+             {user.User.is_public == 0 && user.User.id !== currentUserID && isFollowing !== "accepted"  ? (
                <p>This account is private.</p>
              ) : (
                <div className="postsSection">

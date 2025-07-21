@@ -188,6 +188,38 @@ export default function Navbar() {
     }
   };
 
+const manageFollow = async (
+    notificationId,
+    creator_id,
+    related_user_id,
+    accept
+  ) => {
+    try {
+      const response = await fetch("http://localhost:8080/api/ManageFollowRequest", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+        notification_id: notificationId,
+          creator_id: creator_id ,
+          related_user_id: related_user_id,
+          accepted: accept,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+
+      fetchNotifications(userID, setNotifications, setNotificationCount);
+    } catch (error) {
+      console.error("Failed to manage request:", error);
+    }
+  };
+
+
   const handleNotificationEnter = () => {
     if (hoverTimeoutRef.current) {
       clearTimeout(hoverTimeoutRef.current);
@@ -354,6 +386,7 @@ export default function Navbar() {
                   setNotificationCount={setNotificationCount}
                   manageRequest={manageRequest}
                   manageInvites={manageInvites}
+                  manageFollow={manageFollow}
                 />
               </div>
 

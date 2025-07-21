@@ -392,3 +392,46 @@ var name string
 	}
 	return nil
 }
+
+func (n*NotificationModel)ManageRequestFollow(id int,follower int,following int,accept bool)(error){
+
+
+	
+		if accept{
+			stmt:=`
+			UPDATE followers
+		SET request_status_id = ?
+		WHERE follower_id = ? AND following_id = ?;
+       
+		`
+			_,err:=n.DB.Exec(stmt,2,follower,following)
+			if err!=nil{
+				return err
+			}
+		}else{
+			stmt:=`
+		DELETE FROM followers
+      WHERE follower_id = (?) AND 
+            following_id =(?);
+		   
+			`
+				_,err:=n.DB.Exec(stmt,follower,following)
+				if err!=nil{
+					return err
+				}
+		}
+
+		stmt:=`
+		DELETE FROM notifications
+      WHERE id = (?);
+		`
+		_,err := n.DB.Exec(stmt,id)
+		
+		if err!=nil{
+			return err
+		}
+		
+		return nil
+
+
+}

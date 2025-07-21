@@ -5,6 +5,7 @@ export function NotificationContainer({
   setNotificationCount,
   manageRequest,
   manageInvites,
+  manageFollow,
 }) {
   return (
     <div className={`notification-dropdown ${showNotifications ? "show" : ""}`}>
@@ -125,13 +126,27 @@ export function NotificationContainer({
                     <div className="notification-actions">
                       <button
                         className="accept-btn"
-                     
+                        onClick={()=>
+                           manageFollow(
+                            n.id,
+                            n.user_id,
+                            n.related_user_id,
+                            true
+                          )
+                         }
                       >
                         Accept
                       </button>
                       <button
                         className="decline-btn"
-                 
+                         onClick={()=>
+                           manageFollow(
+                            n.id,
+                            n.user_id,
+                            n.related_user_id,
+                            false
+                          )
+                         }
                       >
                         Decline
                       </button>

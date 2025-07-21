@@ -42,6 +42,7 @@ func SetupRoutes(app *CoreModels.App) *http.ServeMux {
 	mux.HandleFunc("/api/follow-status", handlers.FollowStatusHandler(app) )
 	mux.HandleFunc("/api/followers", handlers.GetFollowersHandler(app) )
 	mux.HandleFunc("/api/following", handlers.GetFollowingHandler(app) )
+	mux.HandleFunc("/api/AcceptFollowRequest", handlers.AcceptFollowRequestHandler(app))
         //Groups
 	mux.HandleFunc("/api/CreateGroup", handlers.CreateGroup(app))
 	mux.HandleFunc("/api/FetchAllGroups", handlers.FetchAllGroups(app))
@@ -62,6 +63,9 @@ func SetupRoutes(app *CoreModels.App) *http.ServeMux {
 	mux.HandleFunc("/api/GetAllNotifications", handlers.GetAllNotifications(app))
 	mux.HandleFunc("/api/ManageRequest", handlers.ManageRequestGroups(app))
 	mux.HandleFunc("/api/ManageInvites", handlers.ManageInvitestGroups(app))
+	mux.HandleFunc("/api/ManageFollowRequest", handlers.ManageRequestFollow(app))
+	
+	
 
 	mux.HandleFunc("/api/MarkNotificationAsRead", handlers.MarkNotificationAsRead(app))
 
