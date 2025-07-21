@@ -45,7 +45,7 @@ func AddMessageToGroupHistory(fromUSer string, toUser string, messageText string
 	db := OpenDatabase()
 	defer CloseDB(db)
 	//inserting data into table
-	_, err := db.Exec("INSERT INTO group_messeges (user_id,group_id,text,time) VALUES (?,?,?,?)", fromUSer, toUser, messageText, time.Now().Format("2006-01-02 15:04:05"))
+	_, err := db.Exec("INSERT INTO group_messages (user_id,group_id,text,time) VALUES (?,?,?,?)", fromUSer, toUser, messageText, time.Now().Format("2006-01-02 15:04:05"))
 	if err != nil {
 		// Handle error
 		fmt.Printf("Server >> Error adding message to database: %s ", err)
