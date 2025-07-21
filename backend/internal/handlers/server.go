@@ -337,7 +337,7 @@ func handleWebSocketMessage(app *CoreModels.App, conn *websocket.Conn, message M
 	case "group_message":
 		fmt.Println("Group message received: ", message)
 		handleGroupMessage(conn, message)
-		// notifyMassage(conn, message)
+		notifyGroupNewMessage(conn, message)
 	case "get_users":
 		handleGetFriends(conn, message.From)
 		// handleGetUsersMessage(conn)
@@ -449,4 +449,23 @@ func notifyNewMessage(m MyMessage) {
 	}
 	conn := (userSockets)[to]
 	conn.WriteJSON(message)
+}
+
+
+
+func notifyGroupNewMessage(conn *websocket.Conn,m MyMessage) {
+	
+	//take the group id from the message
+	//then see all users of that group 
+	//loop and send the message to all users of that group
+	
+	// from := GetNickname(m.From)
+	// message := MyMessage{Type: "new", From: from, To: m.To, Text: m.Text}
+	// to := GetID(m.To)
+	// if _, ok := (userSockets)[to]; !ok {
+	// 	fmt.Println("User not connected: ", to)
+	// 	return
+	// }
+	// conn := (userSockets)[to]
+	// conn.WriteJSON(message)
 }
