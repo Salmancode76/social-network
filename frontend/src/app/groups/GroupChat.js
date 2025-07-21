@@ -10,7 +10,7 @@ import "primereact/resources/themes/lara-light-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 import { FetchUserIDbySession } from "../utils/FetchUserIDbySession";
-import { socket } from "../utils/ws";
+//import { socket } from "../utils/ws";
 import { MultiSelect } from "primereact/multiselect";
 import { FetchAllUsers } from "../utils/FetchAllUsers";
 import CheckSession from "../utils/CheckSession";

@@ -14,14 +14,14 @@ export default function GroupLists({ onGroupClick }) {
   
   const { socket } = useWebSocket();
   
-  const sendWebSocketMessage = (group) => {
+  const sendWebSocketMessage = async (group) => {
       if (!('WebSocket' in window)) {
         console.error('WebSockets are not supported by your browser.');
         return;
       }
   
-    const socket  = new WebSocket(WS_URL);
-      socket.onopen = async () => {
+    //const socket  = new WebSocket(WS_URL);
+   
         const data = await FetchUserIDbySession();
         const userID = data.UserID;
         console.log('WebSocket connected! User ID:', userID);
@@ -34,7 +34,7 @@ export default function GroupLists({ onGroupClick }) {
   
         socket.send(JSON.stringify(message));
         console.log('JSON WebSocket message sent:', message);
-      };
+      
   }
   
   
