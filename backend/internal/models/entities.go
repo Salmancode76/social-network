@@ -117,4 +117,5 @@ type FollowRequest struct {
 	FollowingID string   `json:"following_id"`
 	IsPublic    string   `json:"is_public"`
 	UserID 		int 		`json:"userID"`
+	StatusID	string	 `json:"statusID"`
 }

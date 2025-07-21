@@ -167,3 +167,34 @@ func UnfollowHandler(app *CoreModels.App) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 	}
 }
+
+func AcceptFollowRequestHandler(app *CoreModels.App) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+	var req models.FollowRequest
+
+		if CrosAllow(w, r) {
+			return
+		}
+		
+		if r.Method != "POST" {
+			sendErrorResponse(w, "Method not allowed", http.StatusMethodNotAllowed)
+			return
+		}
+
+	err := json.NewDecoder(r.Body).Decode(&req)
+		if err != nil {
+			sendErrorResponse(w, "Invalid request", http.StatusBadRequest)
+			return
+		}
+
+		err = app.Follow.AcceptFollow(req.FollowerID, req.FollowingID , req.StatusID)
+		if err != nil {
+			http.Error(w, "Failed to Accpet Or Decline the Request: "+err.Error(), http.StatusInternalServerError)
+			return
+		}
+
+		w.WriteHeader(http.StatusOK)
+	
+	
+	}
+}

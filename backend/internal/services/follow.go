@@ -115,16 +115,30 @@ func (F *FollowModel) DeleteFollow(followerID string, followingID string) error 
 	return err
 }
 
-func (F *FollowModel)RequestFollow(requesterID string, receiverID string)(error){
-	stmt :=` UPDATE followers
-			SET 
-				request_status_id = 3
-			WHERE 
-			follower_id = (?) AND following_id = (?);`
+// func (F *FollowModel)RequestFollow(requesterID string, receiverID string)(error){
+// 	stmt :=` UPDATE followers
+// 			SET 
+// 				request_status_id = 3
+// 			WHERE 
+// 			follower_id = (?) AND following_id = (?);`
 
-	_,err:=F.DB.Exec(stmt,requesterID,receiverID)
+// 	_,err:=F.DB.Exec(stmt,requesterID,receiverID)
 
-	if err!=nil{
+// 	if err!=nil{
+// 		return err
+// 	}
+
+// 	return nil
+
+// }
+func (F *FollowModel) AcceptFollow(followerID string, followingID string , response string) error {
+	stmt := `UPDATE followers
+		SET status_id = 2 
+		WHERE follower_id = ? AND following_id = ? AND request_status_id = ?`
+
+		_,err:=F.DB.Exec(stmt,followerID,followingID,response)
+
+		if err!=nil{
 		return err
 	}
 
