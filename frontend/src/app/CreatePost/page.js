@@ -9,7 +9,7 @@ import CheckSession from "../utils/CheckSession";
 import "./creatPost.css"
 
 
-import { FaAlignLeft, FaPaperPlane, FaLock } from "react-icons/fa"; // Add icons
+import { FaAlignLeft, FaPaperPlane, FaLock } from "react-icons/fa"; //icons
 
 import "primereact/resources/themes/lara-light-blue/theme.css";
 

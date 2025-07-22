@@ -15,6 +15,9 @@ import { MultiSelect } from "primereact/multiselect";
 import { FetchAllUsers } from "../utils/FetchAllUsers";
 import CheckSession from "../utils/CheckSession";
 import { useWebSocket } from "../contexts/WebSocketContext";
+import { FaComments, FaPen, FaCalendarAlt, FaUserPlus } from "react-icons/fa";
+
+
 
 export default function GroupChat({ group, onBack }) {
   const router = useRouter();
@@ -37,12 +40,12 @@ export default function GroupChat({ group, onBack }) {
   };
 
 
-const sendText= async (group,message) => {
-  
-  console.log("Sending message to group:", group.id, "Message:", message);
+  const sendText = async (group, message) => {
+
+    console.log("Sending message to group:", group.id, "Message:", message);
     const data = await FetchUserIDbySession();
     const userID = data.UserID;
-    
+
 
     const payload = {
       type: "group_message",
@@ -52,53 +55,53 @@ const sendText= async (group,message) => {
     };
     console.log("Sending group message:", payload);
     socket.send(JSON.stringify(payload));
-    
+
   }
-  
+
 
   useEffect(() => {
     socket.onmessage = (event) => {
       console.log("WebSocket message received:", event.data);
-    } 
+    }
   }, []);
 
   useEffect(() => {
     if (showUserPopup) {
       setSelectedUsers([]);
-      
+
     }
   }, [showUserPopup]);
 
   const HandleInGroupInviteUsers = async (group_id, users) => {
     try {
-        /*
-      const response = await fetch(`http://localhost:8080/api/InviteInGroupUsers`, {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          type : "sendInviteToGroup",
-          user_ids: users,
-          group_id: parseInt(group_id),
-        }),
-      });
+      /*
+    const response = await fetch(`http://localhost:8080/api/InviteInGroupUsers`, {
+      method: "POST",
+      credentials: "include",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        type : "sendInviteToGroup",
+        user_ids: users,
+        group_id: parseInt(group_id),
+      }),
+    });
 
-      */
-      
-      
-          const data = await FetchUserIDbySession();
-          const userID = parseInt(data.UserID);
-          const Invites = {
-            type: "sendInviteToGroup",
-            sender_id: userID,
-            user_ids: users,
-            group_id: parseInt(group_id),
-          };
-          console.log("Invites: ", Invites);
-          socket.send(JSON.stringify(Invites));
-    
+    */
+
+
+      const data = await FetchUserIDbySession();
+      const userID = parseInt(data.UserID);
+      const Invites = {
+        type: "sendInviteToGroup",
+        sender_id: userID,
+        user_ids: users,
+        group_id: parseInt(group_id),
+      };
+      console.log("Invites: ", Invites);
+      socket.send(JSON.stringify(Invites));
+
 
 
 
@@ -256,7 +259,7 @@ const sendText= async (group,message) => {
     setMessages(updatedMessages);
     saveMessagesToStorage(updatedMessages);
     setNewMessage("");
-    
+
   };
 
   if (showEventPage) {
@@ -281,6 +284,7 @@ const sendText= async (group,message) => {
         <div className="modal">
           <div className="modal-content">
             <button
+              className="modal-close"
               onClick={() => {
                 setSelectedUsers([]);
                 setShowUserPopup(false);
@@ -316,6 +320,7 @@ const sendText= async (group,message) => {
         </div>
       )}
 
+
       <div className="chat-header">
         <div className="chat-header-left">
           <button className="back-button" onClick={onBack}>
@@ -326,19 +331,27 @@ const sendText= async (group,message) => {
             <p>{group.description}</p>
           </div>
         </div>
+
         <div className="chat-header-buttons">
-          <button className="create-btn">Chat</button>
+          <button className="create-btn">
+            <FaComments style={{ marginRight: "8px" }} />
+            Chat
+          </button>
           <button className="create-btn" onClick={() => setShowPostPage(true)}>
+            <FaPen style={{ marginRight: "8px" }} />
             Post
           </button>
           <button className="create-btn" onClick={() => setShowEventPage(true)}>
+            <FaCalendarAlt style={{ marginRight: "8px" }} />
             Event
           </button>
           <button className="create-btn" onClick={() => setShowUserPopup(true)}>
+            <FaUserPlus style={{ marginRight: "8px" }} />
             Invite
           </button>
         </div>
       </div>
+
 
       <div className="messages-container">
         {loading ? (
@@ -424,7 +437,7 @@ const sendText= async (group,message) => {
           placeholder="Type your message..."
         />
 
-        <button type="submit" className="send-button">
+        <button type="submit" className="send-button fancy-submit-button">
           Send
         </button>
       </form>

@@ -2,6 +2,8 @@
 import { useState, useRef, useEffect } from "react";
 import { FetchPostsGroup, CreateGroupPost, CreateGroupComment } from "../utils/FetchGroupPosts";
 import "./group.css";
+import { fileChangeHandler } from "../utils/fileChangeHandler";
+
 
 export default function GroupPost({ group, onBack }) {
   const [posts, setPosts] = useState([]);
@@ -325,7 +327,7 @@ export default function GroupPost({ group, onBack }) {
             </div>
           )}
           <div className="modal-buttons">
-            <button type="submit" className="send-button">Create</button>
+            <button type="submit" className="fancy-submit-button">Create</button>
           </div>
         </form>
       </div>

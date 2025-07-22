@@ -27,8 +27,8 @@ export default function GroupPage() {
     return (
       <div className="group-page-container">
         <div className="group-box">
-          <GroupChat 
-            group={selectedGroup} 
+          <GroupChat
+            group={selectedGroup}
             onBack={handleBackToList}
           />
         </div>
@@ -38,20 +38,17 @@ export default function GroupPage() {
 
   // Otherwise, show the group list with create button
   return (
-    <div className="group-page-container">
-      <div className="top-bar">
+    <div className="group-box">
+      <div className="group-box-header">
+        <h1>Groups</h1>
         <CreateGroupButton onGroupCreated={handleGroupCreated} />
       </div>
 
-      <div className="group-box">
-        <div className="group-box-header">
-          <h1>Groups</h1>
-        </div>
-        <GroupLists 
-          key={refreshKey} 
-          onGroupClick={handleGroupClick}
-        />
-      </div>
+      <GroupLists
+        key={refreshKey}
+        onGroupClick={handleGroupClick}
+      />
     </div>
+
   );
 }

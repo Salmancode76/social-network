@@ -106,7 +106,6 @@ export default function CreateGroupButton({ onGroupCreated }) {
       <button className="create-btn" onClick={() => setShowModal(true)}>
         Create Group
       </button>
-
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-box">

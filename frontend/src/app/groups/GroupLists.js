@@ -11,34 +11,34 @@ export default function GroupLists({ onGroupClick }) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [requestStatuses, setRequestStatuses] = useState({}); // Track per group
-  
+
   const { socket } = useWebSocket();
-  
+
   const sendWebSocketMessage = async (group) => {
-      if (!('WebSocket' in window)) {
-        console.error('WebSockets are not supported by your browser.');
-        return;
-      }
-  
+    if (!('WebSocket' in window)) {
+      console.error('WebSockets are not supported by your browser.');
+      return;
+    }
+
     //const socket  = new WebSocket(WS_URL);
-   
-        const data = await FetchUserIDbySession();
-        const userID = data.UserID;
-        console.log('WebSocket connected! User ID:', userID);
-  
-        const message = {
-          type: 'get_group_chat_history',
-          to: group.id,
-          from: userID,
-        };
-  
-        socket.send(JSON.stringify(message));
-        console.log('JSON WebSocket message sent:', message);
-      
+
+    const data = await FetchUserIDbySession();
+    const userID = data.UserID;
+    console.log('WebSocket connected! User ID:', userID);
+
+    const message = {
+      type: 'get_group_chat_history',
+      to: group.id,
+      from: userID,
+    };
+
+    socket.send(JSON.stringify(message));
+    console.log('JSON WebSocket message sent:', message);
+
   }
-  
-  
-  
+
+
+
   const fetchGroups = async () => {
     try {
       setLoading(true);
@@ -82,18 +82,18 @@ export default function GroupLists({ onGroupClick }) {
       );
       */
 
-        const data = await FetchUserIDbySession();
-        const userID = data.UserID;
-        console.log("WebSocket connected! User ID:", userID);
-        const request = {
-          type: "sendRequestToJoinGroup",
-          related_user_id: parseInt(userID),
-          related_group_id: parseInt(id),
-          creator_id: parseInt(creator_id),
-        };
-        console.table(request);
-        socket.send(JSON.stringify(request));
-      
+      const data = await FetchUserIDbySession();
+      const userID = data.UserID;
+      console.log("WebSocket connected! User ID:", userID);
+      const request = {
+        type: "sendRequestToJoinGroup",
+        related_user_id: parseInt(userID),
+        related_group_id: parseInt(id),
+        creator_id: parseInt(creator_id),
+      };
+      console.table(request);
+      socket.send(JSON.stringify(request));
+
 
       setRequestStatuses((prev) => ({ ...prev, [id]: "requested" }));
     } catch (e) {
@@ -150,17 +150,17 @@ export default function GroupLists({ onGroupClick }) {
               <div
                 key={group.id}
                 className="group-item clickable"
-                onClick={() =>
-                { if(group.isMember &&
-                  group.request_status_id != "1"
-                  ){
-                  handleGroupClick(group)
-                  sendWebSocketMessage(group);
-                  console.log("Group clicked:", group.id);
+                onClick={() => {
+                  if (group.isMember &&
+                    group.request_status_id != "1"
+                  ) {
+                    handleGroupClick(group)
+                    sendWebSocketMessage(group);
+                    console.log("Group clicked:", group.id);
                   }
-                  
+
                 }
-              }
+                }
               >
                 <h3>{group.title}</h3>
                 <p>{group.description}</p>
@@ -177,16 +177,17 @@ export default function GroupLists({ onGroupClick }) {
                         }
                       }}
                     >
-                      <button
-                        type="submit"
-                        disabled={buttonInfo.disabled}
-                        className={
-                          requestStatus === "error" ? "error-button" : ""
-                        }
-                      >
-                        {buttonInfo.text}
-                      </button>
+                      <div className="form-submit-wrapper">
+                        <button
+                          type="submit"
+                          disabled={buttonInfo.disabled}
+                          className={requestStatus === "error" ? "error-button" : ""}
+                        >
+                          {buttonInfo.text}
+                        </button>
+                      </div>
                     </form>
+
                   ) : (
                     <div>
                       {group.request_status_id === "1" ? (
