@@ -185,6 +185,32 @@ func GetNickname(id string) string {
 	return username
 }
 
+func GetGroupMembers(id string) []string {
+	db := OpenDatabase()
+	defer db.Close()
+	query := "select user_id FROM group_members where group_id = ?"
+	members := []string{}
+
+	rows, err := db.Query(query, id)
+	if err != nil {
+		fmt.Printf("Server >> Error getting group members: %s", err)
+		return members
+	}
+	user_id := ""
+	defer rows.Close()
+	for rows.Next() {
+		err = rows.Scan(&user_id)
+		if err != nil {
+			fmt.Printf("Server >> Error reading chat history: %s", err)
+		continue
+		}
+		members = append(members, user_id)
+	}
+	// Execute the query and retrieve the user ID
+
+	return members
+}
+
 func GetUserName(db *sql.DB, From string) string {
 	query := "SELECT Username FROM Users WHERE UserID = ?"
 

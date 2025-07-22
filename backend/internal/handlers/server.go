@@ -397,7 +397,6 @@ func handleGetChatHistoryMessage(conn *websocket.Conn, m MyMessage) {
 
 }
 
-
 func handleGetGroupChatHistoryMessage(conn *websocket.Conn, m MyMessage) {
 	db := OpenDatabase()
 	defer db.Close()
@@ -415,7 +414,6 @@ func handleGetGroupChatHistoryMessage(conn *websocket.Conn, m MyMessage) {
 	fmt.Println(message)
 
 }
-
 
 func handleNewMessage(conn *websocket.Conn, m MyMessage) {
 	db := OpenDatabase()
@@ -451,21 +449,25 @@ func notifyNewMessage(m MyMessage) {
 	conn.WriteJSON(message)
 }
 
+func notifyGroupNewMessage(conn *websocket.Conn, m MyMessage) {
 
-
-func notifyGroupNewMessage(conn *websocket.Conn,m MyMessage) {
-	
-	//take the group id from the message
-	//then see all users of that group 
-	//loop and send the message to all users of that group
-	
-	// from := GetNickname(m.From)
-	// message := MyMessage{Type: "new", From: from, To: m.To, Text: m.Text}
-	// to := GetID(m.To)
-	// if _, ok := (userSockets)[to]; !ok {
-	// 	fmt.Println("User not connected: ", to)
-	// 	return
-	// }
-	// conn := (userSockets)[to]
-	// conn.WriteJSON(message)
+	from := GetNickname(m.From)
+	userIDs := GetGroupMembers(m.To)
+	fmt.Println("Group members: ", userIDs)
+	if len(userIDs) == 0 {
+		fmt.Println("No users in group: ", m.To)
+		return
+	}
+	for _, userID := range userIDs {
+		message := MyMessage{Type: "GroupMessage", From: from, To: m.To, Text: m.Text}
+		if _, ok := (userSockets)[userID]; !ok {
+			fmt.Println("User not connected: ", userID)
+			continue
+		} // }
+		if userID == m.From {
+			continue // Skip sending the message to the sender
+		}
+		conn := (userSockets)[userID]
+		conn.WriteJSON(message)
+	}
 }
