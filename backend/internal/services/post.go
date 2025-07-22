@@ -11,31 +11,33 @@ type PostModel struct {
 
 func (p *PostModel) FetchAllPosts(id int)([]models.Post,error){
 
-	//getting all public posts along with all private posts 
+	//getting all public posts along with all private posts and friend posts
 stmt := `
 SELECT 
-    p.id,
-    p.user_id,
-    p.content,
-    p.image_path,
-    p.privacy_type_id,
-    p.created_at,
-    u.nickname,
-    u.first_name || ' ' || u.last_name AS fullname,
-    u.avatar
-FROM 
-    posts p
-JOIN 
-    users u ON u.id = p.user_id
-WHERE 
-    (p.privacy_type_id = 1 
-    OR p.user_id = (?) 
-    OR p.id IN (
-        SELECT post_id 
-        FROM post_privacy 
-        WHERE user_id = (?)
-    ))
-    AND p.group_id IS NULL;
+		p.id,
+		p.user_id,
+		p.content,
+		p.image_path,
+		p.privacy_type_id,
+		p.created_at,
+		u.nickname,
+		u.first_name || ' ' || u.last_name AS fullname,
+		u.avatar
+	FROM 
+		posts p
+	JOIN 
+		users u ON u.id = p.user_id
+	WHERE 
+		( (p.privacy_type_id = 1)
+		OR (p.user_id = (?))
+		OR (p.id IN (
+			SELECT post_id 
+			FROM post_privacy 
+			WHERE user_id = (?)
+		))
+                  OR (p.privacy_type_id=2 AND
+                  p.user_id in (select f.following_id from followers f where f.follower_id = (?)  AND f.request_status_id =2) ))
+		AND p.group_id IS NULL;
 `
 
 	var Posts []models.Post

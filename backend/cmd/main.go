@@ -22,7 +22,7 @@ func main() {
 		Follow: &services.FollowModel{DB: DB},
 		Groups: &services.GroupModel{DB: DB},
 		Notifications : &services.NotificationModel{DB: DB},
-	} 
+	}
 	s:= CoreModels.Server{
 		HTTP: &http.Server{
 			Addr:         ":8080",
