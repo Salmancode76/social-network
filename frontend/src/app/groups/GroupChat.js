@@ -4,27 +4,22 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 import GroupEvent from "./GroupEvent";
 import GroupPost from "./GroupPost";
-//import { ws } from "../utils/ws";
 import "./group.css";
 import "primereact/resources/themes/lara-light-blue/theme.css";
 import "primereact/resources/primereact.min.css";
 import "primeicons/primeicons.css";
 import { FetchUserIDbySession } from "../utils/FetchUserIDbySession";
-//import { socket } from "../utils/ws";
 import { MultiSelect } from "primereact/multiselect";
 import { FetchAllUsers } from "../utils/FetchAllUsers";
 import CheckSession from "../utils/CheckSession";
 import { useWebSocket } from "../contexts/WebSocketContext";
 import { FaComments, FaPen, FaCalendarAlt, FaUserPlus } from "react-icons/fa";
 
-
-
 export default function GroupChat({ group, onBack }) {
   const router = useRouter();
   const [showUserPopup, setShowUserPopup] = useState(false);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
-  const [selectedImage, setSelectedImage] = useState(null);
   const [loading, setLoading] = useState(false);
   const [showEventPage, setShowEventPage] = useState(false);
   const [showPostPage, setShowPostPage] = useState(false);
@@ -32,20 +27,15 @@ export default function GroupChat({ group, onBack }) {
   const [allUsers, setAllUsers] = useState([]);
 
   const messagesEndRef = useRef(null);
-  const imageInputRef = useRef();
   const { socket } = useWebSocket();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
-
   const sendText = async (group, message) => {
-
-    console.log("Sending message to group:", group.id, "Message:", message);
     const data = await FetchUserIDbySession();
     const userID = data.UserID;
-
 
     const payload = {
       type: "group_message",
@@ -53,44 +43,23 @@ export default function GroupChat({ group, onBack }) {
       to: group.id,
       text: message,
     };
-    console.log("Sending group message:", payload);
     socket.send(JSON.stringify(payload));
-
-  }
-
+  };
 
   useEffect(() => {
     socket.onmessage = (event) => {
       console.log("WebSocket message received:", event.data);
-    }
+    };
   }, []);
 
   useEffect(() => {
     if (showUserPopup) {
       setSelectedUsers([]);
-
     }
   }, [showUserPopup]);
 
   const HandleInGroupInviteUsers = async (group_id, users) => {
     try {
-      /*
-    const response = await fetch(`http://localhost:8080/api/InviteInGroupUsers`, {
-      method: "POST",
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        type : "sendInviteToGroup",
-        user_ids: users,
-        group_id: parseInt(group_id),
-      }),
-    });
-
-    */
-
-
       const data = await FetchUserIDbySession();
       const userID = parseInt(data.UserID);
       const Invites = {
@@ -99,11 +68,7 @@ export default function GroupChat({ group, onBack }) {
         user_ids: users,
         group_id: parseInt(group_id),
       };
-      console.log("Invites: ", Invites);
       socket.send(JSON.stringify(Invites));
-
-
-
 
       setSelectedUsers([]);
       setAllUsers([]);
@@ -137,9 +102,7 @@ export default function GroupChat({ group, onBack }) {
           },
         }
       );
-      if (!response.ok) {
-        throw new Error(`HTTP error: ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
       const data = await response.json();
       return data;
     } catch (e) {
@@ -159,9 +122,7 @@ export default function GroupChat({ group, onBack }) {
         try {
           setLoading(false);
           const res = await fetch("/api/session");
-          if (!res.ok) {
-            throw new Error("Failed to fetch session");
-          }
+          if (!res.ok) throw new Error("Failed to fetch session");
           const data = await res.json();
 
           const non_group_users = await FetchUsersInvites(group.id);
@@ -221,37 +182,13 @@ export default function GroupChat({ group, onBack }) {
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-    sendText(group, newMessage)
-    if (!newMessage.trim() && !selectedImage) return;
-
-    if (selectedImage) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64Image = reader.result;
-        const tempMessage = {
-          id: Date.now(),
-          user_name: "You",
-          content: newMessage,
-          image: base64Image,
-          created_at: new Date().toISOString(),
-          group_id: group.id,
-        };
-        const updatedMessages = [...messages, tempMessage];
-        setMessages(updatedMessages);
-        saveMessagesToStorage(updatedMessages);
-        setNewMessage("");
-        setSelectedImage(null);
-        imageInputRef.current.value = "";
-      };
-      reader.readAsDataURL(selectedImage);
-      return;
-    }
+    if (!newMessage.trim()) return;
+    sendText(group, newMessage);
 
     const tempMessage = {
       id: Date.now(),
       user_name: "You",
       content: newMessage,
-      image: null,
       created_at: new Date().toISOString(),
       group_id: group.id,
     };
@@ -259,18 +196,11 @@ export default function GroupChat({ group, onBack }) {
     setMessages(updatedMessages);
     saveMessagesToStorage(updatedMessages);
     setNewMessage("");
-
   };
 
-  if (showEventPage) {
-    return <GroupEvent group={group} onBack={() => setShowEventPage(false)} />;
-  }
+  if (showEventPage) return <GroupEvent group={group} onBack={() => setShowEventPage(false)} />;
+  if (showPostPage) return <GroupPost group={group} onBack={() => setShowPostPage(false)} />;
 
-  if (showPostPage) {
-    return <GroupPost group={group} onBack={() => setShowPostPage(false)} />;
-  }
-
-  // ✅ Group messages by day
   const groupedMessages = messages.reduce((acc, message) => {
     const label = formatMessageDate(message.created_at);
     if (!acc[label]) acc[label] = [];
@@ -283,17 +213,8 @@ export default function GroupChat({ group, onBack }) {
       {showUserPopup && (
         <div className="modal">
           <div className="modal-content">
-            <button
-              className="modal-close"
-              onClick={() => {
-                setSelectedUsers([]);
-                setShowUserPopup(false);
-              }}
-            >
-              X
-            </button>
+            <button className="modal-close" onClick={() => setShowUserPopup(false)}>X</button>
             <h3>Select users to share with</h3>
-
             <MultiSelect
               value={selectedUsers}
               onChange={(e) => setSelectedUsers(e.target.value || [])}
@@ -304,11 +225,9 @@ export default function GroupChat({ group, onBack }) {
               placeholder="Select Users"
               maxSelectedLabels={5}
               style={{ width: "100%" }}
-              key={`multiselect-${Date.now()}-${allUsers.length}`}
-              showClear={true}
-              resetFilterOnHide={true}
+              showClear
+              resetFilterOnHide
             />
-
             <button
               className="btn"
               onClick={() => HandleInGroupInviteUsers(group.id, selectedUsers)}
@@ -320,38 +239,21 @@ export default function GroupChat({ group, onBack }) {
         </div>
       )}
 
-
       <div className="chat-header">
         <div className="chat-header-left">
-          <button className="back-button" onClick={onBack}>
-            ← Back
-          </button>
+          <button className="back-button" onClick={onBack}>← Back</button>
           <div className="group-info">
             <h2>{group.title}</h2>
             <p>{group.description}</p>
           </div>
         </div>
-
         <div className="chat-header-buttons">
-          <button className="create-btn">
-            <FaComments style={{ marginRight: "8px" }} />
-            Chat
-          </button>
-          <button className="create-btn" onClick={() => setShowPostPage(true)}>
-            <FaPen style={{ marginRight: "8px" }} />
-            Post
-          </button>
-          <button className="create-btn" onClick={() => setShowEventPage(true)}>
-            <FaCalendarAlt style={{ marginRight: "8px" }} />
-            Event
-          </button>
-          <button className="create-btn" onClick={() => setShowUserPopup(true)}>
-            <FaUserPlus style={{ marginRight: "8px" }} />
-            Invite
-          </button>
+          <button className="create-btn"><FaComments style={{ marginRight: "8px" }} />Chat</button>
+          <button className="create-btn" onClick={() => setShowPostPage(true)}><FaPen style={{ marginRight: "8px" }} />Post</button>
+          <button className="create-btn" onClick={() => setShowEventPage(true)}><FaCalendarAlt style={{ marginRight: "8px" }} />Event</button>
+          <button className="create-btn" onClick={() => setShowUserPopup(true)}><FaUserPlus style={{ marginRight: "8px" }} />Invite</button>
         </div>
       </div>
-
 
       <div className="messages-container">
         {loading ? (
@@ -364,25 +266,11 @@ export default function GroupChat({ group, onBack }) {
                   <div className="message-date-label">{label}</div>
                 </div>
                 {msgs.map((message) => (
-                  <div
-                    key={message.id}
-                    className={`message ${message.user_name === "You" ? "you" : "other"}`}
-                  >
+                  <div key={message.id} className={`message ${message.user_name === "You" ? "you" : "other"}`}>
                     <div className="message-header">
                       <span className="message-author">{message.user_name}</span>
                     </div>
                     <div className="message-content">{message.content}</div>
-                    {message.image && (
-                      <img
-                        src={message.image}
-                        alt="attachment"
-                        style={{
-                          maxWidth: "200px",
-                          borderRadius: "10px",
-                          marginTop: "10px",
-                        }}
-                      />
-                    )}
                     <div className="message-time">
                       {new Date(message.created_at).toLocaleDateString("en-US")},{" "}
                       {new Date(message.created_at).toLocaleTimeString("en-US", {
@@ -404,39 +292,12 @@ export default function GroupChat({ group, onBack }) {
 
       <form className="message-form" onSubmit={handleSendMessage}>
         <input
-          type="file"
-          accept="image/*"
-          ref={imageInputRef}
-          style={{ display: "none" }}
-          onChange={(e) => setSelectedImage(e.target.files[0])}
-        />
-        <button
-          type="button"
-          className="image-button"
-          onClick={() => imageInputRef.current.click()}
-          title="Attach Image"
-        >
-          +
-        </button>
-
-        <input
           type="text"
           className="message-input"
-          value={
-            selectedImage
-              ? `📎 ${selectedImage.name} | ${newMessage}`
-              : newMessage
-          }
-          onChange={(e) =>
-            setNewMessage(
-              selectedImage
-                ? e.target.value.replace(`📎 ${selectedImage.name} | `, "")
-                : e.target.value
-            )
-          }
+          value={newMessage}
+          onChange={(e) => setNewMessage(e.target.value)}
           placeholder="Type your message..."
         />
-
         <button type="submit" className="send-button fancy-submit-button">
           Send
         </button>
@@ -445,7 +306,6 @@ export default function GroupChat({ group, onBack }) {
   );
 }
 
-// ✅ Date formatting helper
 function formatMessageDate(dateStr) {
   const msgDate = new Date(dateStr);
   const today = new Date();

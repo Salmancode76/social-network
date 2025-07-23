@@ -2,18 +2,23 @@
 import { useState, useRef, useEffect } from "react";
 import { FetchPostsGroup, CreateGroupPost, CreateGroupComment } from "../utils/FetchGroupPosts";
 import "./group.css";
-import { fileChangeHandler } from "../utils/fileChangeHandler";
+import { RiImageAddFill } from "react-icons/ri";
 
 
 export default function GroupPost({ group, onBack }) {
   const [posts, setPosts] = useState([]);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ content: "" });
-  const [imageBase64, setImageBase64] = useState(null);
+  const [formData, setFormData] = useState({ content: "", image_file: "" });
+  const [error, setError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const imageInputRef = useRef();
+  const ImageDiv = useRef();
+
+
   const [commentVisibility, setCommentVisibility] = useState({});
   const [commentForm, setCommentForm] = useState({});
   const commentImageRefs = useRef({});
+  const commentImageDivs = useRef({});
 
   useEffect(() => {
     async function loadPosts() {
@@ -23,89 +28,99 @@ export default function GroupPost({ group, onBack }) {
     loadPosts();
   }, [group.id]);
 
- const groupPostsByDate = (posts) => {
-  const today = new Date();
-  const yesterday = new Date();
-  yesterday.setDate(today.getDate() - 1);
+  const validateImage = (file) => {
+    const validTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
+    const maxSize = 1024 * 1024 * 2; // 2MB
+    if (!validTypes.includes(file.type)) {
+      return "Invalid file type. Please upload a JPEG/PNG/WEBP image.";
+    }
+    if (file.size > maxSize) {
+      return "Image is too large. Max size is 2MB.";
+    }
+    return null;
+  };
 
-  const grouped = {};
+  const handlePostImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-  posts.forEach((post) => {
-    const postDate = new Date(post.created_at);
-    let label;
-
-    if (postDate.toDateString() === today.toDateString()) {
-      label = "Today";
-    } else if (postDate.toDateString() === yesterday.toDateString()) {
-      label = "Yesterday";
-    } else {
-      const diff = (today - postDate) / (1000 * 60 * 60 * 24);
-      if (diff <= 6) {
-        label = postDate.toLocaleDateString("en-US", { weekday: "long" }); // e.g., Sunday
-      } else {
-        label = postDate.toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "long",
-          day: "numeric",
-        });
-      }
+    const validationError = validateImage(file);
+    if (validationError) {
+      setError(true);
+      setErrorMessage(validationError);
+      return;
     }
 
-    if (!grouped[label]) grouped[label] = { posts: [], rawDate: postDate };
-    grouped[label].posts.push(post);
-  });
-
-  // Now return sorted array by rawDate
-  return Object.entries(grouped)
-    .sort((a, b) => new Date(a[1].rawDate) - new Date(b[1].rawDate))
-    .map(([label, value]) => [label, value.posts]);
-};
-
-
-  const handleImageUpload = (file, postId = null) => {
     const reader = new FileReader();
     reader.onloadend = () => {
-      if (postId === null) {
-        setImageBase64(reader.result);
-      } else {
-        setCommentForm(prev => ({
-          ...prev,
-          [postId]: {
-            ...prev[postId],
-            image: reader.result,
-          },
-        }));
-      }
+      setFormData((prev) => ({ ...prev, image_file: reader.result }));
+      ImageDiv.current.style.backgroundImage = `url(${reader.result})`;
+      setError(false);
+      setErrorMessage("");
     };
-    if (file) reader.readAsDataURL(file);
+    reader.readAsDataURL(file);
+  };
+
+  const handleCommentImageUpload = (postId) => async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    const validationError = validateImage(file);
+    if (validationError) {
+      setError(true);
+      setErrorMessage(validationError);
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setCommentForm((prev) => ({
+        ...prev,
+        [postId]: {
+          ...(prev[postId] || {}),
+          image: reader.result,
+        },
+      }));
+
+      if (commentImageDivs.current[postId]) {
+        commentImageDivs.current[postId].style.backgroundImage = `url(${reader.result})`;
+      }
+
+      setError(false);
+      setErrorMessage("");
+    };
+    reader.readAsDataURL(file);
   };
 
   const handleCreate = async (e) => {
     e.preventDefault();
+    if (!formData.content.trim() && !formData.image_file) return;
+
     const payload = {
-      content: form.content,
-      image_file: imageBase64,
+      content: formData.content,
+      image_file: formData.image_file,
       group_id: group.id,
     };
+
     const createdPost = await CreateGroupPost(payload);
     if (createdPost) {
-      setPosts(prev => [...prev, createdPost]);
-      setForm({ content: "" });
-      setImageBase64(null);
+      setPosts((prev) => [...prev, createdPost]);
+      setFormData({ content: "", image_file: "" });
       imageInputRef.current.value = "";
+      ImageDiv.current.style.backgroundImage = "none";
       setShowModal(false);
     }
   };
 
   const toggleComment = (postId) => {
-    setCommentVisibility(prev => ({
+    setCommentVisibility((prev) => ({
       ...prev,
       [postId]: !prev[postId],
     }));
   };
 
   const handleCommentChange = (postId, field, value) => {
-    setCommentForm(prev => ({
+    setCommentForm((prev) => ({
       ...prev,
       [postId]: {
         ...prev[postId],
@@ -132,30 +147,35 @@ export default function GroupPost({ group, onBack }) {
       created_at: res.created_at,
     };
 
-    setPosts(prev =>
-      prev.map(post =>
+    setPosts((prev) =>
+      prev.map((post) =>
         post.id === postId
           ? { ...post, comments: [...(post.comments || []), newComment] }
           : post
       )
     );
 
-    setCommentForm(prev => ({
+    setCommentForm((prev) => ({
       ...prev,
       [postId]: { content: "", image: null },
     }));
-    setCommentVisibility(prev => ({ ...prev, [postId]: false }));
+
+    if (commentImageDivs.current[postId]) {
+      commentImageDivs.current[postId].style.backgroundImage = "none";
+    }
+
+    if (commentImageRefs.current[postId]) {
+      commentImageRefs.current[postId].value = "";
+    }
+
+    setCommentVisibility((prev) => ({ ...prev, [postId]: false }));
   };
 
   return (
     <div className="group-chat-container">
       <div className="chat-header">
-        <div className="chat-header-left">
-          <button className="back-button" onClick={onBack}>← Back</button>
-          <div className="group-info">
-            <h2>Posts in {group.title}</h2>
-          </div>
-        </div>
+        <button className="back-button" onClick={onBack}>← Back</button>
+        <div className="group-title">Posts in {group.title} group</div>
         <button className="send-button" onClick={() => setShowModal(true)}>+ Create Post</button>
       </div>
 
@@ -163,176 +183,153 @@ export default function GroupPost({ group, onBack }) {
         {posts.length === 0 ? (
           <div className="no-messages">No posts yet.</div>
         ) : (
-         groupPostsByDate(posts).map(([label, postGroup]) => (
-              <div key={label}>
-                <div className="message-date-wrapper">
-                  <div className="message-date-label">{label}</div>
-                </div>
-                {postGroup.map((post) => (
+          posts.map((post) => (
+            <div key={post.id} className="post">
+              <p style={{ fontWeight: "bold", color: "#2196f3" }}>You</p>
+              <p className="group-post-content">{post.content}</p>
+              {post.image && (
+                <img
+                  src={`http://localhost:8080/Image/Posts/${post.image}`}
+                  alt="Post visual"
+                  className="group-post-image"
+                />
+              )}
+
+              <div className="message-time-group">
+                {new Date(post.created_at).toLocaleString("en-US", {
+                  dateStyle: "medium",
+                  timeStyle: "short",
+                })}
+              </div>
+
+              <button onClick={() => toggleComment(post.id)} className="comment-group-button"> Comment</button>
+
+              {commentVisibility[post.id] && (
+                <form onSubmit={(e) => { e.preventDefault(); handleCommentSubmit(post.id); }}>
+                  <textarea
+                    value={commentForm[post.id]?.content || ""}
+                    onChange={(e) => handleCommentChange(post.id, "content", e.target.value)}
+                    placeholder="Write a comment..."
+                  />
+
+                  <input
+                    type="file"
+                    accept="image/*"
+                    ref={(el) => (commentImageRefs.current[post.id] = el)}
+                    style={{ display: "none" }}
+                    onChange={handleCommentImageUpload(post.id)}
+                  />
+
                   <div
-                    className="message"
-                    key={post.id}
+                    ref={(el) => (commentImageDivs.current[post.id] = el)}
                     style={{
-                      background: "#474747",
-                      color: "#f4eee2",
-                      borderRadius: "12px",
-                      padding: "16px",
-                      marginBottom: "16px",
+                      width: "200px",
+                      height: "140px",
+                      backgroundSize: "cover",
+                      backgroundPosition: "center",
+                      borderRadius: "10px",
+                      marginTop: "10px",
+                      backgroundImage: commentForm[post.id]?.image
+                        ? `url(${commentForm[post.id].image})`
+                        : "none",
+                    }}
+                  />
+
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "space-between", // 🔹 pushes buttons to left and right
+                      alignItems: "center",
+                      marginTop: "10px",
+                      width: "100%", // ensure it spans the container
                     }}
                   >
-                    <p style={{ fontWeight: "bold", color: "#2196f3" }}>You</p>
-                    <p>{post.content}</p>
-                    {post.image && (
-                      <img
-                        src={`http://localhost:8080/Image/Posts/${post.image}`}
-                        alt="Post visual"
-                        style={{
-                          maxWidth: "250px",
-                          maxHeight: "200px",
-                          borderRadius: "10px",
-                          objectFit: "cover",
-                        }}
-                      />
-                    )}
-                    <div
-                      className="message-time"
-                      style={{
-                        fontSize: "12px",
-                        color: "#cccccc",
-                        marginTop: "10px",
-                      }}
+                    <button
+                      type="button"
+                      onClick={() => commentImageRefs.current[post.id]?.click()}
+                      className="add-img-button"
                     >
-                      {new Date(post.created_at).toLocaleDateString("en-US")},{" "}
-                      {new Date(post.created_at).toLocaleTimeString("en-US", {
-                        hour: "numeric",
-                        minute: "2-digit",
-                        hour12: true,
-                      }).toLowerCase()}
+                      <RiImageAddFill />
+                      Add Img
+                    </button>
+
+                    <button type="submit" className="add-img-button">
+                      Post
+                    </button>
+                  </div>
+
+                </form>
+              )}
+
+              {post.comments?.length > 0 && (
+                <div className="comment-list">
+                  {post.comments.map((c, i) => (
+                    <div key={i} className="comment">
+                      <p><strong>You</strong></p>
+                      <p>{c.text}</p>
+                      {c.image && (
+                        <img
+                          src={`http://localhost:8080/Image/Posts/${c.image}`}
+                          alt="Comment"
+                          className="group-post-image"
+                        />
+                      )}
+                      <div className="message-time">
+                        {new Date(c.created_at).toLocaleString()}
+                      </div>
                     </div>
-                  
-      <div className="comment-button-wrapper">
-        <button className="fancy-comment-button" onClick={() => toggleComment(post.id)}>
-          <span className="comment-icon">💬</span> Comment
-        </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))
+        )}
       </div>
 
-      {commentVisibility[post.id] && (
-        <form className="comment-input-area" onSubmit={(e) => {
-          e.preventDefault();
-          handleCommentSubmit(post.id);
+      {showModal && (
+        <div className="modal-overlay" onClick={(e) => {
+          if (e.target.className === "modal-overlay") setShowModal(false);
         }}>
-          <textarea
-            placeholder="Write a comment..."
-            value={commentForm[post.id]?.content || ""}
-            onChange={(e) => handleCommentChange(post.id, "content", e.target.value)}
-            required
-          />
-          <input
-            type="file"
-            accept="image/*"
-            style={{ display: "none" }}
-            ref={(el) => (commentImageRefs.current[post.id] = el)}
-            onChange={(e) => handleImageUpload(e.target.files[0], post.id)}
-          />
-
-          <div className="comment-buttons-layout">
-            <button type="button" className="add-img-button" onClick={() => commentImageRefs.current[post.id]?.click()}>
-              + Add img
-            </button>
-            <div className="comment-image-wrapper">
-              {commentForm[post.id]?.image && (
-                <img
-                  src={commentForm[post.id].image}
-                  alt="Comment preview"
-                  className="comment-preview-image"
-                />
-              )}
-            </div>
-            <button type="submit" className="post-button">Post</button>
+          <div className="modal-content scrollable">
+            <button className="modal-close" onClick={() => setShowModal(false)}>✖</button>
+            <h2>Create New Post</h2>
+            <form onSubmit={handleCreate}>
+              <textarea
+                placeholder="What's on your mind?"
+                value={formData.content}
+                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+              />
+              <label className="custom-file-button" htmlFor="postImageInput">
+                <RiImageAddFill />
+                Add Image
+              </label>
+              <input
+                type="file"
+                id="postImageInput"
+                accept="image/*"
+                className="hidden-file-input"
+                ref={imageInputRef}
+                onChange={handlePostImageUpload}
+              />
+              <div
+                ref={ImageDiv}
+                className="image"
+                style={{
+                  width: "250px",
+                  height: "200px",
+                  backgroundSize: "cover",
+                  backgroundPosition: "center",
+                  borderRadius: "10px",
+                  marginTop: "10px",
+                  backgroundImage: formData.image_file ? `url(${formData.image_file})` : "none",
+                }}
+              />
+              {error && <p className="error-message">{errorMessage}</p>}
+              <button type="submit" className="fancy-submit-button">Create</button>
+            </form>
           </div>
-        </form>
-      )}
-
-      {post.comments && post.comments.length > 0 && (
-        <div className="comment-list">
-          {post.comments.map((c, i) => (
-            <div key={i} className="comment" style={{ background: "#eeeeee", padding: "10px", borderRadius: "10px", marginTop: "10px" }}>
-              <p style={{ fontWeight: "bold", color: "#555" }}>You</p>
-              <p>{c.text}</p>
-              {c.image && (
-                <img
-                  src={`http://localhost:8080/Image/Posts/${c.image}`}
-                  alt="Comment"
-                  style={{
-                    maxWidth: "250px",
-                    maxHeight: "200px",
-                    borderRadius: "10px",
-                    objectFit: "cover",
-                    marginTop: "10px"
-                  }}
-                />
-              )}
-              <div className="message-time-comments" style={{ fontSize: "12px", color: "#888", marginTop: "8px" }}>
-                {new Date(c.created_at).toLocaleDateString("en-US")},{" "}
-                {new Date(c.created_at).toLocaleTimeString("en-US", {
-                  hour: "numeric",
-                  minute: "2-digit",
-                  hour12: true,
-                }).toLowerCase()}
-              </div>
-            </div>
-          ))}
         </div>
       )}
     </div>
-  ))
-}
-            </div >
-          ))
-        )}
-      </div >
-
-  { showModal && (
-    <div className="modal-overlay" onClick={(e) => {
-      if (e.target.className === "modal-overlay") setShowModal(false);
-    }}>
-      <div className="modal-content scrollable">
-        <button className="modal-close" onClick={() => setShowModal(false)}>✖</button>
-        <h2>Create New Post</h2>
-        <form onSubmit={handleCreate}>
-          <textarea
-            placeholder="What's on your mind?"
-            value={form.content}
-            onChange={(e) => setForm({ ...form, content: e.target.value })}
-            required
-          />
-          <input
-            type="file"
-            accept="image/*"
-            ref={imageInputRef}
-            onChange={(e) => handleImageUpload(e.target.files[0])}
-          />
-          {imageBase64 && (
-            <div style={{ marginTop: "10px" }}>
-              <img
-                src={imageBase64}
-                alt="Preview"
-                style={{
-                  maxWidth: "250px",
-                  maxHeight: "200px",
-                  borderRadius: "10px",
-                  objectFit: "cover"
-                }}
-              />
-            </div>
-          )}
-          <div className="modal-buttons">
-            <button type="submit" className="fancy-submit-button">Create</button>
-          </div>
-        </form>
-      </div>
-    </div>
-  )}
-    </div >
   );
 }

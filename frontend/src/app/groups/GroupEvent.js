@@ -16,7 +16,7 @@ export default function GroupEvent({ group, onBack }) {
   const nearLimit = charCount > 130 && charCount < maxChars;
   const overLimit = charCount >= maxChars;
   const { socket } = useWebSocket();
-  
+
 
   const enrichEvents = (data) => {
     const optionState = {};
@@ -76,24 +76,38 @@ export default function GroupEvent({ group, onBack }) {
     loadEvents();
   }, [group.id]);
 
-  const handleCreate = async () => {
-  
+ const handleCreate = async () => {
+  // Make sure all fields are filled
+  if (!form.title.trim() || !form.description.trim() || !form.datetime) {
+    alert("Please fill in all fields before creating the event.");
+    return;
+  }
 
+  try {
     const data = await FetchUserIDbySession();
     const userID = data.UserID;
-    console.log("WebSocket connected! User ID:", userID);
 
-  const newEvent = {
-    type: "createEvent",
-    group_id: parseInt(group.id),
-    title: form.title,
-    creator_id: parseInt(userID),
-    description: form.description,
-    event_datetime: form.datetime,
-  };
-    socket.send(JSON.stringify(newEvent));
+    const newEvent = {
+      type: "createEvent",
+      group_id: parseInt(group.id),
+      title: form.title,
+      creator_id: parseInt(userID),
+      description: form.description,
+      event_datetime: form.datetime,
     };
-  
+
+    socket.send(JSON.stringify(newEvent)); // Send the event
+
+    // Reset form and close modal
+    setForm({ title: "", description: "", datetime: "" });
+    setShowModal(false);
+
+  } catch (error) {
+    console.error("Error creating event:", error);
+    alert("Something went wrong. Please try again.");
+  }
+};
+
 
   const handleRSVP = async (eventId, choice) => {
     const success = await OptionsEvent(eventId, choice);
@@ -127,10 +141,8 @@ export default function GroupEvent({ group, onBack }) {
           <button className="back-button" onClick={onBack}>
             ← Back
           </button>
-          <div className="group-info">
-            <h2>Events for {group.title}</h2>
-          </div>
         </div>
+        <div className="group-title">Events For {group.title} group</div>
         <button className="send-button" onClick={() => setShowModal(true)}>
           + Create Event
         </button>
@@ -165,9 +177,9 @@ export default function GroupEvent({ group, onBack }) {
                   }));
 
                   return (
-                    <div className="message" key={e.id}>
-                      <h3>{e.title}</h3>
-                      <p>{e.description}</p>
+                    <div className="events" key={e.id}>
+                      <div className="event-title">{e.title}</div>
+                      <div className="event-description">{e.description}</div>
                       <div className="event-time">
                         📅 {new Date(e.event_datetime).toLocaleDateString()}
                         <br />
@@ -193,18 +205,16 @@ export default function GroupEvent({ group, onBack }) {
                                 onChange={() => handleRSVP(e.id, opt)}
                               />
                               <div
-                                className={`poll-choice ${
-                                  selectedOption[e.id] === opt ? "selected" : ""
-                                }`}
+                                className={`poll-choice ${selectedOption[e.id] === opt ? "selected" : ""
+                                  }`}
                               >
                                 <div
-                                  className={`poll-bar-fill ${
-                                    opt === "Going"
-                                      ? "going"
-                                      : opt === "Not Going"
+                                  className={`poll-bar-fill ${opt === "Going"
+                                    ? "going"
+                                    : opt === "Not Going"
                                       ? "not-going"
                                       : ""
-                                  }`}
+                                    }`}
                                   style={{
                                     width: `${(count / totalVotes) * 100}%`,
                                   }}
@@ -216,7 +226,7 @@ export default function GroupEvent({ group, onBack }) {
                           );
                         })}
                       </div>
-                      <div className="message-time">
+                      <div className="message-time-group">
                         {new Date(e.created_at).toLocaleDateString("en-GB")},{" "}
                         {new Date(e.created_at).toLocaleTimeString([], {
                           hour: "2-digit",
@@ -249,11 +259,11 @@ export default function GroupEvent({ group, onBack }) {
               value={form.title}
               onChange={(e) => setForm({ ...form, title: e.target.value })}
               required
+              className="styled-input" // ✅ add this
             />
+
             <textarea
-              className={`description-textarea ${
-                overLimit ? "limit-exceeded" : nearLimit ? "near-limit" : ""
-              }`}
+              className={`description-textarea styled-input ${overLimit ? "limit-exceeded" : nearLimit ? "near-limit" : ""}`}
               placeholder="Description"
               value={form.description}
               onChange={(e) => {
@@ -264,20 +274,15 @@ export default function GroupEvent({ group, onBack }) {
               }}
               required
             />
-            <div
-              className={`char-counter ${
-                overLimit ? "limit-exceeded" : nearLimit ? "near-limit" : ""
-              }`}
-            >
-              {charCount}/{maxChars} characters
-            </div>
 
             <input
               type="datetime-local"
               value={form.datetime}
               onChange={(e) => setForm({ ...form, datetime: e.target.value })}
               required
+              className="styled-input" // ✅ add this
             />
+
             <p>
               <strong>Options:</strong> "Going" and "Not Going" will be
               automatically added.

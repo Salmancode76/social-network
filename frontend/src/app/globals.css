@@ -185,11 +185,11 @@ html {
 /****************************************** SIGNUP + LOGIN + LOGOUT *********************************************/
 
 
-
 .btn-login,
 .btn-signup,
 .btn-logout,
-.create-btn {
+.create-btn,
+.comment-group-button {
   color: #FFFFFF;
   background: linear-gradient(to right, #003973, #0077B6);
   padding: 12px 32px;
@@ -207,7 +207,8 @@ html {
 .btn-login:hover,
 .btn-signup:hover,
 .btn-logout:hover,
-.create-btn:hover {
+.create-btn:hover,
+.comment-group-button:hover {
   background: linear-gradient(to right, #005f99, #00b4d8);
   box-shadow: 0 8px 20px rgba(0, 119, 182, 0.5);
   transform: translateY(-2px);
