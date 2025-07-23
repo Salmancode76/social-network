@@ -1,13 +1,15 @@
 import React, { useState } from 'react';
 import { FetchUserIDbySession } from '../utils/FetchUserIDbySession';
 import ChattingScreen from './ChattingScreen';
-import { socket } from "../utils/ws";
+import { useWebSocket } from "../contexts/WebSocketContext";
+
 
 
 export default function ChatUser({ user }) {
   const [showChattingScreen, setShowChattingScreen] = useState(false);
   const [chatHistory, setChatHistory] = useState([]);
   
+ const { socket } = useWebSocket();
 
   const handleUserClick = () => {
     sendWebSocketMessage(user);

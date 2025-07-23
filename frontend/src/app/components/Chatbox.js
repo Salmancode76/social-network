@@ -1,16 +1,18 @@
 "use client";
 import { useEffect, useState } from "react";
-import { socket } from "../utils/ws";
+import { useWebSocket } from "../contexts/WebSocketContext";
 import ChatUser from "./ChatUser.js";
 import "./ChatBox.css";
 
 export default function Chatbox() {
   const [isOpen, setIsOpen] = useState(false);
-  const [users, setUsers] = useState([]); 
+  const [users, setUsers] = useState([]);
+  const { socket } = useWebSocket();
 
-  
   useEffect(() => {
-    const handleSocketMessage = (event) => {
+    if (!socket) return;
+
+    const handleMessage = (event) => {
       try {
         const data = JSON.parse(event.data);
         console.log("Received message:", data);
@@ -23,20 +25,19 @@ export default function Chatbox() {
       }
     };
 
-    socket.addEventListener("message", handleSocketMessage);
+    socket.onmessage = handleMessage;
 
+    // Clean up on unmount or when socket changes
     return () => {
-      socket.removeEventListener("message", handleSocketMessage);
+      socket.onmessage = null;
     };
-  }, []); 
+  }, [socket]);
 
-  
   useEffect(() => {
-    if (isOpen) {
-      
+    if (isOpen && socket) {
       socket.send(JSON.stringify({ type: "get_users" }));
     }
-  }, [isOpen]); 
+  }, [isOpen, socket]);
 
   return (
     <>

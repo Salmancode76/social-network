@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { socket } from "../utils/ws";
 import { FetchUserIDbySession } from '../utils/FetchUserIDbySession';
 import './ChattingScreen.css';
+import { useWebSocket } from "../contexts/WebSocketContext";
+
 
 // Helper function to format date
 const formatTimestamp = (dateString) => {
@@ -19,6 +21,8 @@ const formatTimestamp = (dateString) => {
 function ChattingScreen({ userName, onClose, chatHistory: initialChatHistory }) {
   const [messageText, setMessageText] = useState("");
   const [currentChatHistory, setCurrentChatHistory] = useState(initialChatHistory);
+    const { socket } = useWebSocket();
+  
 
   useEffect(() => {
     setCurrentChatHistory(initialChatHistory);
