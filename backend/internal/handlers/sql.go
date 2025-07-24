@@ -202,7 +202,7 @@ func GetGroupMembers(id string) []string {
 		err = rows.Scan(&user_id)
 		if err != nil {
 			fmt.Printf("Server >> Error reading chat history: %s", err)
-		continue
+			continue
 		}
 		members = append(members, user_id)
 	}
@@ -279,7 +279,7 @@ func getAllUsers(db *sql.DB, id string) []string {
 			names = append(names, name)
 		}
 	}
-
+	fmt.Println("names after getting all following", names)
 	// get all following
 	query = "SELECT follower_id FROM followers WHERE following_id = ? "
 
@@ -301,8 +301,9 @@ func getAllUsers(db *sql.DB, id string) []string {
 		names = append(names, name)
 	}
 	//get public
-
-	query = "SELECT nickname FROM users WHERE is_public = 1   AND id != ?"
+	fmt.Println("names after getting all following and followers", names)
+	fmt.Println("id is", id)
+	query = "SELECT nickname FROM users WHERE is_public = 1 AND id != ?"
 	rows, err = db.Query(query, id)
 	if err != nil {
 		fmt.Printf("Server >> Error getting all users: %s", err)
@@ -319,6 +320,7 @@ func getAllUsers(db *sql.DB, id string) []string {
 		}
 		names = append(names, name)
 	}
+	fmt.Println("names after getting all public users", names)
 	return names
 }
 func isRedunat(AllUsers []string, name string) bool {
