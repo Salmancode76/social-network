@@ -5,6 +5,7 @@ import "./group.css";
 import { WS_URL } from "../utils/ws";
 import { FetchUserIDbySession } from "../utils/FetchUserIDbySession";
 import { useWebSocket } from "../contexts/WebSocketContext";
+import { FetchAllUsers } from "../utils/FetchAllUsers";
 
 export default function GroupEvent({ group, onBack }) {
   const [events, setEvents] = useState([]);
@@ -16,6 +17,11 @@ export default function GroupEvent({ group, onBack }) {
   const nearLimit = charCount > 130 && charCount < maxChars;
   const overLimit = charCount >= maxChars;
   const { socket } = useWebSocket();
+  const [allUsers, setAllUsers] = useState([]);
+  const [currentUserID, setCurrentUserID] = useState(null);
+  const [eventWarning, setEventWarning] = useState("");
+
+
 
 
   const enrichEvents = (data) => {
@@ -68,45 +74,73 @@ export default function GroupEvent({ group, onBack }) {
 
   useEffect(() => {
     async function loadEvents() {
-      const data = await FetchEvents(group.id);
-      const { enriched, optionState } = enrichEvents(data);
-      setEvents(enriched);
-      setSelectedOption(optionState);
+      try {
+        // Get user ID and store it
+        const session = await FetchUserIDbySession();
+        setCurrentUserID(session.UserID);
+
+        // Fetch group events
+        const data = await FetchEvents(group.id);
+        const { enriched, optionState } = enrichEvents(data);
+        setEvents(enriched);
+        setSelectedOption(optionState);
+
+        // Fetch all users for display names
+        const users = await FetchAllUsers();
+        setAllUsers(users);
+      } catch (error) {
+        console.error("Error loading events or users:", error);
+      }
     }
     loadEvents();
   }, [group.id]);
 
- const handleCreate = async () => {
-  // Make sure all fields are filled
-  if (!form.title.trim() || !form.description.trim() || !form.datetime) {
-    alert("Please fill in all fields before creating the event.");
-    return;
-  }
 
-  try {
-    const data = await FetchUserIDbySession();
-    const userID = data.UserID;
 
-    const newEvent = {
-      type: "createEvent",
-      group_id: parseInt(group.id),
-      title: form.title,
-      creator_id: parseInt(userID),
-      description: form.description,
-      event_datetime: form.datetime,
-    };
 
-    socket.send(JSON.stringify(newEvent)); // Send the event
 
-    // Reset form and close modal
-    setForm({ title: "", description: "", datetime: "" });
-    setShowModal(false);
+  const getDisplayName = (userId) => {
+    if (String(userId) === String(currentUserID)) return "You";
+    const user = allUsers.find((u) => String(u.id) === String(userId));
+    return user?.nickname || user?.first_name || user?.name || "Unknown";
+  };
 
-  } catch (error) {
-    console.error("Error creating event:", error);
-    alert("Something went wrong. Please try again.");
-  }
-};
+
+
+
+  const handleCreate = async () => {
+    // Make sure all fields are filled
+    if (!form.title.trim() || !form.description.trim() || !form.datetime) {
+      setEventWarning("Please fill in all fields before creating the event.");
+      return;
+    }
+
+    try {
+      const data = await FetchUserIDbySession();
+      const userID = data.UserID;
+
+      const newEvent = {
+        type: "createEvent",
+        group_id: parseInt(group.id),
+        title: form.title,
+        creator_id: parseInt(userID),
+        description: form.description,
+        event_datetime: form.datetime,
+      };
+
+      socket.send(JSON.stringify(newEvent)); // Send the event
+
+      // Reset form and close modal
+      setForm({ title: "", description: "", datetime: "" });
+      setShowModal(false);
+      setEventWarning(""); //  clear warning
+
+
+    } catch (error) {
+      console.error("Error creating event:", error);
+      alert("Something went wrong. Please try again.");
+    }
+  };
 
 
   const handleRSVP = async (eventId, choice) => {
@@ -178,6 +212,10 @@ export default function GroupEvent({ group, onBack }) {
 
                   return (
                     <div className="events" key={e.id}>
+                      <p style={{ fontWeight: "bold", color: "#2196f3" }}>
+                        {getDisplayName(e.creator_id)}
+                      </p>
+
                       <div className="event-title">{e.title}</div>
                       <div className="event-description">{e.description}</div>
                       <div className="event-time">
@@ -248,7 +286,7 @@ export default function GroupEvent({ group, onBack }) {
             if (e.target.className === "modal-overlay") setShowModal(false);
           }}
         >
-          <div className="modal-content scrollable">
+          + <div className="modal-box">
             <button className="modal-close" onClick={() => setShowModal(false)}>
               ✖
             </button>
@@ -283,10 +321,18 @@ export default function GroupEvent({ group, onBack }) {
               className="styled-input" // ✅ add this
             />
 
-            <p>
+            <p className="error-message-group">
               <strong>Options:</strong> "Going" and "Not Going" will be
               automatically added.
             </p>
+
+
+            {eventWarning && (
+              <p className="error-message-group" style={{ marginTop: "10px" }}>
+                {eventWarning}
+              </p>
+            )}
+
             <div className="modal-buttons">
               <button
                 type="submit"
@@ -296,6 +342,7 @@ export default function GroupEvent({ group, onBack }) {
                 Create
               </button>
             </div>
+
           </div>
         </div>
       )}

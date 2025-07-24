@@ -3,6 +3,9 @@ import { useState, useRef, useEffect } from "react";
 import { FetchPostsGroup, CreateGroupPost, CreateGroupComment } from "../utils/FetchGroupPosts";
 import "./group.css";
 import { RiImageAddFill } from "react-icons/ri";
+import { FetchUserIDbySession } from "../utils/FetchUserIDbySession";
+import { FetchAllUsers } from "../utils/FetchAllUsers";
+
 
 
 export default function GroupPost({ group, onBack }) {
@@ -11,14 +14,44 @@ export default function GroupPost({ group, onBack }) {
   const [formData, setFormData] = useState({ content: "", image_file: "" });
   const [error, setError] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [formWarning, setFormWarning] = useState("");
+  const isFormEmpty = !formData.content.trim() && !formData.image_file;
+
   const imageInputRef = useRef();
   const ImageDiv = useRef();
-
 
   const [commentVisibility, setCommentVisibility] = useState({});
   const [commentForm, setCommentForm] = useState({});
   const commentImageRefs = useRef({});
   const commentImageDivs = useRef({});
+  const [currentUserId, setCurrentUserId] = useState(null);
+  const [allUsers, setAllUsers] = useState([]);
+
+  const MAX_IMAGE_SIZE_MB = 5;
+  const MAX_IMAGE_SIZE_BYTES = MAX_IMAGE_SIZE_MB * 1024 * 1024;
+
+  const [commentError, setCommentError] = useState({});
+
+
+  useEffect(() => {
+    async function loadData() {
+      const groupPosts = await FetchPostsGroup(group.id);
+      setPosts(groupPosts);
+
+      const uid = await FetchUserIDbySession();
+      setCurrentUserId(uid.UserID);
+
+
+
+      const users = await FetchAllUsers();
+      setAllUsers(users);
+    }
+    loadData();
+  }, [group.id]);
+
+
+
+
 
   useEffect(() => {
     async function loadPosts() {
@@ -28,17 +61,48 @@ export default function GroupPost({ group, onBack }) {
     loadPosts();
   }, [group.id]);
 
+
   const validateImage = (file) => {
     const validTypes = ["image/jpeg", "image/png", "image/webp", "image/jpg"];
-    const maxSize = 1024 * 1024 * 2; // 2MB
+
     if (!validTypes.includes(file.type)) {
       return "Invalid file type. Please upload a JPEG/PNG/WEBP image.";
     }
-    if (file.size > maxSize) {
-      return "Image is too large. Max size is 2MB.";
+
+    if (file.size > MAX_IMAGE_SIZE_BYTES) {
+      return `Image is too large. Max size is ${MAX_IMAGE_SIZE_MB}MB.`;
     }
+
     return null;
   };
+
+
+
+
+
+
+  const getDisplayName = (userId) => {
+
+    if (!userId || !currentUserId) return "Unknown";
+
+    if (String(userId) === String(currentUserId)) {
+      return "You";
+    }
+
+    const user = allUsers.find((u) => {
+      return String(u.id) === String(userId);
+    });
+
+    if (!user) {
+      return "Unknown";
+    }
+
+    return user.nickname || user.first_name || user.name || "Unknown";
+  };
+
+
+
+
 
   const handlePostImageUpload = async (e) => {
     const file = e.target.files[0];
@@ -94,7 +158,13 @@ export default function GroupPost({ group, onBack }) {
 
   const handleCreate = async (e) => {
     e.preventDefault();
-    if (!formData.content.trim() && !formData.image_file) return;
+
+    // if (!formData.content.trim() && !formData.image_file) {
+    //   setFormWarning("You need to put either text or an image to create a post.");
+    //   return;
+    // }
+
+    setFormWarning(""); // Clear any previous warning
 
     const payload = {
       content: formData.content,
@@ -111,6 +181,7 @@ export default function GroupPost({ group, onBack }) {
       setShowModal(false);
     }
   };
+
 
   const toggleComment = (postId) => {
     setCommentVisibility((prev) => ({
@@ -131,7 +202,17 @@ export default function GroupPost({ group, onBack }) {
 
   const handleCommentSubmit = async (postId) => {
     const comment = commentForm[postId];
-    if (!comment || !comment.content?.trim()) return;
+
+    const isEmpty = !comment?.content?.trim() && !comment?.image;
+    if (isEmpty) {
+      setCommentError((prev) => ({
+        ...prev,
+        [postId]: "You need to enter text or add an image to comment.",
+      }));
+      return;
+    }
+
+    setCommentError((prev) => ({ ...prev, [postId]: "" }));
 
     const res = await CreateGroupComment({
       post_id: postId,
@@ -145,6 +226,7 @@ export default function GroupPost({ group, onBack }) {
       text: res.text,
       image: res.image || null,
       created_at: res.created_at,
+      user_id: currentUserId,
     };
 
     setPosts((prev) =>
@@ -171,6 +253,7 @@ export default function GroupPost({ group, onBack }) {
     setCommentVisibility((prev) => ({ ...prev, [postId]: false }));
   };
 
+
   return (
     <div className="group-chat-container">
       <div className="chat-header">
@@ -184,9 +267,11 @@ export default function GroupPost({ group, onBack }) {
           <div className="no-messages">No posts yet.</div>
         ) : (
           posts.map((post) => (
+
             <div key={post.id} className="post">
-              <p style={{ fontWeight: "bold", color: "#2196f3" }}>You</p>
-              <p className="group-post-content">{post.content}</p>
+              <p style={{ fontWeight: "bold", color: "#2196f3" }}>
+                {getDisplayName(post.user_id)}
+              </p>              <p className="group-post-content">{post.content}</p>
               {post.image && (
                 <img
                   src={`http://localhost:8080/Image/Posts/${post.image}`}
@@ -234,7 +319,11 @@ export default function GroupPost({ group, onBack }) {
                         : "none",
                     }}
                   />
-
+                  {commentError[post.id] && (
+                    <p className="error-message-group" style={{ marginTop: "10px" }}>
+                      {commentError[post.id]}
+                    </p>
+                  )}
                   <div
                     style={{
                       display: "flex",
@@ -244,6 +333,10 @@ export default function GroupPost({ group, onBack }) {
                       width: "100%", // ensure it spans the container
                     }}
                   >
+
+
+
+
                     <button
                       type="button"
                       onClick={() => commentImageRefs.current[post.id]?.click()}
@@ -265,7 +358,7 @@ export default function GroupPost({ group, onBack }) {
                 <div className="comment-list">
                   {post.comments.map((c, i) => (
                     <div key={i} className="comment">
-                      <p><strong>You</strong></p>
+                      <p><strong>{getDisplayName(c.user_id)}</strong></p>
                       <p>{c.text}</p>
                       {c.image && (
                         <img
@@ -294,6 +387,7 @@ export default function GroupPost({ group, onBack }) {
             <button className="modal-close" onClick={() => setShowModal(false)}>✖</button>
             <h2>Create New Post</h2>
             <form onSubmit={handleCreate}>
+              
               <textarea
                 placeholder="What's on your mind?"
                 value={formData.content}
@@ -324,8 +418,18 @@ export default function GroupPost({ group, onBack }) {
                   backgroundImage: formData.image_file ? `url(${formData.image_file})` : "none",
                 }}
               />
-              {error && <p className="error-message">{errorMessage}</p>}
-              <button type="submit" className="fancy-submit-button">Create</button>
+              {error && <p className="error-message-group">{errorMessage}</p>}
+              <button
+                type="submit"
+                className="fancy-submit-button"
+                disabled={isFormEmpty}
+                style={{
+                  opacity: isFormEmpty ? 0.5 : 1,
+                  cursor: isFormEmpty ? "not-allowed" : "pointer",
+                }}
+              >
+                Create
+              </button>
             </form>
           </div>
         </div>

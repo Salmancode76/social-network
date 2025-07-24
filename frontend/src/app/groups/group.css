@@ -33,7 +33,6 @@ label {
 }
 
 
-
 .modal-overlay {
   position: fixed;
   top: 0;
@@ -45,21 +44,27 @@ label {
   align-items: center;
   justify-content: center;
   z-index: 999;
-
+  overflow: hidden; /* Prevent outer scroll */
+  margin-top: 2em;
 }
 
 .modal-box {
+  background: #fff;
   background-image: url(../content.jpg);
-  /* background-position: center; */
   background-size: cover;
-  background-color: #fff;
-  width: 300px;
-  padding: 20px;
-  border-radius: 10px;
+  background-repeat: no-repeat;
+  padding: 24px;
+  border-radius: 12px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;        /* ✅ limits height */
+  overflow-y: auto;        /* ✅ internal scroll if needed */
   position: relative;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
-  animation: zoomInOut 7s ease infinite;
-
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.2);
+  animation: fadeIn 0.25s ease-in-out;
 }
 
 @keyframes zoomInOut {
@@ -1221,4 +1226,19 @@ h3 {
 .add-img-button i {
   font-size: 18px;
   color: white;
+}
+
+
+
+
+
+.error-message-group {
+  color: #eceef1;
+  background-color: rgba(69, 56, 255, 0.1);
+  border-left: 4px solid #4db8ff;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 1em;
+  /* margin-top: 20px; */
+  font-family: 'Segoe UI', 'Roboto', 'Helvetica Neue', Arial, sans-serif;
 }
