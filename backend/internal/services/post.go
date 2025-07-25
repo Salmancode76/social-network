@@ -42,7 +42,7 @@ SELECT
 
 	var Posts []models.Post
 	//fmt.Print(id)
-	row,err := p.DB.Query(stmt,id,id)
+	row,err := p.DB.Query(stmt,id,id,id)
 
 	if err != nil {
 	  return  Posts,err
